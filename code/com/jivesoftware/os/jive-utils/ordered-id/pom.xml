@@ -8,7 +8,7 @@
         <version>unspecified</version>
         <relativePath>../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
     </parent>
-    <groupId>com.jivesoftware.jive.platform.common</groupId>
+    <groupId>com.jivesoftware.os.jive.utils</groupId>
     <artifactId>ordered-id</artifactId>
     <properties>
         <module.type>shared_lib</module.type>

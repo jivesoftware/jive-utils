@@ -1,10 +1,5 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.jivesoftware.os.jive.utils.ordered.id;
 
-import com.jivesoftware.os.jive.utils.ordered.id.SnowflakeIdPacker;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

@@ -13,6 +13,8 @@
         <module>ordered-id</module>
         <module>http-client</module>
         <module>http-client-rest</module>
+        <module>server-http-jetty-jersey</module>
+        <module>jaxrs-util</module>
         <module>shell-utils</module>
     </modules>
 </project>
