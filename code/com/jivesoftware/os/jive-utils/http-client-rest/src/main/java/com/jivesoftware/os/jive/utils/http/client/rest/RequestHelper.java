@@ -96,5 +96,5 @@ public class RequestHelper {
     private boolean isSuccessStatusCode(int statusCode) {
         return statusCode >= 200 && statusCode < 300;
     }
-
+    
 }
