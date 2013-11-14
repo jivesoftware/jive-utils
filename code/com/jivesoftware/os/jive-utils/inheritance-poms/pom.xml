@@ -10,7 +10,7 @@
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-repo-management</artifactId>
         <version>0.1</version>
-        <relativePath>inheritance-poms/global-repo-management/pom.xml</relativePath>
+        <relativePath>global-repo-management/pom.xml</relativePath>
     </parent>
     <modules>
         <module>global-build-management</module>
