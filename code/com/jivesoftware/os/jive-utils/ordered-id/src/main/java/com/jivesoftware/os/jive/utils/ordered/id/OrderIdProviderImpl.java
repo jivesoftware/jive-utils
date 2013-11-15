@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * An order id provider which generates ids using a combination of system time, a logical writer id, and an incrementing sequence number.
  */
 public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider {
+
     private final int maxOrderId;
     final private TimestampProvider timestampProvider;
     private final IdPacker idPacker;
@@ -29,7 +30,7 @@ public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider 
     }
 
     @Override
-    public long nextId() throws IdGenerationException {
+    public long nextId() {
         while (true) { // exits on successful compare-and-set
             long timestamp = timestampProvider.getTimestamp();
             TimeAndOrder current = state.get();
@@ -37,9 +38,12 @@ public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider 
             if (current.time > timestamp) {
                 long retryWaitHint = current.time - timestamp;
 
-                throw new IdGenerationException(retryWaitHint,
-                    String.format("Clock moved backwards. Refusing to generate id for %d milliseconds",
-                    retryWaitHint));
+                try {
+                    Thread.sleep(retryWaitHint);
+                } catch (InterruptedException ie) {
+                    Thread.interrupted();
+                }
+
             } else {
                 TimeAndOrder next;
 

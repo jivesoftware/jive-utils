@@ -16,5 +16,6 @@
         <module>server-http-jetty-jersey</module>
         <module>jaxrs-util</module>
         <module>shell-utils</module>
+        <module>merlin-config</module>
     </modules>
 </project>

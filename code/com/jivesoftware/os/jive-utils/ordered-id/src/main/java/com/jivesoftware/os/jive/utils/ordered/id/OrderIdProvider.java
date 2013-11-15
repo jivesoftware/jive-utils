@@ -18,7 +18,6 @@ public interface OrderIdProvider {
      *
      * @return a globally unique, orderable id
      *
-     * @throws IdGenerationException if the id could not be generated due to e.g. clock skew
      */
-    long nextId() throws IdGenerationException;
+    long nextId();
 }

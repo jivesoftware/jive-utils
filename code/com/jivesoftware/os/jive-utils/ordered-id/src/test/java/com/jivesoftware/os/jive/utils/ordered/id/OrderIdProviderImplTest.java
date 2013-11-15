@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -23,31 +22,6 @@ public class OrderIdProviderImplTest {
         long secondOrderId = orderIdProvider.nextId();
         int compare = (firstOrderId < secondOrderId) ? -1 : ((firstOrderId == secondOrderId) ? 0 : 1);
         Assert.assertTrue(compare < 0);
-    }
-
-    @Test
-    public void testClockMovingBackwards() throws Exception {
-        final AtomicBoolean returnZeroTime = new AtomicBoolean();
-
-        OrderIdProvider orderIdProvider = new OrderIdProviderImpl(1, new SnowflakeIdPacker(), new TimestampProvider() {
-            @Override
-            public long getTimestamp() {
-                if (!returnZeroTime.get()) {
-                    return System.currentTimeMillis();
-                } else {
-                    return 0;
-                }
-            }
-        });
-
-        orderIdProvider.nextId();
-        returnZeroTime.set(true);
-
-        try {
-            orderIdProvider.nextId();
-            Assert.fail("Expected IdGenerationException when clock moved backwards");
-        } catch (IdGenerationException e) {
-        }
     }
 
     static int compare(long x, long y) {
