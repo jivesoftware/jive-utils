@@ -26,18 +26,16 @@ public class RestfulManageServer implements ServiceHandle {
     private final RestfulServer server;
     private final HealthCheckService healthCheckService = new HealthCheckService();
     private final KillSwitchService killSwitchService = new KillSwitchService();
-    private final String instanceKey;
+    private final JerseyEndpoints jerseyEndpoints;
 
     public RestfulManageServer(int port,
             String applicationName,
             String configFilePath,
             int maxNumberOfThreads,
-            int maxQueuedRequests,
-            String instanceKey) {
+            int maxQueuedRequests) {
         server = new RestfulServer(port, applicationName, maxNumberOfThreads, maxQueuedRequests);
-        this.instanceKey = instanceKey;
 
-        JerseyEndpoints jerseyEndpoints = new JerseyEndpoints()
+        jerseyEndpoints = new JerseyEndpoints()
                 .enableCORS()
                 .humanReadableJson()
                 .addEndpoint(RestfulBaseEndpoints.class).addInjectable(healthCheckService)
@@ -46,11 +44,19 @@ public class RestfulManageServer implements ServiceHandle {
                 .addEndpoint(LogLevelRestEndpoints.class)
                 .addEndpoint(KillSwitchsRestEndpoints.class).addInjectable(killSwitchService);
 
-        server.addContextHandler("/manage", jerseyEndpoints);
     }
 
-    public String getInstanceKey() {
-        return instanceKey;
+    public void addEndpoint(Class clazz) {
+        jerseyEndpoints.addEndpoint(clazz);
+    }
+
+    public void addInjectable(Class clazz, Object injectable) {
+        jerseyEndpoints.addInjectable(clazz, injectable);
+    }
+
+    public RestfulManageServer initialize() {
+        server.addContextHandler("/manage", jerseyEndpoints);
+        return this;
     }
 
     public RestfulManageServer addHealthCheck(HealthCheck... check) {
