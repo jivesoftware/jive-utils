@@ -1,9 +1,5 @@
 package com.jivesoftware.os.jive.utils.http.client;
 
-import com.jivesoftware.os.jive.utils.http.client.Constants;
-import com.jivesoftware.os.jive.utils.http.client.HttpResponse;
-import com.jivesoftware.os.jive.utils.http.client.ApacheHttpClient31BackedHttpClient;
-import com.jivesoftware.os.jive.utils.http.client.HttpClientException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

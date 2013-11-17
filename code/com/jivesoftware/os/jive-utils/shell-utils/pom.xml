@@ -24,9 +24,9 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-exec</groupId>
+            <groupId>org.apache.commons</groupId>
             <artifactId>commons-exec</artifactId>
-       </dependency>
+        </dependency>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>

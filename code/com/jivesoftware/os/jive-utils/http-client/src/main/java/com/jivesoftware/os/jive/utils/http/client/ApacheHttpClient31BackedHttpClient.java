@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import oauth.signpost.OAuthConsumer;
-import oauth.signpost.commonshttp3.CommonsHttp3OAuthConsumer;
+import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -42,7 +42,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
     private static final int JSON_POST_LOG_LENGTH_LIMIT = 2048;
 
     public ApacheHttpClient31BackedHttpClient(org.apache.commons.httpclient.HttpClient client,
-            Map<String, String> headersForEveryRequest) {
+        Map<String, String> headersForEveryRequest) {
         this.client = client;
         this.headersForEveryRequest = headersForEveryRequest;
     }
@@ -62,7 +62,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
             return execute(get);
         } catch (Exception e) {
             throw new HttpClientException("Error executing GET request to: " + client.getHostConfiguration().getHostURL()
-                    + " path: " + path, e);
+                + " path: " + path, e);
         }
     }
 
@@ -83,9 +83,9 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
             return execute(post);
         } catch (Exception e) {
             String trimmedPostBody =
-                    (postJsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ? postJsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : postJsonBody;
+                (postJsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ? postJsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : postJsonBody;
             throw new HttpClientException("Error executing POST request to: "
-                    + client.getHostConfiguration().getHostURL() + " path: " + path + " JSON body: " + trimmedPostBody, e);
+                + client.getHostConfiguration().getHostURL() + " path: " + path + " JSON body: " + trimmedPostBody, e);
         }
     }
 
@@ -106,22 +106,22 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
             return execute(post);
         } catch (Exception e) {
             String trimmedPostBody =
-                    (postBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ? new String(postBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(postBytes);
+                (postBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ? new String(postBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(postBytes);
             throw new HttpClientException("Error executing POST request to:"
-                    + client.getHostConfiguration().getHostURL() + " path: " + path + " byte body: " + trimmedPostBody, e);
+                + client.getHostConfiguration().getHostURL() + " path: " + path + " byte body: " + trimmedPostBody, e);
         }
     }
 
     @Override
     public String toString() {
         return "ApacheHttpClient31BackedHttpClient{"
-                + "client=" + client
-                + ", headersForEveryRequest=" + headersForEveryRequest
-                + ", consumerKey=" + consumerKey
-                + ", consumerSecret=" + consumerSecret
-                + ", isOauthEnabled=" + isOauthEnabled
-                + ", isSSLEnabled=" + isSSLEnabled
-                + '}';
+            + "client=" + client
+            + ", headersForEveryRequest=" + headersForEveryRequest
+            + ", consumerKey=" + consumerKey
+            + ", consumerSecret=" + consumerSecret
+            + ", isOauthEnabled=" + isOauthEnabled
+            + ", isSSLEnabled=" + isSSLEnabled
+            + '}';
     }
 
     private HttpResponse execute(HttpMethod method) throws IOException {
@@ -163,7 +163,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
                     httpInfo.append("Exception sending request");
                 }
                 httpInfo.append(" in ").append(elapsedTime).append(" ms ").append(method.getName()).append(" ")
-                        .append(safeHostString(client.getHostConfiguration())).append(method.getURI());
+                    .append(safeHostString(client.getHostConfiguration())).append(method.getURI());
                 if (logInfo) {
                     LOG.debug(httpInfo.toString());
                 } else {
@@ -179,20 +179,20 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
             URI uri = method.getURI();
             URI newUri = new URI(
-                    (isSSLEnabled) ? "https" : "http",
-                    uri.getUserinfo(),
-                    hostConfiguration.getHost(),
-                    hostConfiguration.getPort(),
-                    uri.getPath(),
-                    uri.getQuery(),
-                    uri.getFragment());
+                (isSSLEnabled) ? "https" : "http",
+                uri.getUserinfo(),
+                hostConfiguration.getHost(),
+                hostConfiguration.getPort(),
+                uri.getPath(),
+                uri.getQuery(),
+                uri.getFragment());
 
             method.setURI(newUri);
 
             //URI checkUri = method.getURI();
             //String checkUriString = checkUri.toString();
 
-            CommonsHttp3OAuthConsumer oAuthConsumer = new CommonsHttp3OAuthConsumer(consumerKey, consumerSecret);
+            CommonsHttpOAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(consumerKey, consumerSecret);
             oAuthConsumer.setTokenWithSecret(consumerKey, consumerSecret);
             oAuthConsumer.sign(method);
         } catch (Exception e) {
@@ -231,7 +231,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
     // package scope for testing ...
     OAuthConsumer getConsumer() {
         if (isOauthEnabled) {
-            return new CommonsHttp3OAuthConsumer(consumerKey, consumerSecret);
+            return new CommonsHttpOAuthConsumer(consumerKey, consumerSecret);
         }
         return null;
     }

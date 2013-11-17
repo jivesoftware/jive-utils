@@ -32,12 +32,11 @@
         </dependency>
         <dependency>
             <groupId>oauth.signpost</groupId>
-            <artifactId>signpost-core</artifactId>
-            <scope>compile</scope>
+            <artifactId>signpost-commonshttp4</artifactId>
         </dependency>
         <dependency>
             <groupId>oauth.signpost</groupId>
-            <artifactId>signpost-commonshttp3</artifactId>
+            <artifactId>signpost-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jivesoftware.os.jive.utils</groupId>

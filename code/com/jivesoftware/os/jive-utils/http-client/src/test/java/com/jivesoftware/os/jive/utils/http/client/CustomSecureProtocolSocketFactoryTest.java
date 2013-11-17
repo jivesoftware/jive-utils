@@ -1,6 +1,5 @@
 package com.jivesoftware.os.jive.utils.http.client;
 
-import com.jivesoftware.os.jive.utils.http.client.CustomSecureProtocolSocketFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;

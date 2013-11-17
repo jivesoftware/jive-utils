@@ -238,7 +238,7 @@
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
                             <artifactId>checkstyle</artifactId>
-                            <version>5.6.jive2</version>
+                            <version>5.6</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -345,7 +345,7 @@
     </build>
 
     <!-- Global profile definitions. Make sure NOT to include any custom maven plugins as the maven plugins project also inherits
-         these profiles. Custom plugins can be merged into these defaults at a child build-management configuration level. -->
+    these profiles. Custom plugins can be merged into these defaults at a child build-management configuration level. -->
     <profiles>
         <profile>
             <id>all-tests</id>
@@ -423,16 +423,16 @@
         <!--  Inheritance from the pluginManagement section doesn't work for reporting plugins. -->
         <plugins>
             <!--            <plugin>
-                            <groupId>org.codehaus.mojo</groupId>
-                            <artifactId>cobertura-maven-plugin</artifactId>
-                            <version>2.5.2</version>
-                            <configuration>
-                                <formats>
-                                    <format>html</format>
-                                    <format>xml</format>
-                                </formats>
-                            </configuration>
-                        </plugin>-->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.5.2</version>
+                <configuration>
+                    <formats>
+                        <format>html</format>
+                        <format>xml</format>
+                    </formats>
+                </configuration>
+            </plugin>-->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

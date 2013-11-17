@@ -6,7 +6,6 @@
  */
 package com.jivesoftware.os.jive.utils.http.client;
 
-import com.jivesoftware.os.jive.utils.http.client.ApacheHttpClient31BackedHttpClient;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;

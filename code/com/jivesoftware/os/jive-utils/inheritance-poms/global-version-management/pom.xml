@@ -140,13 +140,12 @@
             <dependency>
                 <groupId>oauth.signpost</groupId>
                 <artifactId>signpost-core</artifactId>
-                <version>1.2.1.1</version>
-                <scope>compile</scope>
+                <version>1.2.1.2</version>
             </dependency>
             <dependency>
                 <groupId>oauth.signpost</groupId>
-                <artifactId>signpost-commonshttp3</artifactId>
-                <version>1.2.1.1</version>
+                <artifactId>signpost-commonshttp4</artifactId>
+                <version>1.2.1.2</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
@@ -214,10 +213,9 @@
                 <version>2.2.3</version>
             </dependency>
             <dependency>
-                <groupId>commons-exec</groupId>
+                <groupId>org.apache.commons</groupId>
                 <artifactId>commons-exec</artifactId>
                 <version>1.1</version>
-                <type>jar</type>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
