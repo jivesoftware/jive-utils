@@ -41,7 +41,7 @@ public class Unzip {
         GZIPInputStream gzipInputStream = new GZIPInputStream(new FileInputStream(inFilePath));
 
         File outFile = new File(outputDir, outName);
-        outFile.mkdirs();
+        outFile.getParentFile().mkdirs();
         String outFilePath = outFile.getAbsolutePath();
         OutputStream out = new FileOutputStream(outFilePath);
 

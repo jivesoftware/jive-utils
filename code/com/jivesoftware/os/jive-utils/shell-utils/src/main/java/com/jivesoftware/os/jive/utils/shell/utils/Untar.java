@@ -68,7 +68,7 @@ public class Untar {
                     if (verbose) {
                         System.out.println(String.format("Creating output file %s.", getRelativePath(outputDir, outputFile)));
                     }
-                    outputFile.mkdirs();
+                    outputFile.getParentFile().mkdirs();
                     final OutputStream outputFileStream = new FileOutputStream(outputFile);
                     IOUtils.copy(debInputStream, outputFileStream);
                     outputFileStream.close();
