@@ -18,15 +18,16 @@ package com.jivesoftware.os.server.http.jetty.jersey.endpoints.configuration;
 /**
  *
  */
-public class MainArgsConfigurationFile {
-    private final String configFile;
+public class MainProperties {
 
-    public MainArgsConfigurationFile(String configFile) {
-        this.configFile = configFile;
+    private final String[] propertyFiles;
+
+    public MainProperties(String[] propertyFiles) {
+        this.propertyFiles = propertyFiles;
     }
 
-    public String getConfigFile() {
-        return configFile;
+    public String[] getPropertiesFiles() {
+        return propertyFiles;
     }
 
 }

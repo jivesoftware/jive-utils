@@ -372,18 +372,6 @@ public class RestfulBaseEndpoints {
         public int serverIdleThreads;
     }
 
-    /** Summery of service */
-    @GET
-    @Path("/release")
-    public Response release(@QueryParam("callback") @DefaultValue("") String callback) {
-
-        if (callback.length() > 0) {
-            return ResponseHelper.INSTANCE.jsonpResponse(callback, "deprecated see releaseNotes instead.");
-        } else {
-            return ResponseHelper.INSTANCE.jsonResponse("deprecated see releaseNotes instead.");
-        }
-
-    }
 
     @GET
     @Path("/help")

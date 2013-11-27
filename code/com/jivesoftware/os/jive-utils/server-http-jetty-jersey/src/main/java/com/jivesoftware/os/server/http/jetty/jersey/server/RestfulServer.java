@@ -42,7 +42,6 @@ public class RestfulServer implements ServiceHandle {
 
     private final Server server;
     private final String applicationName;
-
     private final ContextHandlerCollection handlers;
 
     public RestfulServer(int port, String applicationName, int maxNumberOfThreads, int maxQueuedRequests) {
