@@ -41,6 +41,9 @@ public interface Metric {
      * and you don't want to dump a huge object graph. When used with the jive service-logging-http durable logger, then the only properties on the pojos that
      * are serialized are those that specifically are annotated with an
      *
+     * @param key
+     * @param pojo
+     * @return 
      * @JsonProperty annotation.
      */
     public Metric putPojo(String key, Object pojo);

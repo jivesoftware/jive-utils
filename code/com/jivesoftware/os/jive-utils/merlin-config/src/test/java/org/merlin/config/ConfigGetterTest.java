@@ -22,7 +22,7 @@ public class ConfigGetterTest {
 
     @DataProvider
     public Object[][] impl() {
-        ConfigHandler handler = new ConfigHandler(mock(Configuration.class), TestConfig.class, "", mock(ObjectStringMapper.class));
+        ConfigHandler handler = new ConfigHandler(mock(Configuration.class), TestConfig.class, "");
 
         return new Object[][] {
             { handler }

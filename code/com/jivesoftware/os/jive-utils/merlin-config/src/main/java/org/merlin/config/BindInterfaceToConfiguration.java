@@ -27,13 +27,13 @@ import java.util.Map;
  *
  * @author Merlin Hughes
  * @version 0.1, 2007/04/15
+ * @param <T>
  */
 public class BindInterfaceToConfiguration<T extends Config> {
 
     private final Configuration configuration;
     private final Class<T> configInterface;
     private String instanceName = null;
-    private ObjectStringMapper objectStringMapper = null;
 
     public BindInterfaceToConfiguration(Class<T> configInterface) {
         this.configuration = new MapBackConfiguration(new HashMap<String, String>());
@@ -50,22 +50,17 @@ public class BindInterfaceToConfiguration<T extends Config> {
         return this;
     }
 
-    public BindInterfaceToConfiguration<T> setObjectStringMapper(ObjectStringMapper objectStringMapper) {
-        this.objectStringMapper = objectStringMapper;
-        return this;
-    }
-
     public T bind() {
         ClassLoader classLoader = configInterface.getClassLoader();
         Class<?>[] interfaces = { configInterface };
-        InvocationHandler handler = new ConfigHandler(configuration, configInterface, instanceName, objectStringMapper);
+        InvocationHandler handler = new ConfigHandler(configuration, configInterface, instanceName);
         Object proxy = Proxy.newProxyInstance(classLoader, interfaces, handler);
         return configInterface.cast(proxy);
     }
 
     public static final <T extends Config> T bindDefault(Class<T> configurationInterfaceClass) {
-        Map<String, String> expected = new HashMap<String, String>();
-        T config = new BindInterfaceToConfiguration<T>(new MapBackConfiguration(expected), configurationInterfaceClass)
+        Map<String, String> expected = new HashMap<>();
+        T config = new BindInterfaceToConfiguration<>(new MapBackConfiguration(expected), configurationInterfaceClass)
             .bind();
         config.applyDefaults();
         return config;

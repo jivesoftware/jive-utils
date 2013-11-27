@@ -39,19 +39,16 @@ public class ConfigHandler implements InvocationHandler {
 
     private final String _instanceName;
 
-    private final ObjectStringMapper _objectStringMapper;
-
     /**
      * Create a new ConfigHandler instance.
      *
      * @param configuration The configuration source.
      * @param configInterface The configuration interface.
      */
-    public ConfigHandler(Configuration configuration, Class<?> configInterface, String instanceName, ObjectStringMapper objectStringMapper) {
+    public ConfigHandler(Configuration configuration, Class<?> configInterface, String instanceName) {
         _configuration = configuration;
         _configInterface = configInterface;
         _instanceName = instanceName;
-        _objectStringMapper = objectStringMapper;
     }
 
     /**
@@ -74,13 +71,6 @@ public class ConfigHandler implements InvocationHandler {
 
     public String getInstanceName() {
         return _instanceName;
-    }
-
-    public ObjectStringMapper getObjectStringMapper() {
-        if (_objectStringMapper == null) {
-            throw new IllegalStateException("There is no registered objectStringMapper. Please set BindInterfaceToConfiguration.setObjectStringMapper().");
-        }
-        return _objectStringMapper;
     }
 
     /**
