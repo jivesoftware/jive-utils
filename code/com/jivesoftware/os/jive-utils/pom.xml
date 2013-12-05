@@ -18,4 +18,12 @@
         <module>shell-utils</module>
         <module>merlin-config</module>
     </modules>
+<distributionManagement>
+            <repository>
+                <id>modified-thirdparty</id>
+                <name>Jive Internal Repository</name>
+                <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
+            </repository>
+        </distributionManagement>
+
 </project>
