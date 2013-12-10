@@ -6,20 +6,18 @@
     <artifactId>inheritance-poms</artifactId>
     <version>unspecified</version>
     <packaging>pom</packaging>
+    <parent>
+        <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
+        <artifactId>global-repo-management</artifactId>
+        <version>unspecified</version>
+        <relativePath>inheritance-poms/global-repo-management/pom.xml</relativePath>
+    </parent>
     <modules>
-    <module>global-build-management</module>
-	<module>global-plugin-management</module>
-	<module>global-repo-management</module>
-	<module>global-version-management</module>
-	<module>shared-lib-build-management</module>
-	<module>shared-lib-version-management</module>
+        <module>global-build-management</module>
+        <module>global-plugin-management</module>
+        <module>global-repo-management</module>
+        <module>global-version-management</module>
+        <module>shared-lib-build-management</module>
+        <module>shared-lib-version-management</module>
     </modules>
-<distributionManagement>
-            <repository>
-                <id>modified-thirdparty</id>
-                <name>Jive Internal Repository</name>
-                <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
-            </repository>
-        </distributionManagement>
-
 </project>

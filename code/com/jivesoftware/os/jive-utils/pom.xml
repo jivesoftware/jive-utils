@@ -6,6 +6,12 @@
     <artifactId>jive-utils</artifactId>
     <version>unspecified</version>
     <packaging>pom</packaging>
+    <parent>
+        <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
+        <artifactId>global-repo-management</artifactId>
+        <version>unspecified</version>
+        <relativePath>inheritance-poms/global-repo-management/pom.xml</relativePath>
+    </parent>
     <modules>
         <module>inheritance-poms</module>
         <module>base</module>
@@ -18,12 +24,5 @@
         <module>shell-utils</module>
         <module>merlin-config</module>
     </modules>
-<distributionManagement>
-            <repository>
-                <id>modified-thirdparty</id>
-                <name>Jive Internal Repository</name>
-                <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
-            </repository>
-        </distributionManagement>
 
 </project>
