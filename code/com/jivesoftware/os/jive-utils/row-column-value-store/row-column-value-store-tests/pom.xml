@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
+        <artifactId>shared-lib-build-management</artifactId>
+        <version>unspecified</version>
+        <relativePath>../../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
+    </parent>
+    <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+    <artifactId>row-column-value-store-tests</artifactId>
+    <version>unspecified</version>
+    <properties>
+        <module.type>shared_lib</module.type>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils</groupId>
+            <artifactId>base</artifactId>
+            <version>unspecified</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+            <artifactId>row-column-value-store-api</artifactId>
+            <version>unspecified</version>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+</project>

@@ -2,8 +2,8 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.jivesoftware.os.jive</groupId>
-    <artifactId>jive-utils</artifactId>
+    <groupId>com.jivesoftware.os.jive.utils</groupId>
+    <artifactId>row-column-value-store</artifactId>
     <version>unspecified</version>
     <packaging>pom</packaging>
     <parent>
@@ -13,17 +13,13 @@
         <relativePath>inheritance-poms/global-repo-management/pom.xml</relativePath>
     </parent>
     <modules>
-        <module>inheritance-poms</module>
-        <module>base</module>
-        <module>logger</module>
-        <module>ordered-id</module>
-        <module>http-client</module>
-        <module>http-client-rest</module>
-        <module>server-http-jetty-jersey</module>
-        <module>jaxrs-util</module>
-        <module>shell-utils</module>
-        <module>merlin-config</module>
-        <module>row-column-value-store</module>
+        <module>row-column-value-store-api</module>
+        <module>row-column-value-store-hbase</module>
+        <module>row-column-value-store-hbase-ha-tests</module>
+        <module>row-column-value-store-inmemory</module>
+        <module>row-column-value-store-shared</module>
+        <module>row-column-value-store-tests</module>
+        <module>row-column-value-store-marshall-api</module>
+        <module>row-column-value-store-marshall-primatives</module>
     </modules>
-
 </project>
