@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
     <artifactId>global-repo-management</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <packaging>pom</packaging>
 
     <inceptionYear>2013</inceptionYear>
@@ -16,15 +16,10 @@
         </license>
     </licenses>
     <distributionManagement>
-        <repository>
-            <id>modified-thirdparty</id>
-            <name>Jive Internal Repository</name>
-            <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
-        </repository>
-    </distributionManagement>
-    <scm>
-        <url>https://github.com/jivesoftware/jive-utils</url>
-        <connection>scm:git:git://github.com/jivesoftware/jive-utils.git</connection>
-        <developerConnection>scm:git:git@github.com:jivesoftware/jive-utils.git</developerConnection>
-    </scm>
+            <repository>
+                <id>modified-thirdparty</id>
+                <name>Jive Internal Repository</name>
+                <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
+            </repository>
+        </distributionManagement>
 </project>

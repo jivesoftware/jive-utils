@@ -5,13 +5,94 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-repo-management</artifactId>
-        <version>0.1</version>
+        <version>0.2</version>
         <relativePath>../global-repo-management/pom.xml</relativePath>
     </parent>
     <artifactId>global-version-management</artifactId>
     <packaging>pom</packaging>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils</groupId>
+                <artifactId>jaxrs-util</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils</groupId>
+                <artifactId>base</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils</groupId>
+                <artifactId>logger</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils</groupId>
+                <artifactId>http-client</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils</groupId>
+                <artifactId>http-client-rest</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+                <artifactId>row-column-value-store-api</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils</groupId>
+                <artifactId>merlin-config</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+                <artifactId>row-column-value-store-shared</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+                <artifactId>row-column-value-store-tests</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+                <artifactId>row-column-value-store-marshall-primatives</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+                <artifactId>row-column-value-store-marshall-api</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+                <artifactId>row-column-value-store-hbase</artifactId>
+                <version>0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase</artifactId>
+                <version>0.94.6-cdh4.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>2.0.0-cdh4.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-test</artifactId>
+                <version>2.0.0-mr1-cdh4.4.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase</artifactId>
+                <version>0.94.6-cdh4.4.0</version>
+                <classifier>tests</classifier>
+            </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
@@ -73,11 +154,6 @@
                 <version>0.9.8</version>
             </dependency>
             <dependency>
-                <groupId>com.jivesoftware.os.jive.utils</groupId>
-                <artifactId>jaxrs-util</artifactId>
-                <version>0.1</version>
-            </dependency>
-            <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>1</version>
@@ -133,11 +209,6 @@
                 <version>2.4</version>
             </dependency>
             <dependency>
-                <groupId>com.jivesoftware.os.jive.utils</groupId>
-                <artifactId>base</artifactId>
-                <version>0.1</version>
-            </dependency>
-            <dependency>
                 <groupId>oauth.signpost</groupId>
                 <artifactId>signpost-core</artifactId>
                 <version>1.2.1.2</version>
@@ -148,23 +219,10 @@
                 <version>1.2.1.2</version>
             </dependency>
             <dependency>
-                <groupId>com.jivesoftware.os.jive.utils</groupId>
-                <artifactId>logger</artifactId>
-                <version>0.1</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-math</artifactId>
                 <version>2.2</version>
             </dependency>
-
-
-            <dependency>
-                <groupId>com.jivesoftware.os.jive.utils</groupId>
-                <artifactId>http-client</artifactId>
-                <version>0.1</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
@@ -221,12 +279,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>1.2</version>
-                <type>jar</type>
-            </dependency>
-            <dependency>
-                <groupId>com.jivesoftware.os.jive.utils</groupId>
-                <artifactId>http-client-rest</artifactId>
-                <version>0.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
