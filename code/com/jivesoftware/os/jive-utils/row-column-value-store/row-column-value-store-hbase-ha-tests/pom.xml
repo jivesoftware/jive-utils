@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>shared-lib-build-management</artifactId>
-        <version>unspecified</version>
+        <version>0.2-SNAPSHOT</version>
         <relativePath>../../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
     </parent>
     <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
     <artifactId>row-column-value-store-hbase-ha-tests</artifactId>
-    <version>unspecified</version>
+    <version>0.2-SNAPSHOT</version>
     <properties>
         <main.class>com.jivesoftware.os.jive.utils.row.column.value.store.hbase.ha.tests.Main</main.class>
         <module.type>shared_lib</module.type>
@@ -24,26 +24,18 @@
         <dependency>
             <groupId>com.jivesoftware.os.jive.utils</groupId>
             <artifactId>merlin-config</artifactId>
-            <version>0.1</version>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
             <artifactId>row-column-value-store-api</artifactId>
-            <version>unspecified</version>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
             <artifactId>row-column-value-store-hbase</artifactId>
-            <version>unspecified</version>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
             <artifactId>row-column-value-store-marshall-primatives</artifactId>
-            <version>unspecified</version>
-            <type>jar</type>
         </dependency>
     </dependencies>
 </project>

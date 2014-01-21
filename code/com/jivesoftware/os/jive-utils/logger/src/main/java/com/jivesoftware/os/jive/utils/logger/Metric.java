@@ -43,7 +43,7 @@ public interface Metric {
      *
      * @param key
      * @param pojo
-     * @return 
+     * @return
      * @JsonProperty annotation.
      */
     public Metric putPojo(String key, Object pojo);
