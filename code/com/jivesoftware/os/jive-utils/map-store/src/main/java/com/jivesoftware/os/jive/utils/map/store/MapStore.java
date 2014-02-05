@@ -1,0 +1,679 @@
+package com.jivesoftware.os.jive.utils.map.store;
+
+//!! POORLY TESTING
+import com.jivesoftware.os.jive.utils.map.store.extractors.Extractor;
+import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractorStream;
+import com.jivesoftware.os.jive.utils.map.store.pages.Page;
+import com.jivesoftware.os.jive.utils.map.store.pages.PageFactory;
+
+/**
+ * this is a key+payload set that is backed buy a byte array. It is a fixed size set.
+ * It will not grow or shrink. You need to be aware and expect that your system will
+ * cause the set to throw EOverCapacity exceptions. The goal is to create a collection
+ * which will page to and from disk or net as fast as possible. Nothing is synchronized
+ * to make it thread safe you need to synchronize on the byte[].
+ *
+ */
+/**
+ *
+ * @author jonathan
+ */
+public class MapStore {
+
+    public final byte cPageFamily = 1;
+    public final byte cPageVersion = 1;
+    private final int cPageVersionSize = 1;
+    private final int cPageFamilySize = 1;
+    private final int cIdSize = 16;
+    private final int cVersion = 8;
+    private final int cCountSize = 4;
+    private final int cMaxCountSize = 4;
+    private final int cMaxCapacitySize = 4;
+    private final int cKeySizeSize = 4;
+    private final int cPayloadSize = 4;
+    private final int cHeaderSize = cPageFamilySize + cPageVersionSize + cIdSize + cVersion + cCountSize
+        + cMaxCountSize + cMaxCapacitySize + cKeySizeSize + cPayloadSize;
+    private final int cPageFamilyOffset = 0;
+    private final int cPageVersionOffset = cPageFamilySize;
+    private final int cIdOffset = cPageFamilySize + cPageVersionSize;
+    private final int cVersionOffset = cPageFamilySize + cPageVersionSize + cIdSize;
+    private final int cCountOffset = cPageFamilySize + cPageVersionSize + cIdSize + cVersion;
+    private final int cMaxCountOffset = cPageFamilySize + cPageVersionSize + cIdSize + cVersion + cCountSize;
+    private final int cCapacityOffset = cPageFamilySize + cPageVersionSize + cIdSize + cVersion + cCountSize + cMaxCountSize;
+    private final int cKeySizeOffset = cPageFamilySize + cPageVersionSize + cIdSize + cVersion + cCountSize + cMaxCountSize + cMaxCapacitySize;
+    private final int cPayloadOffset = cPageFamilySize + cPageVersionSize + cIdSize + cVersion + cCountSize + cMaxCountSize + cMaxCapacitySize + cKeySizeSize;
+    private final double cSetDensity = 0.6d;
+    private final byte cSkip = -1;
+    private final byte cNull = 0;
+
+    private final Extractor<Integer> extractIndex;
+    private final Extractor<byte[]> extractKey;
+    private final Extractor<byte[]> extractPayload;
+
+    public MapStore(Extractor<Integer> extractIndex, Extractor<byte[]> extractKey, Extractor<byte[]> extractPayload) {
+        this.extractIndex = extractIndex;
+        this.extractKey = extractKey;
+        this.extractPayload = extractPayload;
+    }
+
+    /**
+     *
+     * @param _maxKeys
+     * @param _keySize
+     * @param _payloadSize
+     * @return
+     */
+    final public int cost(int _maxKeys, int _keySize, int _payloadSize) {
+        int maxCapacity = (int) (_maxKeys + (_maxKeys - (_maxKeys * cSetDensity)));
+        // 1+ for head of entry status byte. 0 and -1 reserved
+        int entrySize = 1 + _keySize + _payloadSize;
+        return cHeaderSize + (entrySize * maxCapacity);
+    }
+
+    /**
+     *
+     * @param _keySize
+     * @param _payloadSize
+     * @return
+     */
+    final public long absoluteMaxCount(int _keySize, int _payloadSize) {
+        // 1+ for head of entry status byte. 0 and -1 reserved
+        int entrySize = 1 + _keySize + _payloadSize;
+        long maxCount = (Integer.MAX_VALUE - cHeaderSize) / entrySize;
+        return (long) (maxCount * cSetDensity);
+    }
+
+    /**
+     *
+     * @param pageVersion
+     * @param pageFamily
+     * @param id
+     * @param version
+     * @param maxCount
+     * @param keySize
+     * @param payloadSize
+     * @param factory
+     * @return
+     */
+    final public MapPage allocate(byte pageFamily,
+        byte pageVersion,
+        byte[] id,
+        long version,
+        int maxCount,
+        int keySize,
+        int payloadSize,
+        PageFactory factory) {
+        if (id == null || id.length != cIdSize) {
+            throw new RuntimeException("Malformed ID");
+        }
+        int maxCapacity = (int) (maxCount + (maxCount - (maxCount * cSetDensity)));
+
+        int arraySize = cost(maxCount, keySize, payloadSize);
+        MapPage page = new MapPage(factory.allocate(arraySize));
+        setPageFamily(page, pageFamily);
+        setPageVersion(page, pageVersion);
+        setId(page, id);
+        setVersion(page, version);
+        setCount(page, 0);
+        setMaxCount(page, maxCount);
+        setCapacity(page, maxCapacity); // good to use prime
+        setKeySize(page, keySize);
+        setPayloadSize(page, payloadSize);
+        page.init();
+        return page;
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public byte getFamily(MapPage page) {
+        return page.read(cPageFamilyOffset);
+    }
+
+    /**
+     *
+     * @param page
+     * @param family
+     */
+    final public void setPageFamily(MapPage page, byte family) {
+        page.write(cPageFamilyOffset, family);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public byte getPageVersion(Page page) { //?? hacky
+        return page.read(cPageVersionOffset);
+    }
+
+    /**
+     *
+     * @param page
+     * @param family
+     */
+    final public void setPageVersion(MapPage page, byte family) {
+        page.write(cPageVersionOffset, family);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public byte[] getId(MapPage page) {
+        byte[] id = new byte[cIdSize];
+        page.read(cIdOffset, id, 0, cIdSize);
+        return id;
+    }
+
+    /**
+     *
+     * @param page
+     * @param id
+     */
+    final public void setId(MapPage page, byte[] id) {
+        page.write(cIdSize, id, 0, cIdSize);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public long getVersion(MapPage page) {
+        return page.readLong(cVersionOffset);
+    }
+
+    /**
+     *
+     * @param page
+     * @param version
+     */
+    final public void setVersion(MapPage page, long version) {
+        page.write(cVersionOffset, longBytes(version, new byte[8], 0), 0, 8); // todo  refactor to use writeLong(
+    }
+
+    private byte[] longBytes(long v, byte[] _bytes, int _offset) {
+        _bytes[_offset + 0] = (byte) (v >>> 56);
+        _bytes[_offset + 1] = (byte) (v >>> 48);
+        _bytes[_offset + 2] = (byte) (v >>> 40);
+        _bytes[_offset + 3] = (byte) (v >>> 32);
+        _bytes[_offset + 4] = (byte) (v >>> 24);
+        _bytes[_offset + 5] = (byte) (v >>> 16);
+        _bytes[_offset + 6] = (byte) (v >>> 8);
+        _bytes[_offset + 7] = (byte) v;
+        return _bytes;
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public long getCount(MapPage page) {
+        return page.readInt(cCountOffset);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public long getFreeCount(MapPage page) {
+        return getMaxCount(page) - getCount(page);
+    }
+
+    private void setCount(MapPage page, long v) {
+        page.writeInt(cCountOffset, (int) v);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public int getMaxCount(MapPage page) {
+        return page.readInt(cMaxCountOffset);
+    }
+
+    private void setMaxCount(MapPage page, int v) {
+        page.writeInt(cMaxCountOffset, v);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public int getCapacity(MapPage page) {
+        return page.readInt(cCapacityOffset);
+    }
+
+    private void setCapacity(MapPage page, int v) {
+        page.writeInt(cCapacityOffset, v);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public int getKeySize(MapPage page) {
+        return page.readInt(cKeySizeOffset);
+    }
+
+    private void setKeySize(MapPage page, int v) {
+        page.writeInt(cKeySizeOffset, v);
+    }
+
+    /**
+     *
+     * @param page
+     * @return
+     */
+    final public int getPayloadSize(MapPage page) {
+        return page.readInt(cPayloadOffset);
+    }
+
+    private void setPayloadSize(MapPage page, int v) {
+        page.writeInt(cPayloadOffset, v);
+    }
+
+    private long index(long _arrayIndex, int keySize, int payloadSize) {
+        return cHeaderSize + (1 + keySize + payloadSize) * _arrayIndex;
+    }
+
+    /**
+     *
+     * @param page
+     * @param mode typically 1
+     * @param key
+     * @param payload
+     * @return Returns the index the entry was inserted at or -1
+     */
+    final public int add(MapPage page, byte mode, byte[] key, byte[] payload) {
+        return add(page, mode, key, 0, payload, 0);
+
+    }
+
+    /**
+     *
+     * @param page
+     * @param mode
+     * @param key
+     * @param keyOffset
+     * @param payload
+     * @param _payloadOffset
+     * @return
+     */
+    final public int add(MapPage page, byte mode, byte[] key, int keyOffset, byte[] payload, int _payloadOffset) {
+        int capacity = page.capacity;
+        if (getCount(page) >= page.maxCount) {
+            throw new EOverCapacity(getCount(page) + " > " + page.maxCount);
+        }
+        int keySize = page.keySize;
+        int payloadSize = page.payloadSize;
+        for (long i = hash(key, keyOffset, keySize) % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
+            j < k; // max search for available slot
+            i = (++i) % k, j++) { // wraps around table
+
+            long ai = index(i, keySize, payloadSize);
+            if (page.read((int) ai) == cNull || page.read((int) ai) == cSkip) {
+                page.write((int) ai, mode);
+                page.write((int) (ai + 1), key, keyOffset, keySize);
+                //System.arraycopy(key, 0, page, (int) (ai + 1), keySize);
+                page.write((int) (ai + 1 + keySize), payload, _payloadOffset, payloadSize);
+                //System.arraycopy(_payload, 0, page, (int) (ai + 1 + keySize), payloadSize);
+                setCount(page, getCount(page) + 1);
+                return (int) i;
+            }
+            if (page.equals(ai, keySize, key, keyOffset)) {
+                page.write((int) ai, mode);
+                //byte[] oldPayload = payload(page,ai,keySize,payloadSize);
+                page.write((int) (ai + 1 + keySize), payload, _payloadOffset, payloadSize);
+                //System.arraycopy(_payload, 0, page, (int)(ai+1+keySize), payloadSize);
+                return (int) i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     *
+     * @param page
+     * @param _key
+     * @return
+     */
+    final public boolean contains(MapPage page, byte[] _key) {
+        return get(page, _key, extractIndex) != -1;
+    }
+
+    /**
+     *
+     * @param setIndex
+     * @param keySize
+     * @param payloadSize
+     * @return
+     */
+    final public int startOfKey(int setIndex, int keySize, int payloadSize) {
+        return (int) (index(setIndex, keySize, payloadSize) + 1);
+    }
+
+    /**
+     *
+     * @param page
+     * @param i
+     * @return
+     */
+    final public byte[] getKeyAtIndex(MapPage page, int i) {
+        if (i < 0 || i >= page.capacity) {
+            throw new RuntimeException("Requested index (" + i + ") is out of bounds (0->" + (getCapacity(page) - 1) + ")");
+        }
+        int keySize = page.keySize;
+        int payloadSize = page.payloadSize;
+        long ai = index(i, keySize, payloadSize);
+        if (page.read((int) ai) == cSkip) {
+            return null;
+        }
+        if (page.read((int) ai) == cNull) {
+            return null;
+        }
+        return extractKey.extract(i, ai, keySize, payloadSize, page);
+    }
+
+    /**
+     *
+     * @param setIndex
+     * @param keySize
+     * @param payloadSize
+     * @return
+     */
+    final public int startOfPayload(int setIndex, int keySize, int payloadSize) {
+        long ai = index(setIndex, keySize, payloadSize);
+        return (int) (ai + 1 + keySize);
+    }
+
+    /**
+     *
+     * @param page
+     * @param i
+     * @return
+     */
+    final public byte[] getPayloadAtIndex(MapPage page, int i) {
+        if (i < 0 || i >= page.capacity) {
+            throw new RuntimeException("Requested index (" + i + ") is out of bounds (0->" + (getCapacity(page) - 1) + ")");
+        }
+        int keySize = page.keySize;
+        int payloadSize = page.payloadSize;
+        long ai = index(i, keySize, payloadSize);
+        if (page.read((int) ai) == cSkip) {
+            return null;
+        }
+        if (page.read((int) ai) == cNull) {
+            return null;
+        }
+        return extractPayload.extract(i, ai, keySize, payloadSize, page);
+    }
+
+    /**
+     *
+     * @param page
+     * @param i
+     * @param _destOffset
+     * @param payload
+     * @param _poffset
+     * @param _plength
+     */
+    final public void setPayloadAtIndex(MapPage page, int i, int _destOffset, byte[] payload, int _poffset, int _plength) {
+        if (i < 0 || i >= page.capacity) {
+            throw new RuntimeException("Requested index (" + i + ") is out of bounds (0->" + (getCapacity(page) - 1) + ")");
+        }
+        int keySize = page.keySize;
+        int payloadSize = page.payloadSize;
+        long ai = index(i, keySize, payloadSize);
+        if (page.read((int) ai) == cSkip) {
+            return;
+        }
+        if (page.read((int) ai) == cNull) {
+            return;
+        }
+        page.write((int) (ai + 1 + keySize) + _destOffset, payload, _poffset, _plength);
+    }
+
+    /**
+     *
+     * @param <R>
+     * @param page
+     * @param key
+     * @param extractor
+     * @return
+     */
+    final public <R> R get(MapPage page, byte[] key, Extractor<R> extractor) {
+        return get(page, key, 0, extractor);
+    }
+
+    /**
+     *
+     * @param <R>
+     * @param page
+     * @param key
+     * @param keyOffset
+     * @param extractor
+     * @return
+     */
+    final public <R> R get(MapPage page, byte[] key, int keyOffset, Extractor<R> extractor) {
+        if (key == null || key.length == 0) {
+            return extractor.ifNull();
+        }
+        int capacity = page.capacity;
+        int keySize = page.keySize;
+        int payloadSize = page.payloadSize;
+        for (long i = hash(key, keyOffset, keySize) % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
+            j < k; // max search for key
+            i = (++i) % k, j++) { // wraps around table
+
+            long ai = index(i, keySize, payloadSize);
+            if (page.read((int) ai) == cSkip) {
+                continue;
+            }
+            if (page.read((int) ai) == cNull) {
+                return extractor.ifNull();
+            }
+            if (page.equals(ai, keySize, key, keyOffset)) {
+                return extractor.extract((int) i, ai, keySize, payloadSize, page);
+            }
+        }
+        return extractor.ifNull();
+    }
+
+    /**
+     *
+     * @param page
+     * @param key
+     * @return
+     */
+    final public byte[] remove(MapPage page, byte[] key) {
+        return remove(page, key, 0);
+
+    }
+
+    /**
+     *
+     * @param page
+     * @param key
+     * @param keyOffset
+     * @return
+     */
+    final public byte[] remove(MapPage page, byte[] key, int keyOffset) {
+        if (key == null || key.length == 0) {
+            return null;
+        }
+        int capacity = page.capacity;
+        int keySize = page.keySize;
+        int payloadSize = page.payloadSize;
+        for (long i = hash(key, 0, key.length) % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
+            j < k; // max search for key
+            i = (++i) % k, j++) { // wraps around table
+
+            long ai = index(i, keySize, payloadSize);
+            if (page.read((int) ai) == cSkip) {
+                continue;
+            }
+            if (page.read((int) ai) == cNull) {
+                return null;
+            }
+            if (page.equals(ai, keySize, key, keyOffset)) {
+                byte[] removedPayload = extractPayload.extract((int) i, ai, keySize, payloadSize, page);
+                long next = (i + 1) % k;
+                if (page.read((int) index(next, keySize, payloadSize)) == cNull) {
+                    for (long z = i; z >= 0; z--) {
+                        if (page.read((int) index(z, keySize, payloadSize)) != cSkip) {
+                            break;
+                        }
+                        page.write((int) index(z, keySize, payloadSize), cNull);
+                    }
+                    page.write((int) index(i, keySize, payloadSize), cNull);
+                } else {
+                    page.write((int) index(i, keySize, payloadSize), cSkip);
+                }
+                setCount(page, getCount(page) - 1);
+                return removedPayload;
+            }
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @param <R>
+     * @param page
+     * @param _extractor
+     * @param _callback
+     */
+    final public <R> void get(MapPage page, Extractor<R> _extractor, ExtractorStream<R> _callback) {
+        try {
+            int capacity = page.capacity;
+            int keySize = page.keySize;
+            int payloadSize = page.payloadSize;
+            long count = getCount(page);
+            for (int i = 0; i < capacity; i++) {
+                long ai = index(i, keySize, payloadSize);
+                if (page.read((int) ai) == cNull) {
+                    continue;
+                }
+                if (page.read((int) ai) == cSkip) {
+                    continue;
+                }
+                count--;
+                R v = _extractor.extract(i, ai, keySize, payloadSize, page);
+                R back = _callback.stream(v);
+                if (back != v) {
+                    break;
+                }
+                if (count < 0) {
+                    break;
+                }
+            }
+            _callback.stream(null); // EOS
+        } catch (Exception x) {
+            x.printStackTrace();
+        }
+    }
+
+    /**
+     * Used to gow or shrink a set
+     * @param from
+     * @param to
+     */
+    final public void copyTo(MapPage from, MapPage to) {
+        int fcapacity = from.capacity;
+        int fkeySize = from.keySize;
+        int fpayloadSize = from.payloadSize;
+        long fcount = getCount(from);
+
+        int tkeySize = to.keySize;
+        int tpayloadSize = to.payloadSize;
+        long tcount = getCount(to);
+        int tmaxCount = getMaxCount(to);
+
+        if (fkeySize != tkeySize) {
+            throw new RuntimeException("Miss matched keySizes " + fkeySize + " vs " + tkeySize);
+        }
+        if (fpayloadSize != tpayloadSize) {
+            throw new RuntimeException("Miss matched payloadSize" + fpayloadSize + " vs " + tpayloadSize);
+        }
+        if (tmaxCount - tcount < fcount) {
+            throw new RuntimeException("Insufficient room " + tmaxCount + " vs " + fcount);
+        }
+
+        for (int i = 0; i < fcapacity; i++) {
+            long ai = index(i, fkeySize, fpayloadSize);
+            byte mode = from.read((int) ai);
+            if (mode == cNull) {
+                continue;
+            }
+            if (mode == cSkip) {
+                continue;
+            }
+            fcount--;
+            add(to, mode, extractKey.extract(i, ai, fkeySize, fpayloadSize, from), extractPayload.extract(i, ai, fkeySize, fpayloadSize, from));
+
+            if (fcount < 0) {
+                break;
+            }
+        }
+    }
+
+    /**
+     *
+     * @param page
+     */
+    final public void toSysOut(MapPage page) {
+        try {
+            int capacity = page.capacity;
+            int keySize = page.keySize;
+            int payloadSize = page.payloadSize;
+            for (int i = 0; i < capacity; i++) {
+                long ai = index(i, keySize, payloadSize);
+                if (page.read((int) ai) == cNull) {
+                    System.out.println("\t" + i + "): null");
+                    continue;
+                }
+                if (page.read((int) ai) == cSkip) {
+                    System.out.println("\t" + i + "): skip");
+                    continue;
+                }
+                System.out.println("\t" + i + "): "
+                    + extractKey.extract(i, ai, keySize, payloadSize, page) + "->"
+                    + extractPayload.extract(i, ai, keySize, payloadSize, page));
+            }
+        } catch (Exception x) {
+            x.printStackTrace();
+        }
+    }
+
+    /**
+     *
+     * @param _key
+     * @param _start
+     * @param _length
+     * @return
+     */
+    final public long hash(byte[] _key, int _start, int _length) {
+        long hash = 0;
+        long randMult = 0x5DEECE66DL;
+        long randAdd = 0xBL;
+        long randMask = (1L << 48) - 1;
+        long seed = _length;
+        for (int i = 0; i < _length; i++) {
+            long x = (seed * randMult + randAdd) & randMask;
+            seed = x;
+            hash += (_key[_start + i] + 128) * x;
+        }
+        return hash;
+    }
+}

@@ -24,6 +24,8 @@
         <module>shell-utils</module>
         <module>merlin-config</module>
         <module>row-column-value-store</module>
+        <module>chunk-store</module>
+        <module>map-store</module>
     </modules>
 
 </project>
