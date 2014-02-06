@@ -1,36 +1,36 @@
-
 package com.jivesoftware.os.jive.utils.chunk.store.filers;
-
 
 import java.io.Closeable;
 import java.io.IOException;
 
 /**
- *
- * @author Administrator
- */
-public interface IWriteable extends Closeable {
+
+@author jonathan.colt
+*/
+public interface Readable extends Closeable {
+
+    /**
+     *
+     * @return
+     * @throws IOException
+     */
+    public int read() throws IOException;
 
     /**
      *
      * @param b
+     * @return
      * @throws IOException
      */
-    public void write(int b) throws IOException;
-
-    /**
-     *
-     * @param b
-     * @throws IOException
-     */
-    public void write(byte b[]) throws IOException;
+    public int read(byte b[]) throws IOException;
 
     /**
      *
      * @param b
      * @param _offset
      * @param _len
+     * @return
      * @throws IOException
      */
-    public void write(byte b[], int _offset, int _len) throws IOException;
+    public int read(byte b[], int _offset, int _len) throws IOException;
 }

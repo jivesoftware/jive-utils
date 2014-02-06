@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
  *
  * @author jonathan.colt
  */
-public class ByteBufferBackedFiler implements IFiler {
+public class ByteBufferBackedFiler implements Filer {
 
     private final Object lock;
     private final ByteBuffer buffer;

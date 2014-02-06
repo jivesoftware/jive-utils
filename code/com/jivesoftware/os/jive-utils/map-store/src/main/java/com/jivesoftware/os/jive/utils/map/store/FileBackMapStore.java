@@ -28,7 +28,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
     private final int payloadSize;
     private final int initialPageCapacity;
     private final StripingLocksProvider<K> keyLocksProvider;
-    private final Map<String, MapPage> indexPages;
+    private final Map<String, MapChunk> indexPages;
     private final V returnWhenGetReturnsNull;
 
     public FileBackMapStore(String pathToPartitions,
@@ -58,7 +58,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
             return;
         }
         synchronized (keyLocksProvider.lock(key)) {
-            MapPage index = index(key);
+            MapChunk index = index(key);
 
             try {
                 // grow the set if needed;
@@ -66,7 +66,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                     int newSize = index.maxCount * 2;
 
                     File temporaryNewKeyIndexParition = createIndexTempFile(key);
-                    MapPage newIndex = mmap(temporaryNewKeyIndexParition, newSize);
+                    MapChunk newIndex = mmap(temporaryNewKeyIndexParition, newSize);
                     mapStore.copyTo(index, newIndex);
                     // TODO: implement to clean up
                     //index.close();
@@ -102,7 +102,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
 
         byte[] keyBytes = keyBytes(key);
         synchronized (keyLocksProvider.lock(key)) {
-            MapPage index = index(key);
+            MapChunk index = index(key);
             mapStore.remove(index, keyBytes);
         }
     }
@@ -129,7 +129,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         if (key == null) {
             return returnWhenGetReturnsNull;
         }
-        MapPage index = index(key);
+        MapChunk index = index(key);
         byte[] keyBytes = keyBytes(key);
         byte[] payload;
         synchronized (keyLocksProvider.lock(key)) {
@@ -146,10 +146,10 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         return FileUtils.sizeOfDirectory(new File(pathToPartitions)) / payloadSize;
     }
 
-    private MapPage index(K key) throws KeyValueStoreException {
+    private MapChunk index(K key) throws KeyValueStoreException {
         try {
             String pageId = keyPartition(key);
-            MapPage got = indexPages.get(pageId);
+            MapChunk got = indexPages.get(pageId);
             if (got != null) {
                 return got;
             }
@@ -164,7 +164,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 if (!file.exists()) {
                     // initializing in a temporary file prevents accidental corruption if the thread dies during mmap
                     File temporaryNewKeyIndexParition = createIndexTempFile(key);
-                    MapPage newIndex = mmap(temporaryNewKeyIndexParition, initialPageCapacity);
+                    MapChunk newIndex = mmap(temporaryNewKeyIndexParition, initialPageCapacity);
 
                     File createIndexSetFile = createIndexSetFile(key);
                     FileUtils.copyFile(temporaryNewKeyIndexParition, createIndexSetFile);
@@ -182,15 +182,15 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         }
     }
 
-    private MapPage mmap(File file, int maxCapacity) throws FileNotFoundException, IOException {
+    private MapChunk mmap(File file, int maxCapacity) throws FileNotFoundException, IOException {
         FileBackedMemMappedByteBufferChunkFactory pageFactory = new FileBackedMemMappedByteBufferChunkFactory(file);
         if (file.exists()) {
             MappedByteBuffer buffer = pageFactory.open();
-            MapPage page = new MapPage(new ByteBufferChunk(buffer));
+            MapChunk page = new MapChunk(new ByteBufferChunk(buffer));
             page.init();
             return page;
         } else {
-            MapPage set = mapStore.allocate((byte) 0, (byte) 0, new byte[16], 0, maxCapacity, keySize,
+            MapChunk set = mapStore.allocate((byte) 0, (byte) 0, new byte[16], 0, maxCapacity, keySize,
                 payloadSize,
                 pageFactory);
             return set;

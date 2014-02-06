@@ -52,7 +52,7 @@ public class MapStoreTest {
         int payloadSize = 4;
 
         System.out.println("Upper Bound Max Count = " + pset.absoluteMaxCount(keySize, payloadSize));
-        MapPage set = pset.allocate((byte) 0, (byte) 0, new byte[16], 0, _maxSize, keySize, payloadSize, factory);
+        MapChunk set = pset.allocate((byte) 0, (byte) 0, new byte[16], 0, _maxSize, keySize, payloadSize, factory);
         long seed = System.currentTimeMillis();
         int maxCapacity = pset.getCapacity(set);
         System.out.println("ByteSet size in mb for (" + _maxSize + ") is " + (set.size() / 1024d / 1024d) + "mb");

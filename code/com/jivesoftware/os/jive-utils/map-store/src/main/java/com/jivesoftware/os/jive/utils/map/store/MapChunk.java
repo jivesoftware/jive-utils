@@ -12,12 +12,11 @@ import java.nio.ByteBuffer;
  *
  * @author jonathan
  */
-public class MapPage extends ChunkProxy {
+public class MapChunk extends ChunkProxy {
 
     /**
      *
      */
-    static final public MapPage cNull = new MapPage(new ByteBufferChunk(ByteBuffer.allocate(0)));
     int keySize; // read only
     int payloadSize; // read only
     int capacity; // read only
@@ -27,7 +26,7 @@ public class MapPage extends ChunkProxy {
      *
      * @param page
      */
-    public MapPage(Chunk page) {
+    public MapChunk(Chunk page) {
         super(page);
     }
 
@@ -37,10 +36,10 @@ public class MapPage extends ChunkProxy {
     @Override
     public void init() {
         super.init();
-        MapStore pset = new MapStore(new ExtractIndex(), new ExtractKey(), new ExtractPayload());
-        keySize = pset.getKeySize(this);
-        payloadSize = pset.getPayloadSize(this);
-        maxCount = pset.getMaxCount(this);
-        capacity = pset.getCapacity(this);
+        MapStore mapStore = new MapStore(new ExtractIndex(), new ExtractKey(), new ExtractPayload());
+        keySize = mapStore.getKeySize(this);
+        payloadSize = mapStore.getPayloadSize(this);
+        maxCount = mapStore.getMaxCount(this);
+        capacity = mapStore.getCapacity(this);
     }
 }

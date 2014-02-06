@@ -6,6 +6,6 @@ package com.jivesoftware.os.jive.utils.chunk.store;
  */
 public interface ChunkIdStream {
 
-    public long stream(long chunkFP);
+    long stream(long chunkFP);
 
 }

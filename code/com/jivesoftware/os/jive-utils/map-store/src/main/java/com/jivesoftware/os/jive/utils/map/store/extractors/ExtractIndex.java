@@ -1,6 +1,6 @@
 package com.jivesoftware.os.jive.utils.map.store.extractors;
 
-import com.jivesoftware.os.jive.utils.map.store.MapPage;
+import com.jivesoftware.os.jive.utils.map.store.MapChunk;
 
 /**
  *
@@ -9,7 +9,7 @@ import com.jivesoftware.os.jive.utils.map.store.MapPage;
 public class ExtractIndex implements Extractor<Integer> {
 
     @Override
-    public Integer extract(int i, long _startIndex, int _keySize, int _payloadSize, MapPage page) {
+    public Integer extract(int i, long _startIndex, int _keySize, int _payloadSize, MapChunk page) {
         return i;
     }
 

@@ -19,13 +19,13 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static long copy(IReadable _from, IWriteable _to, long _bufferSize) throws Exception {
+    public static long copy(Readable _from, Writeable _to, long _bufferSize) throws Exception {
         long byteCount = _bufferSize;
         if (_bufferSize < 1) {
             byteCount = 1024 * 1024; //1MB
         }
         byte[] chunk = new byte[(int) byteCount];
-        int bytesRead = -1;
+        int bytesRead;
         long size = 0;
         while ((bytesRead = _from.read(chunk)) > -1) {
             _to.write(chunk, 0, bytesRead);
@@ -44,7 +44,7 @@ public class FilerIO {
     public static byte[] toByteArray(InputStream _in, int _bufferSize) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buffer = new byte[_bufferSize];
-        int bytesRead = -1;
+        int bytesRead;
         while ((bytesRead = _in.read(buffer)) > -1) {
             out.write(buffer, 0, bytesRead);
         }
@@ -78,7 +78,7 @@ public class FilerIO {
      * @param _line
      * @throws IOException
      */
-    public static void writeLine(IWriteable _filer, String _line) throws IOException {
+    public static void writeLine(Writeable _filer, String _line) throws IOException {
         _filer.write((_line + "\n").getBytes());
     }
 
@@ -89,7 +89,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void write(IWriteable _filer, int b, String fieldName) throws IOException {
+    public static void write(Writeable _filer, int b, String fieldName) throws IOException {
         _filer.write(b);
     }
 
@@ -100,7 +100,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void write(IWriteable _filer, byte[] bytes,
+    public static void write(Writeable _filer, byte[] bytes,
         String fieldName) throws IOException {
         _filer.write(bytes);
     }
@@ -112,7 +112,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeBoolean(IWriteable _filer, boolean v,
+    public static void writeBoolean(Writeable _filer, boolean v,
         String fieldName) throws IOException {
         _filer.write(v ? 1 : 0);
     }
@@ -124,7 +124,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeByte(IWriteable _filer, int v,
+    public static void writeByte(Writeable _filer, int v,
         String fieldName) throws IOException {
         _filer.write(v);
     }
@@ -136,7 +136,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeShort(IWriteable _filer, int v,
+    public static void writeShort(Writeable _filer, int v,
         String fieldName) throws IOException {
         _filer.write(new byte[]{
             (byte) (v >>> 8),
@@ -151,7 +151,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeChar(IWriteable _filer, int v,
+    public static void writeChar(Writeable _filer, int v,
         String fieldName) throws IOException {
         _filer.write(new byte[]{
             (byte) (v >>> 8),
@@ -166,7 +166,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeInt(IWriteable _filer, int v, String fieldName) throws IOException {
+    public static void writeInt(Writeable _filer, int v, String fieldName) throws IOException {
         _filer.write(new byte[]{
             (byte) (v >>> 24),
             (byte) (v >>> 16),
@@ -182,7 +182,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeLong(IWriteable _filer, long v,
+    public static void writeLong(Writeable _filer, long v,
         String fieldName) throws IOException {
         _filer.write(new byte[]{
             (byte) (v >>> 56),
@@ -256,7 +256,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeFloat(IWriteable _filer, float v,
+    public static void writeFloat(Writeable _filer, float v,
         String fieldName) throws IOException {
         writeInt(_filer, Float.floatToIntBits(v), fieldName);
     }
@@ -268,7 +268,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeDouble(IWriteable _filer, double v,
+    public static void writeDouble(Writeable _filer, double v,
         String fieldName) throws IOException {
         writeLong(_filer, Double.doubleToLongBits(v), fieldName);
     }
@@ -279,7 +279,7 @@ public class FilerIO {
      * @param l
      * @throws IOException
      */
-    public static void writeLength(IWriteable _filer, int l) throws IOException {
+    public static void writeLength(Writeable _filer, int l) throws IOException {
         writeInt(_filer, l, "length");
     }
 
@@ -290,7 +290,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeBooleanArray(IWriteable _filer,
+    public static void writeBooleanArray(Writeable _filer,
         boolean[] array, String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -313,7 +313,7 @@ public class FilerIO {
      * @param array
      * @throws IOException
      */
-    public static void write(IWriteable _filer, byte[] array) throws IOException {
+    public static void write(Writeable _filer, byte[] array) throws IOException {
         _filer.write(array);
     }
 
@@ -324,7 +324,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeByteArray(IWriteable _filer, byte[] array,
+    public static void writeByteArray(Writeable _filer, byte[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -348,7 +348,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeByteArray(IWriteable _filer, byte[] array,
+    public static void writeByteArray(Writeable _filer, byte[] array,
         int _start, int _len, String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -370,7 +370,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeCharArray(IWriteable _filer, char[] array,
+    public static void writeCharArray(Writeable _filer, char[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -399,7 +399,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeShortArray(IWriteable _filer, short[] array,
+    public static void writeShortArray(Writeable _filer, short[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -428,7 +428,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeIntArray(IWriteable _filer, int[] array,
+    public static void writeIntArray(Writeable _filer, int[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -459,7 +459,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeStringArray(IWriteable _filer, Object[] array,
+    public static void writeStringArray(Writeable _filer, Object[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -492,7 +492,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeLongArray(IWriteable _filer, long[] array,
+    public static void writeLongArray(Writeable _filer, long[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -528,7 +528,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeLongArray(IWriteable _filer, long[] array,
+    public static void writeLongArray(Writeable _filer, long[] array,
         int _start, int _len, String fieldName) throws IOException {
         writeLength(_filer, _len);
         if (_len < 0) {
@@ -556,7 +556,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeFloatArray(IWriteable _filer, float[] array,
+    public static void writeFloatArray(Writeable _filer, float[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -586,7 +586,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeDoubleArray(IWriteable _filer, double[] array,
+    public static void writeDoubleArray(Writeable _filer, double[] array,
         String fieldName) throws IOException {
         int len;
         if (array == null) {
@@ -620,7 +620,7 @@ public class FilerIO {
      * @param fieldName
      * @throws IOException
      */
-    public static void writeString(IWriteable _filer, String s,
+    public static void writeString(Writeable _filer, String s,
         String fieldName) throws IOException {
         if (s == null) {
             s = "";
@@ -634,7 +634,7 @@ public class FilerIO {
      * @param _tag
      * @throws Exception
      */
-    public static void readBegin(IReadable _filer, String _tag) throws Exception {
+    public static void readBegin(Readable _filer, String _tag) throws Exception {
     }
 
     /**
@@ -643,7 +643,7 @@ public class FilerIO {
      * @param _tag
      * @throws Exception
      */
-    public static void readEnd(IReadable _filer, String _tag) throws Exception {
+    public static void readEnd(Readable _filer, String _tag) throws Exception {
     }
 
     /**
@@ -652,7 +652,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static int readLength(IReadable _filer) throws IOException {
+    public static int readLength(Readable _filer) throws IOException {
         return readInt(_filer, "length");
     }
 
@@ -663,7 +663,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static boolean[] readBooleanArray(IReadable _filer,
+    public static boolean[] readBooleanArray(Readable _filer,
         String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
@@ -687,7 +687,7 @@ public class FilerIO {
      * @param array
      * @throws IOException
      */
-    public static void read(IReadable _filer, byte[] array) throws IOException {
+    public static void read(Readable _filer, byte[] array) throws IOException {
         _filer.read(array);
     }
 
@@ -698,7 +698,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static byte[] readByteArray(IReadable _filer, String fieldName) throws IOException {
+    public static byte[] readByteArray(Readable _filer, String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
             return null;
@@ -718,7 +718,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static char[] readCharArray(IReadable _filer, String fieldName) throws IOException {
+    public static char[] readCharArray(Readable _filer, String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
             return null;
@@ -748,7 +748,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static short[] readShortArray(IReadable _filer,
+    public static short[] readShortArray(Readable _filer,
         String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
@@ -779,7 +779,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static int[] readIntArray(IReadable _filer, String fieldName) throws IOException {
+    public static int[] readIntArray(Readable _filer, String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
             return null;
@@ -813,7 +813,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static String[] readStringArray(IReadable _filer,
+    public static String[] readStringArray(Readable _filer,
         String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
@@ -836,7 +836,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static long[] readLongArray(IReadable _filer, String fieldName) throws IOException {
+    public static long[] readLongArray(Readable _filer, String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
             return null;
@@ -878,7 +878,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static float[] readFloatArray(IReadable _filer,
+    public static float[] readFloatArray(Readable _filer,
         String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
@@ -913,7 +913,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static double[] readDoubleArray(IReadable _filer,
+    public static double[] readDoubleArray(Readable _filer,
         String fieldName) throws IOException {
         int len = readLength(_filer);
         if (len < 0) {
@@ -956,7 +956,7 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static String readText(IReadable _filer, String fieldName) throws Exception {
+    public static String readText(Readable _filer, String fieldName) throws Exception {
         return new String(readCharArray(_filer, fieldName));
     }
 
@@ -967,7 +967,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static String readString(IReadable _filer, String fieldName) throws IOException {
+    public static String readString(Readable _filer, String fieldName) throws IOException {
         return new String(readCharArray(_filer, fieldName));
     }
 
@@ -979,7 +979,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static boolean readBoolean(IReadable _filer, String fieldName) throws IOException {
+    public static boolean readBoolean(Readable _filer, String fieldName) throws IOException {
         int v = _filer.read();
         if (v < 0) {
             throw new EOFException();
@@ -994,7 +994,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static byte readByte(IReadable _filer, String fieldName) throws IOException {
+    public static byte readByte(Readable _filer, String fieldName) throws IOException {
         return (byte) _filer.read();
     }
 
@@ -1005,7 +1005,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static int readUnsignedByte(IReadable _filer, String fieldName) throws IOException {
+    public static int readUnsignedByte(Readable _filer, String fieldName) throws IOException {
         return _filer.read();
     }
 
@@ -1016,7 +1016,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static short readShort(IReadable _filer, String fieldName) throws IOException {
+    public static short readShort(Readable _filer, String fieldName) throws IOException {
         byte[] bytes = new byte[2];
         _filer.read(bytes);
         short v = 0;
@@ -1033,7 +1033,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static int readUnsignedShort(IReadable _filer, String fieldName) throws IOException {
+    public static int readUnsignedShort(Readable _filer, String fieldName) throws IOException {
         byte[] bytes = new byte[2];
         _filer.read(bytes);
         int v = 0;
@@ -1050,7 +1050,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static char readChar(IReadable _filer, String fieldName) throws IOException {
+    public static char readChar(Readable _filer, String fieldName) throws IOException {
         byte[] bytes = new byte[2];
         _filer.read(bytes);
         char v = 0;
@@ -1080,7 +1080,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static int readInt(IReadable _filer, String fieldName) throws IOException {
+    public static int readInt(Readable _filer, String fieldName) throws IOException {
         byte[] bytes = new byte[4];
         _filer.read(bytes);
         int v = 0;
@@ -1101,7 +1101,7 @@ public class FilerIO {
      * @return
      * @throws IOException
      */
-    public static long readLong(IReadable _filer, String fieldName) throws IOException {
+    public static long readLong(Readable _filer, String fieldName) throws IOException {
         byte[] bytes = new byte[8];
         _filer.read(bytes);
         long v = 0;
@@ -1131,7 +1131,7 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static float readFloat(IReadable _filer, String fieldName) throws Exception {
+    public static float readFloat(Readable _filer, String fieldName) throws Exception {
         byte[] bytes = new byte[4];
         _filer.read(bytes);
         int v = 0;
@@ -1184,7 +1184,7 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static double readDouble(IReadable _filer, String fieldName) throws Exception {
+    public static double readDouble(Readable _filer, String fieldName) throws Exception {
         byte[] bytes = new byte[8];
         _filer.read(bytes);
         long v = 0;
@@ -1222,7 +1222,7 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static String readLine(IFiler _filer, String fieldName) throws Exception {
+    public static String readLine(Filer _filer, String fieldName) throws Exception {
         StringBuilder input = new StringBuilder();
         int c = -1;
         boolean eol = false;

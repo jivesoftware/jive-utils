@@ -9,12 +9,10 @@ import com.jivesoftware.os.jive.utils.map.store.pages.ChunkFactory;
 /**
  * this is a key+payload set that is backed buy a byte array. It is a fixed size set.
  * It will not grow or shrink. You need to be aware and expect that your system will
- * cause the set to throw EOverCapacity exceptions. The goal is to create a collection
+ * cause the set to throw OverCapacityExceptions. The goal is to create a collection
  * which will page to and from disk or net as fast as possible. Nothing is synchronized
- * to make it thread safe you need to synchronize on the byte[].
+ * to make it thread safe you need to synchronize higher up.
  *
- */
-/**
  *
  * @author jonathan
  */
@@ -95,7 +93,7 @@ public class MapStore {
      * @param factory
      * @return
      */
-    final public MapPage allocate(byte pageFamily,
+    final public MapChunk allocate(byte pageFamily,
         byte pageVersion,
         byte[] id,
         long version,
@@ -109,7 +107,7 @@ public class MapStore {
         int maxCapacity = (int) (maxCount + (maxCount - (maxCount * cSetDensity)));
 
         int arraySize = cost(maxCount, keySize, payloadSize);
-        MapPage page = new MapPage(factory.allocate(arraySize));
+        MapChunk page = new MapChunk(factory.allocate(arraySize));
         setPageFamily(page, pageFamily);
         setPageVersion(page, pageVersion);
         setId(page, id);
@@ -128,7 +126,7 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public byte getFamily(MapPage page) {
+    final public byte getFamily(MapChunk page) {
         return page.read(cPageFamilyOffset);
     }
 
@@ -137,7 +135,7 @@ public class MapStore {
      * @param page
      * @param family
      */
-    final public void setPageFamily(MapPage page, byte family) {
+    final public void setPageFamily(MapChunk page, byte family) {
         page.write(cPageFamilyOffset, family);
     }
 
@@ -155,7 +153,7 @@ public class MapStore {
      * @param page
      * @param family
      */
-    final public void setPageVersion(MapPage page, byte family) {
+    final public void setPageVersion(MapChunk page, byte family) {
         page.write(cPageVersionOffset, family);
     }
 
@@ -164,7 +162,7 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public byte[] getId(MapPage page) {
+    final public byte[] getId(MapChunk page) {
         byte[] id = new byte[cIdSize];
         page.read(cIdOffset, id, 0, cIdSize);
         return id;
@@ -175,7 +173,7 @@ public class MapStore {
      * @param page
      * @param id
      */
-    final public void setId(MapPage page, byte[] id) {
+    final public void setId(MapChunk page, byte[] id) {
         page.write(cIdSize, id, 0, cIdSize);
     }
 
@@ -184,7 +182,7 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public long getVersion(MapPage page) {
+    final public long getVersion(MapChunk page) {
         return page.readLong(cVersionOffset);
     }
 
@@ -193,7 +191,7 @@ public class MapStore {
      * @param page
      * @param version
      */
-    final public void setVersion(MapPage page, long version) {
+    final public void setVersion(MapChunk page, long version) {
         page.write(cVersionOffset, longBytes(version, new byte[8], 0), 0, 8); // todo  refactor to use writeLong(
     }
 
@@ -214,7 +212,7 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public long getCount(MapPage page) {
+    final public long getCount(MapChunk page) {
         return page.readInt(cCountOffset);
     }
 
@@ -223,11 +221,11 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public long getFreeCount(MapPage page) {
+    final public long getFreeCount(MapChunk page) {
         return getMaxCount(page) - getCount(page);
     }
 
-    private void setCount(MapPage page, long v) {
+    private void setCount(MapChunk page, long v) {
         page.writeInt(cCountOffset, (int) v);
     }
 
@@ -236,11 +234,11 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public int getMaxCount(MapPage page) {
+    final public int getMaxCount(MapChunk page) {
         return page.readInt(cMaxCountOffset);
     }
 
-    private void setMaxCount(MapPage page, int v) {
+    private void setMaxCount(MapChunk page, int v) {
         page.writeInt(cMaxCountOffset, v);
     }
 
@@ -249,11 +247,11 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public int getCapacity(MapPage page) {
+    final public int getCapacity(MapChunk page) {
         return page.readInt(cCapacityOffset);
     }
 
-    private void setCapacity(MapPage page, int v) {
+    private void setCapacity(MapChunk page, int v) {
         page.writeInt(cCapacityOffset, v);
     }
 
@@ -262,11 +260,11 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public int getKeySize(MapPage page) {
+    final public int getKeySize(MapChunk page) {
         return page.readInt(cKeySizeOffset);
     }
 
-    private void setKeySize(MapPage page, int v) {
+    private void setKeySize(MapChunk page, int v) {
         page.writeInt(cKeySizeOffset, v);
     }
 
@@ -275,11 +273,11 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public int getPayloadSize(MapPage page) {
+    final public int getPayloadSize(MapChunk page) {
         return page.readInt(cPayloadOffset);
     }
 
-    private void setPayloadSize(MapPage page, int v) {
+    private void setPayloadSize(MapChunk page, int v) {
         page.writeInt(cPayloadOffset, v);
     }
 
@@ -295,7 +293,7 @@ public class MapStore {
      * @param payload
      * @return Returns the index the entry was inserted at or -1
      */
-    final public int add(MapPage page, byte mode, byte[] key, byte[] payload) {
+    final public int add(MapChunk page, byte mode, byte[] key, byte[] payload) {
         return add(page, mode, key, 0, payload, 0);
 
     }
@@ -310,7 +308,7 @@ public class MapStore {
      * @param _payloadOffset
      * @return
      */
-    final public int add(MapPage page, byte mode, byte[] key, int keyOffset, byte[] payload, int _payloadOffset) {
+    final public int add(MapChunk page, byte mode, byte[] key, int keyOffset, byte[] payload, int _payloadOffset) {
         int capacity = page.capacity;
         if (getCount(page) >= page.maxCount) {
             throw new OverCapacityException(getCount(page) + " > " + page.maxCount);
@@ -348,7 +346,7 @@ public class MapStore {
      * @param _key
      * @return
      */
-    final public boolean contains(MapPage page, byte[] _key) {
+    final public boolean contains(MapChunk page, byte[] _key) {
         return get(page, _key, extractIndex) != -1;
     }
 
@@ -369,7 +367,7 @@ public class MapStore {
      * @param i
      * @return
      */
-    final public byte[] getKeyAtIndex(MapPage page, int i) {
+    final public byte[] getKeyAtIndex(MapChunk page, int i) {
         if (i < 0 || i >= page.capacity) {
             throw new RuntimeException("Requested index (" + i + ") is out of bounds (0->" + (getCapacity(page) - 1) + ")");
         }
@@ -403,7 +401,7 @@ public class MapStore {
      * @param i
      * @return
      */
-    final public byte[] getPayloadAtIndex(MapPage page, int i) {
+    final public byte[] getPayloadAtIndex(MapChunk page, int i) {
         if (i < 0 || i >= page.capacity) {
             throw new RuntimeException("Requested index (" + i + ") is out of bounds (0->" + (getCapacity(page) - 1) + ")");
         }
@@ -428,7 +426,7 @@ public class MapStore {
      * @param _poffset
      * @param _plength
      */
-    final public void setPayloadAtIndex(MapPage page, int i, int _destOffset, byte[] payload, int _poffset, int _plength) {
+    final public void setPayloadAtIndex(MapChunk page, int i, int _destOffset, byte[] payload, int _poffset, int _plength) {
         if (i < 0 || i >= page.capacity) {
             throw new RuntimeException("Requested index (" + i + ") is out of bounds (0->" + (getCapacity(page) - 1) + ")");
         }
@@ -452,7 +450,7 @@ public class MapStore {
      * @param extractor
      * @return
      */
-    final public <R> R get(MapPage page, byte[] key, Extractor<R> extractor) {
+    final public <R> R get(MapChunk page, byte[] key, Extractor<R> extractor) {
         return get(page, key, 0, extractor);
     }
 
@@ -465,7 +463,7 @@ public class MapStore {
      * @param extractor
      * @return
      */
-    final public <R> R get(MapPage page, byte[] key, int keyOffset, Extractor<R> extractor) {
+    final public <R> R get(MapChunk page, byte[] key, int keyOffset, Extractor<R> extractor) {
         if (key == null || key.length == 0) {
             return extractor.ifNull();
         }
@@ -496,7 +494,7 @@ public class MapStore {
      * @param key
      * @return
      */
-    final public byte[] remove(MapPage page, byte[] key) {
+    final public byte[] remove(MapChunk page, byte[] key) {
         return remove(page, key, 0);
 
     }
@@ -508,7 +506,7 @@ public class MapStore {
      * @param keyOffset
      * @return
      */
-    final public byte[] remove(MapPage page, byte[] key, int keyOffset) {
+    final public byte[] remove(MapChunk page, byte[] key, int keyOffset) {
         if (key == null || key.length == 0) {
             return null;
         }
@@ -554,7 +552,7 @@ public class MapStore {
      * @param _extractor
      * @param _callback
      */
-    final public <R> void get(MapPage page, Extractor<R> _extractor, ExtractorStream<R> _callback) {
+    final public <R> void get(MapChunk page, Extractor<R> _extractor, ExtractorStream<R> _callback) {
         try {
             int capacity = page.capacity;
             int keySize = page.keySize;
@@ -589,7 +587,7 @@ public class MapStore {
      * @param from
      * @param to
      */
-    final public void copyTo(MapPage from, MapPage to) {
+    final public void copyTo(MapChunk from, MapChunk to) {
         int fcapacity = from.capacity;
         int fkeySize = from.keySize;
         int fpayloadSize = from.payloadSize;
@@ -632,7 +630,7 @@ public class MapStore {
      *
      * @param page
      */
-    final public void toSysOut(MapPage page) {
+    final public void toSysOut(MapChunk page) {
         try {
             int capacity = page.capacity;
             int keySize = page.keySize;

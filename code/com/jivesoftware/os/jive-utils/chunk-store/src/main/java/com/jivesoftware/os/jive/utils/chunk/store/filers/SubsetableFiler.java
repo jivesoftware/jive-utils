@@ -4,21 +4,23 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
- * This class segments a single Filer into segment filers where
- * each segment filer restates fp = 0. It only allows one segment filer
- * at a time to be in control. It is the responsibility of the
- * programmer to remove the segment filers as the become stale.
- */
-public class SubsetableFiler implements IFiler {
+ This class segments a single Filer into segment filers where
+ each segment filer restates fp = 0. It only allows one segment filer
+ at a time to be in control. It is the responsibility of the
+ programmer to remove the segment filers as the become stale.
 
-    private final IFiler filer;
+ @author jonathan.colt
+ */
+public class SubsetableFiler implements Filer {
+
+    private final Filer filer;
     private final long startOfFP;
     private final long endOfFP;
     private final String key;
     private final ConcurrentHashMap<String, SubsetableFiler> subFilers = new ConcurrentHashMap<>();
-    private long count;
+    private final long count;
 
-    public SubsetableFiler(IFiler filer, long startOfFP, long endOfFP, long count) {
+    public SubsetableFiler(Filer filer, long startOfFP, long endOfFP, long count) {
         this.filer = filer;
         this.startOfFP = startOfFP;
         this.endOfFP = endOfFP;

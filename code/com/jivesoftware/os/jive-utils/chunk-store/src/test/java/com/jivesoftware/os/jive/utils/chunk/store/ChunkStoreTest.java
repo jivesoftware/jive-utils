@@ -10,8 +10,8 @@ package com.jivesoftware.os.jive.utils.chunk.store;
 
 import com.jivesoftware.os.jive.utils.chunk.store.filers.ByteBufferBackedFiler;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.FileBackedMemMappedByteBufferFactory;
+import com.jivesoftware.os.jive.utils.chunk.store.filers.Filer;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.FilerIO;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.IFiler;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.SubsetableFiler;
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class ChunkStoreTest {
 
         long chunk10 = chunkStore.newChunk(10);
         System.out.println("chunkId:" + chunk10);
-        IFiler filer = chunkStore.getFiler(chunk10);
+        Filer filer = chunkStore.getFiler(chunk10);
         synchronized (filer.lock()) {
             FilerIO.writeInt(filer, 10, "");
         }

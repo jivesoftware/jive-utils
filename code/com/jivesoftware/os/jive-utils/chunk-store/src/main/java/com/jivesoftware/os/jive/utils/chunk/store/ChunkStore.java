@@ -1,7 +1,7 @@
 package com.jivesoftware.os.jive.utils.chunk.store;
 
+import com.jivesoftware.os.jive.utils.chunk.store.filers.Filer;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.FilerIO;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.IFiler;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.SubsetableFiler;
 
 public class ChunkStore {
@@ -148,7 +148,7 @@ public class ChunkStore {
         }
     }
 
-    public IFiler getFiler(long _chunkFP) throws Exception {
+    public Filer getFiler(long _chunkFP) throws Exception {
         long chunkPower = 0;
         long nextFreeChunkFP = 0;
         long length = 0;

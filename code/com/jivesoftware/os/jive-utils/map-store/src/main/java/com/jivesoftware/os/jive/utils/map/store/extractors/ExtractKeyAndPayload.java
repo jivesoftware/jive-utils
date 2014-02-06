@@ -1,6 +1,6 @@
 package com.jivesoftware.os.jive.utils.map.store.extractors;
 
-import com.jivesoftware.os.jive.utils.map.store.MapPage;
+import com.jivesoftware.os.jive.utils.map.store.MapChunk;
 
 /**
  *
@@ -9,7 +9,7 @@ import com.jivesoftware.os.jive.utils.map.store.MapPage;
 public class ExtractKeyAndPayload implements Extractor<KeyAndPayload> {
 
     @Override
-    public KeyAndPayload extract(int i, long _startIndex, int _keySize, int _payloadSize, MapPage page) {
+    public KeyAndPayload extract(int i, long _startIndex, int _keySize, int _payloadSize, MapChunk page) {
         byte[] k = new byte[_keySize];
         page.read((int) _startIndex + 1, k, 0, _keySize);
         byte[] p = new byte[_payloadSize];
