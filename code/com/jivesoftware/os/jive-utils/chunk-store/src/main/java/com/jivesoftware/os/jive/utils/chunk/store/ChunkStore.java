@@ -1,9 +1,8 @@
 package com.jivesoftware.os.jive.utils.chunk.store;
 
-import com.jivesoftware.os.jive.utils.chunk.store.filers.Filer;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.FilerIO;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.SubFiler;
-import java.io.File;
+import com.jivesoftware.os.jive.utils.chunk.store.filers.IFiler;
+import com.jivesoftware.os.jive.utils.chunk.store.filers.SubsetableFiler;
 
 public class ChunkStore {
 
@@ -13,7 +12,7 @@ public class ChunkStore {
     private long lengthOfFile = 8 + 8 + (8 * (64 - cMinPower));
     private long referenceNumber = 0;
 
-    private SubFiler filer;
+    private SubsetableFiler filer;
 
     /*
      New Call Sequence
@@ -42,7 +41,7 @@ public class ChunkStore {
         return Long.MAX_VALUE;
     }
 
-    public void open(SubFiler _filer) throws Exception {
+    public void open(SubsetableFiler _filer) throws Exception {
         filer = _filer;
         synchronized (filer.lock()) {
             FilerIO.writeLong(filer, lengthOfFile, "lengthOfFile");
@@ -59,7 +58,7 @@ public class ChunkStore {
      ChunkStore chunks = ChunkStore(_filer);
      open();
      */
-    public ChunkStore(SubFiler _filer) throws Exception {
+    public ChunkStore(SubsetableFiler _filer) throws Exception {
         filer = _filer;
     }
 
@@ -118,7 +117,7 @@ public class ChunkStore {
                 }
                 synchronized (filer.lock()) {
                     filer.seek(newChunkFP + chunkLength - 1); // last byte in chunk
-                    filer.write(0); // cause file backed ChunkStore to grow file on disk
+                    filer.write(0); // cause file backed ChunkStore to grow file on disk. Use setLength()?
                     filer.seek(newChunkFP);
                     FilerIO.writeLong(filer, cMagicNumber, "magicNumber");
                     FilerIO.writeLong(filer, chunkPower, "chunkPower");
@@ -149,7 +148,7 @@ public class ChunkStore {
         }
     }
 
-    public SubFiler getFiler(long _chunkFP) throws Exception {
+    public IFiler getFiler(long _chunkFP) throws Exception {
         long chunkPower = 0;
         long nextFreeChunkFP = 0;
         long length = 0;
@@ -242,50 +241,33 @@ public class ChunkStore {
         }
     }
 
-    public static String name(String _chunkName) {
-        String fileName = _chunkName + ".chunk";
-        ensureDirectory(new File(fileName));
-        return fileName;
-    }
+//    public static String name(String _chunkName) {
+//        String fileName = _chunkName + ".chunk";
+//        ensureDirectory(new File(fileName));
+//        return fileName;
+//    }
+//
+//    public static ChunkStore factory(String _chunkName) throws Exception {
+//        if (new File(name(_chunkName)).exists()) {
+//            return openInstance(_chunkName);
+//        }
+//        return newInstance(_chunkName);
+//    }
+//
+//    public static ChunkStore newInstance(String _chunkName) throws Exception {
+//        Filer chunkFiler = Filer.open(name(_chunkName), "rw");
+//        SubsetableFiler chunkSegment = new SubsetableFiler(chunkFiler, 0, Long.MAX_VALUE, 0);
+//        ChunkStore chunks = new ChunkStore();
+//        chunks.open(chunkSegment);
+//        return chunks;
+//    }
+//
+//    public static ChunkStore openInstance(String _chunkName) throws Exception {
+//        Filer chunkFiler = Filer.open(name(_chunkName), "rw");
+//        SubsetableFiler chunkSegment = new SubsetableFiler(chunkFiler, 0, Long.MAX_VALUE, 0);
+//        ChunkStore chunks = new ChunkStore(chunkSegment);
+//        chunks.open();
+//        return chunks;
+//    }
 
-    public static ChunkStore factory(String _chunkName) throws Exception {
-        if (new File(name(_chunkName)).exists()) {
-            return openInstance(_chunkName);
-        }
-        return newInstance(_chunkName);
-    }
-
-    public static ChunkStore newInstance(String _chunkName) throws Exception {
-        Filer chunkFiler = Filer.open(name(_chunkName), "rw");
-        SubFiler chunkSegment = new SubFiler(chunkFiler, 0, Long.MAX_VALUE, 0);
-        ChunkStore chunks = new ChunkStore();
-        chunks.open(chunkSegment);
-        return chunks;
-    }
-
-    public static ChunkStore openInstance(String _chunkName) throws Exception {
-        Filer chunkFiler = Filer.open(name(_chunkName), "rw");
-        SubFiler chunkSegment = new SubFiler(chunkFiler, 0, Long.MAX_VALUE, 0);
-        ChunkStore chunks = new ChunkStore(chunkSegment);
-        chunks.open();
-        return chunks;
-    }
-
-    public static Exception ensureDirectory(File _file) {
-        if (_file == null) {
-            return null;
-        }
-        try {
-            if (_file.exists()) {
-                return null;
-            }
-            File parent = _file.getParentFile();
-            if (parent != null) {
-                parent.mkdirs();
-            }
-            return null;
-        } catch (Exception x) {
-            return x;
-        }
-    }
 }

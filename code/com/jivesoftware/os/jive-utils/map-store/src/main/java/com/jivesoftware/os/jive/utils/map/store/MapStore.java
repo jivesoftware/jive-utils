@@ -3,8 +3,8 @@ package com.jivesoftware.os.jive.utils.map.store;
 //!! POORLY TESTING
 import com.jivesoftware.os.jive.utils.map.store.extractors.Extractor;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractorStream;
-import com.jivesoftware.os.jive.utils.map.store.pages.Page;
-import com.jivesoftware.os.jive.utils.map.store.pages.PageFactory;
+import com.jivesoftware.os.jive.utils.map.store.pages.Chunk;
+import com.jivesoftware.os.jive.utils.map.store.pages.ChunkFactory;
 
 /**
  * this is a key+payload set that is backed buy a byte array. It is a fixed size set.
@@ -102,7 +102,7 @@ public class MapStore {
         int maxCount,
         int keySize,
         int payloadSize,
-        PageFactory factory) {
+        ChunkFactory factory) {
         if (id == null || id.length != cIdSize) {
             throw new RuntimeException("Malformed ID");
         }
@@ -146,7 +146,7 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public byte getPageVersion(Page page) { //?? hacky
+    final public byte getPageVersion(Chunk page) { //?? hacky
         return page.read(cPageVersionOffset);
     }
 
@@ -313,7 +313,7 @@ public class MapStore {
     final public int add(MapPage page, byte mode, byte[] key, int keyOffset, byte[] payload, int _payloadOffset) {
         int capacity = page.capacity;
         if (getCount(page) >= page.maxCount) {
-            throw new EOverCapacity(getCount(page) + " > " + page.maxCount);
+            throw new OverCapacityException(getCount(page) + " > " + page.maxCount);
         }
         int keySize = page.keySize;
         int payloadSize = page.payloadSize;

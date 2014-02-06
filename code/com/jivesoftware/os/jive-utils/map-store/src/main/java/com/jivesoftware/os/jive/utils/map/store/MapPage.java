@@ -3,20 +3,21 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import com.jivesoftware.os.jive.utils.map.store.pages.ByteArrayPage;
-import com.jivesoftware.os.jive.utils.map.store.pages.Page;
-import com.jivesoftware.os.jive.utils.map.store.pages.PageProxy;
+import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferChunk;
+import com.jivesoftware.os.jive.utils.map.store.pages.Chunk;
+import com.jivesoftware.os.jive.utils.map.store.pages.ChunkProxy;
+import java.nio.ByteBuffer;
 
 /**
  *
  * @author jonathan
  */
-public class MapPage extends PageProxy {
+public class MapPage extends ChunkProxy {
 
     /**
      *
      */
-    static final public MapPage cNull = new MapPage(new ByteArrayPage(new byte[0]));
+    static final public MapPage cNull = new MapPage(new ByteBufferChunk(ByteBuffer.allocate(0)));
     int keySize; // read only
     int payloadSize; // read only
     int capacity; // read only
@@ -26,7 +27,7 @@ public class MapPage extends PageProxy {
      *
      * @param page
      */
-    public MapPage(Page page) {
+    public MapPage(Chunk page) {
         super(page);
     }
 

@@ -41,8 +41,7 @@ public class FileBackedMemMappedByteBufferFactory {
             ensureDirectory(file);
             MappedByteBuffer buf;
             try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                raf.seek(size);
-                raf.write(0);
+                raf.setLength(size);
                 raf.seek(0);
                 FileChannel channel = raf.getChannel();
                 buf = channel.map(FileChannel.MapMode.READ_WRITE, 0, (int) channel.size());
@@ -53,17 +52,14 @@ public class FileBackedMemMappedByteBufferFactory {
         }
     }
 
-    private Exception ensureDirectory(File _file) {
-        try {
-            if (!_file.exists()) {
-                File parent = _file.getParentFile();
-                if (parent != null) {
-                    parent.mkdirs();
+    private void ensureDirectory(File _file) {
+        if (!_file.exists()) {
+            File parent = _file.getParentFile();
+            if (parent != null) {
+                if (!parent.mkdirs()) {
+                    throw new RuntimeException("Failed to create parent:" + parent);
                 }
             }
-            return null;
-        } catch (Exception x) {
-            return x;
         }
     }
 

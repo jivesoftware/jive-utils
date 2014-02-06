@@ -11,7 +11,8 @@ package com.jivesoftware.os.jive.utils.chunk.store;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.ByteBufferBackedFiler;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.chunk.store.filers.FilerIO;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.SubFiler;
+import com.jivesoftware.os.jive.utils.chunk.store.filers.IFiler;
+import com.jivesoftware.os.jive.utils.chunk.store.filers.SubsetableFiler;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,13 +31,14 @@ public class ChunkStoreTest {
         File tmp = File.createTempFile("chunk", "1");
         FileBackedMemMappedByteBufferFactory bufferFactory = new FileBackedMemMappedByteBufferFactory(tmp, size);
         ByteBuffer byteBuffer = bufferFactory.allocate();
+        ByteBufferBackedFiler byteBufferBackedFiler = new ByteBufferBackedFiler(tmp, byteBuffer);
 
         ChunkStore chunkStore = new ChunkStore();
-        chunkStore.open(new SubFiler(new ByteBufferBackedFiler(tmp, byteBuffer), 0, size, 0));
+        chunkStore.open(new SubsetableFiler(byteBufferBackedFiler, 0, size, 0));
 
         long chunk10 = chunkStore.newChunk(10);
         System.out.println("chunkId:" + chunk10);
-        SubFiler filer = chunkStore.getFiler(chunk10);
+        IFiler filer = chunkStore.getFiler(chunk10);
         synchronized (filer.lock()) {
             FilerIO.writeInt(filer, 10, "");
         }

@@ -4,7 +4,7 @@ package com.jivesoftware.os.jive.utils.map.store.pages;
  *
  * @author jonathan
  */
-public interface Page {
+public interface Chunk {
 
     void init();
 

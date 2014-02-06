@@ -3,8 +3,8 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferPage;
-import com.jivesoftware.os.jive.utils.map.store.pages.FileBackedMemMappedByteBufferPageFactory;
+import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferChunk;
+import com.jivesoftware.os.jive.utils.map.store.pages.FileBackedMemMappedByteBufferChunkFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -220,7 +220,7 @@ abstract public class KeyIndexer<K, V> implements KeyValueStore<K, V> {
                     buf = channel.map(FileChannel.MapMode.READ_WRITE, 0, (int) channel.size());
                 }
 
-                MapPage page = new MapPage(new ByteBufferPage(buf));
+                MapPage page = new MapPage(new ByteBufferChunk(buf));
                 page.init();
 
                 return page;
@@ -233,7 +233,7 @@ abstract public class KeyIndexer<K, V> implements KeyValueStore<K, V> {
 
         MapPage set = mapStore.allocate((byte) 0, (byte) 0, new byte[16], 0, maxCapacity, keySize,
             (1 + payloadSize) * numPayloadsPerKey,
-            new FileBackedMemMappedByteBufferPageFactory(file));
+            new FileBackedMemMappedByteBufferChunkFactory(file));
 
         return set;
 

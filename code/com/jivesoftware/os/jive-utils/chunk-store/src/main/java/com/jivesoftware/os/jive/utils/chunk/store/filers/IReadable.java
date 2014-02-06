@@ -1,13 +1,13 @@
-
 package com.jivesoftware.os.jive.utils.chunk.store.filers;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
  *
  * @author Administrator
  */
-public interface IReadable extends ICloseable {
+public interface IReadable extends Closeable {
 
     /**
      *

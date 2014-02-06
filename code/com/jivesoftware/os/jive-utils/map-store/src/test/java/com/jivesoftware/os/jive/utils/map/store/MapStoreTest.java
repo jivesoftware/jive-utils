@@ -3,8 +3,8 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import com.jivesoftware.os.jive.utils.map.store.pages.ByteArrayPageFactory;
-import com.jivesoftware.os.jive.utils.map.store.pages.PageFactory;
+import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferChunkFactory;
+import com.jivesoftware.os.jive.utils.map.store.pages.ChunkFactory;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -41,12 +41,12 @@ public class MapStoreTest {
 
         int it = 10000;
         int ksize = 4;
-        test(it, ksize, it, new ByteArrayPageFactory());
+        test(it, ksize, it, new ByteBufferChunkFactory());
         System.exit(0);
 
     }
 
-    private static boolean test(int _iterations, int keySize, int _maxSize, PageFactory factory) {
+    private static boolean test(int _iterations, int keySize, int _maxSize, ChunkFactory factory) {
 
         MapStore pset = new MapStore(new ExtractIndex(), new ExtractKey(), new ExtractPayload());
         int payloadSize = 4;
@@ -62,7 +62,7 @@ public class MapStoreTest {
         for (int i = 0; i < _iterations; i++) {
             try {
                 pset.add(set, (byte) 1, randomLowerCaseAlphaBytes(random, keySize), intBytes(i));
-            } catch (EOverCapacity x) {
+            } catch (OverCapacityException x) {
                 break;
             }
         }

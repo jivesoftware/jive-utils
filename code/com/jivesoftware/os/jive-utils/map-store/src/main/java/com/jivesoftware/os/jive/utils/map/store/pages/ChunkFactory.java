@@ -4,13 +4,13 @@ package com.jivesoftware.os.jive.utils.map.store.pages;
  *
  * @author jonathan
  */
-public interface PageFactory {
+public interface ChunkFactory {
 
     /**
      *
      * @param _size
      * @return
      */
-    Page allocate(long _size);
+    Chunk allocate(long _size);
 
 }

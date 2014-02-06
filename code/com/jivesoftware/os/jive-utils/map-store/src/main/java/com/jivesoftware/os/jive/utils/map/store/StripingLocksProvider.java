@@ -3,6 +3,7 @@ package com.jivesoftware.os.jive.utils.map.store;
 /**
  *
  * @author jonathan.colt
+ * @param <K>
  */
 public class StripingLocksProvider<K> {
 

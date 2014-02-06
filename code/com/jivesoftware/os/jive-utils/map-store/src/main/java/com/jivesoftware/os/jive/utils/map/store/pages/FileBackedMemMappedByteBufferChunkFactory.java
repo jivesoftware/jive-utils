@@ -18,11 +18,11 @@ import java.nio.channels.FileChannel;
  *
  * @author jonathan.colt
  */
-public class FileBackedMemMappedByteBufferPageFactory implements PageFactory {
+public class FileBackedMemMappedByteBufferChunkFactory implements ChunkFactory {
 
     private final File file;
 
-    public FileBackedMemMappedByteBufferPageFactory(File file) {
+    public FileBackedMemMappedByteBufferChunkFactory(File file) {
         this.file = file;
     }
 
@@ -42,7 +42,7 @@ public class FileBackedMemMappedByteBufferPageFactory implements PageFactory {
     }
 
     @Override
-    public Page allocate(long _size) {
+    public Chunk allocate(long _size) {
         try {
             ensureDirectory(file);
             MappedByteBuffer buf;
@@ -53,23 +53,20 @@ public class FileBackedMemMappedByteBufferPageFactory implements PageFactory {
                 FileChannel channel = raf.getChannel();
                 buf = channel.map(FileChannel.MapMode.READ_WRITE, 0, (int) channel.size());
             }
-            return new ByteBufferPage(buf);
+            return new ByteBufferChunk(buf);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Exception ensureDirectory(File _file) {
-        try {
-            if (!_file.exists()) {
-                File parent = _file.getParentFile();
-                if (parent != null) {
-                    parent.mkdirs();
+    private void ensureDirectory(File _file) {
+        if (!_file.exists()) {
+            File parent = _file.getParentFile();
+            if (parent != null) {
+                if (!parent.mkdirs()) {
+                    throw new RuntimeException("Failed to create parent:" + parent);
                 }
             }
-            return null;
-        } catch (Exception x) {
-            return x;
         }
     }
 

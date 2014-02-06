@@ -6,7 +6,7 @@ import java.nio.MappedByteBuffer;
 /**
  * @author jonathan
  */
-public class ByteBufferPage implements Page {
+public class ByteBufferChunk implements Chunk {
 
     /**
      *
@@ -16,7 +16,7 @@ public class ByteBufferPage implements Page {
     /**
      * @param _array
      */
-    public ByteBufferPage(ByteBuffer _array) {
+    public ByteBufferChunk(ByteBuffer _array) {
         array = _array;
     }
 

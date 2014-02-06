@@ -4,15 +4,15 @@ package com.jivesoftware.os.jive.utils.map.store.pages;
  *
  * @author jonathan
  */
-public class PageProxy implements Page {
+public class ChunkProxy implements Chunk {
 
-    Page page;
+    Chunk page;
 
     /**
      *
      * @param _page
      */
-    public PageProxy(Page _page) {
+    public ChunkProxy(Chunk _page) {
         page = _page;
     }
 
@@ -28,7 +28,7 @@ public class PageProxy implements Page {
      *
      * @return
      */
-    public Page backingPage() {
+    public Chunk backingChunk() {
         return page;
     }
 

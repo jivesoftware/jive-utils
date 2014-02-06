@@ -3,8 +3,8 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferPage;
-import com.jivesoftware.os.jive.utils.map.store.pages.FileBackedMemMappedByteBufferPageFactory;
+import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferChunk;
+import com.jivesoftware.os.jive.utils.map.store.pages.FileBackedMemMappedByteBufferChunkFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -183,10 +183,10 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
     }
 
     private MapPage mmap(File file, int maxCapacity) throws FileNotFoundException, IOException {
-        FileBackedMemMappedByteBufferPageFactory pageFactory = new FileBackedMemMappedByteBufferPageFactory(file);
+        FileBackedMemMappedByteBufferChunkFactory pageFactory = new FileBackedMemMappedByteBufferChunkFactory(file);
         if (file.exists()) {
             MappedByteBuffer buffer = pageFactory.open();
-            MapPage page = new MapPage(new ByteBufferPage(buffer));
+            MapPage page = new MapPage(new ByteBufferChunk(buffer));
             page.init();
             return page;
         } else {

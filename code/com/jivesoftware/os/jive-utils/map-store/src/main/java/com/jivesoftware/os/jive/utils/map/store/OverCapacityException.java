@@ -4,9 +4,9 @@ package com.jivesoftware.os.jive.utils.map.store;
  *
  * @author jonathan.colt
  */
-class EOverCapacity extends RuntimeException {
+class OverCapacityException extends RuntimeException {
 
-    EOverCapacity(String string) {
+    OverCapacityException(String string) {
         super(string);
     }
 

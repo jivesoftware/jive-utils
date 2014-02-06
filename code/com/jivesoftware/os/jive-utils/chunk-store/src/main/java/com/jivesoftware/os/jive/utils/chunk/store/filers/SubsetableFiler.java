@@ -1,7 +1,6 @@
 package com.jivesoftware.os.jive.utils.chunk.store.filers;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
@@ -10,29 +9,29 @@ import java.util.concurrent.ConcurrentHashMap;
  * at a time to be in control. It is the responsibility of the
  * programmer to remove the segment filers as the become stale.
  */
-public class SubFiler implements IFiler {
+public class SubsetableFiler implements IFiler {
 
     private final IFiler filer;
     private final long startOfFP;
     private final long endOfFP;
     private final String key;
-    private final ConcurrentHashMap<String, SubFiler> subFilers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, SubsetableFiler> subFilers = new ConcurrentHashMap<>();
     private long count;
 
-    public SubFiler(IFiler _filer, long _startOfFP, long _endOfFP, long _count) {
-        filer = _filer;
-        startOfFP = _startOfFP;
-        endOfFP = _endOfFP;
-        key = _startOfFP + ":" + _endOfFP;
-        count = _count;
+    public SubsetableFiler(IFiler filer, long startOfFP, long endOfFP, long count) {
+        this.filer = filer;
+        this.startOfFP = startOfFP;
+        this.endOfFP = endOfFP;
+        this.key = startOfFP + ":" + endOfFP;
+        this.count = count;
     }
 
-    public SubFiler get(long _startOfFP, long _endOfFP, long _count) {
+    public SubsetableFiler get(long _startOfFP, long _endOfFP, long _count) {
         String subKey = _startOfFP + ":" + _endOfFP;
-        SubFiler subFiler = subFilers.get(subKey);
+        SubsetableFiler subFiler = subFilers.get(subKey);
         if (subFiler == null) {
-            subFiler = new SubFiler(filer, _startOfFP, _endOfFP, _count);
-            SubFiler had = subFilers.putIfAbsent(key, subFiler);
+            subFiler = new SubsetableFiler(filer, _startOfFP, _endOfFP, _count);
+            SubsetableFiler had = subFilers.putIfAbsent(key, subFiler);
             if (had != null) {
                 subFiler = had;
             }
@@ -59,44 +58,6 @@ public class SubFiler implements IFiler {
 
     final public boolean isFileBacked() {
         return (endOfFP == Long.MAX_VALUE);
-    }
-
-    final public byte[] toBytes() throws IOException {
-        synchronized (lock()) {
-            byte[] b = new byte[(int) count];
-            seek(0);
-            read(b);
-            return b;
-        }
-    }
-
-    public void setBytes(byte[] _bytes) throws IOException {
-        synchronized (lock()) {
-            seek(0);
-            write(_bytes);
-            count = _bytes.length;
-        }
-    }
-
-    final public void fill(byte _v) throws IOException {
-        byte[] zerosMax = new byte[(int) Math.pow(2, 16)]; // 65536 max used until min needed
-        Arrays.fill(zerosMax, _v);
-        synchronized (lock()) {
-            seek(0); //!! optimize
-            long segmentLength = getSize();
-            long size = segmentLength;
-            while (size + zerosMax.length < segmentLength) {
-                write(zerosMax);
-                size += zerosMax.length;
-            }
-            for (long i = size; i < segmentLength; i++) {
-                write(_v);
-            }
-        }
-    }
-
-    final public boolean validFilePostion(long _position) {
-        return (endOfFP - startOfFP) < _position;
     }
 
     final public long startOfFP() {
