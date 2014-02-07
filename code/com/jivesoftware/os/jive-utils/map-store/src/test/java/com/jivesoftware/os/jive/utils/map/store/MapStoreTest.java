@@ -46,11 +46,9 @@ public class MapStoreTest {
 
             @Override
             public ByteBuffer allocate(long _size) {
-                return ByteBuffer.allocate((int)_size);
+                return ByteBuffer.allocate((int) _size);
             }
         });
-        System.exit(0);
-
     }
 
     private static boolean test(int _iterations, int keySize, int _maxSize, ByteBufferFactory factory) {

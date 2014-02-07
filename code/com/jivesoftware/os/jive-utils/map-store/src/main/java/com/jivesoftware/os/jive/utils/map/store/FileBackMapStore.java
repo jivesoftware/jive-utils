@@ -1,9 +1,9 @@
 package com.jivesoftware.os.jive.utils.map.store;
 
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
+import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
-import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
@@ -197,11 +197,11 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 payloadSize,
                 new ByteBufferFactory() {
 
-                @Override
-                public ByteBuffer allocate(long _size) {
-                    return pageFactory.allocate(_size);
-                }
-            });
+                    @Override
+                    public ByteBuffer allocate(long _size) {
+                        return pageFactory.allocate(_size);
+                    }
+                });
             return set;
         }
     }
