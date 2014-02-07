@@ -8,11 +8,11 @@
  */
 package com.jivesoftware.os.jive.utils.chunk.store;
 
-import com.jivesoftware.os.jive.utils.chunk.store.filers.ByteBufferBackedFiler;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.FileBackedMemMappedByteBufferFactory;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.Filer;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.FilerIO;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.SubsetableFiler;
+import com.jivesoftware.os.jive.utils.io.ByteBufferBackedFiler;
+import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
+import com.jivesoftware.os.jive.utils.io.Filer;
+import com.jivesoftware.os.jive.utils.io.FilerIO;
+import com.jivesoftware.os.jive.utils.io.SubsetableFiler;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,8 +29,8 @@ public class ChunkStoreTest {
     public void chunkStoreTest() throws IOException, Exception {
         int size = 1024 * 10;
         File tmp = File.createTempFile("chunk", "1");
-        FileBackedMemMappedByteBufferFactory bufferFactory = new FileBackedMemMappedByteBufferFactory(tmp, size);
-        ByteBuffer byteBuffer = bufferFactory.allocate();
+        FileBackedMemMappedByteBufferFactory bufferFactory = new FileBackedMemMappedByteBufferFactory(tmp);
+        ByteBuffer byteBuffer = bufferFactory.allocate(size);
         ByteBufferBackedFiler byteBufferBackedFiler = new ByteBufferBackedFiler(tmp, byteBuffer);
 
         ChunkStore chunkStore = new ChunkStore();

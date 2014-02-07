@@ -6,7 +6,7 @@
  *
  * This software is the proprietary information of Jive Software. Use is subject to license terms.
  */
-package com.jivesoftware.os.jive.utils.chunk.store.filers;
+package com.jivesoftware.os.jive.utils.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

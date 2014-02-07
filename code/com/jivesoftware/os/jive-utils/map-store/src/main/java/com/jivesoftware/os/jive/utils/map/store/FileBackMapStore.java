@@ -1,13 +1,16 @@
 package com.jivesoftware.os.jive.utils.map.store;
 
+import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
+import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
+import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
+import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferChunk;
-import com.jivesoftware.os.jive.utils.map.store.pages.FileBackedMemMappedByteBufferChunkFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.util.Map;
 import java.util.UUID;
@@ -182,17 +185,23 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         }
     }
 
-    private MapChunk mmap(File file, int maxCapacity) throws FileNotFoundException, IOException {
-        FileBackedMemMappedByteBufferChunkFactory pageFactory = new FileBackedMemMappedByteBufferChunkFactory(file);
+    private MapChunk mmap(final File file, int maxCapacity) throws FileNotFoundException, IOException {
+        final FileBackedMemMappedByteBufferFactory pageFactory = new FileBackedMemMappedByteBufferFactory(file);
         if (file.exists()) {
             MappedByteBuffer buffer = pageFactory.open();
-            MapChunk page = new MapChunk(new ByteBufferChunk(buffer));
+            MapChunk page = new MapChunk(mapStore, buffer);
             page.init();
             return page;
         } else {
             MapChunk set = mapStore.allocate((byte) 0, (byte) 0, new byte[16], 0, maxCapacity, keySize,
                 payloadSize,
-                pageFactory);
+                new ByteBufferFactory() {
+
+                @Override
+                public ByteBuffer allocate(long _size) {
+                    return pageFactory.allocate(_size);
+                }
+            });
             return set;
         }
     }

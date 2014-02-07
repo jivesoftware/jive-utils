@@ -1,10 +1,9 @@
 package com.jivesoftware.os.jive.utils.map.store;
 
 //!! POORLY TESTING
+import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.extractors.Extractor;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractorStream;
-import com.jivesoftware.os.jive.utils.map.store.pages.Chunk;
-import com.jivesoftware.os.jive.utils.map.store.pages.ChunkFactory;
 
 /**
  * this is a key+payload set that is backed buy a byte array. It is a fixed size set.
@@ -100,14 +99,14 @@ public class MapStore {
         int maxCount,
         int keySize,
         int payloadSize,
-        ChunkFactory factory) {
+        ByteBufferFactory factory) {
         if (id == null || id.length != cIdSize) {
             throw new RuntimeException("Malformed ID");
         }
         int maxCapacity = (int) (maxCount + (maxCount - (maxCount * cSetDensity)));
 
         int arraySize = cost(maxCount, keySize, payloadSize);
-        MapChunk page = new MapChunk(factory.allocate(arraySize));
+        MapChunk page = new MapChunk(this, factory.allocate(arraySize));
         setPageFamily(page, pageFamily);
         setPageVersion(page, pageVersion);
         setId(page, id);
@@ -144,7 +143,7 @@ public class MapStore {
      * @param page
      * @return
      */
-    final public byte getPageVersion(Chunk page) { //?? hacky
+    final public byte getPageVersion(MapChunk page) { //?? hacky
         return page.read(cPageVersionOffset);
     }
 

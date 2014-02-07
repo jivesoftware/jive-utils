@@ -1,4 +1,4 @@
-package com.jivesoftware.os.jive.utils.chunk.store.filers;
+package com.jivesoftware.os.jive.utils.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;

@@ -9,7 +9,7 @@
         <relativePath>../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
     </parent>
     <groupId>com.jivesoftware.os.jive.utils</groupId>
-    <artifactId>chunk-store</artifactId>
+    <artifactId>io</artifactId>
     <properties>
         <module.type>shared_lib</module.type>
     </properties>
@@ -19,12 +19,6 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jivesoftware.os.jive.utils</groupId>
-            <artifactId>io</artifactId>
-            <version>0.2</version>
-            <type>jar</type>
         </dependency>
     </dependencies>
 

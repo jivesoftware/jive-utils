@@ -1,18 +1,24 @@
 package com.jivesoftware.os.jive.utils.map.store;
 
+import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import com.jivesoftware.os.jive.utils.map.store.pages.ByteBufferChunkFactory;
-import com.jivesoftware.os.jive.utils.map.store.pages.ChunkFactory;
+import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Random;
+import org.testng.annotations.Test;
 
 /**
  *
  * @author jonathan
  */
 public class MapStoreTest {
+
+    @Test
+    public void basicTest() {
+        test();
+    }
 
     /**
      *
@@ -25,28 +31,29 @@ public class MapStoreTest {
 
                 @Override
                 public void run() {
-                    test("" + n, _args);
+                    test();
                 }
             };
             t.start();
         }
     }
 
-    /**
-     *
-     * @param thread
-     * @param _args
-     */
-    public static void test(final String thread, String[] _args) {
+    public static void test() {
 
         int it = 10000;
         int ksize = 4;
-        test(it, ksize, it, new ByteBufferChunkFactory());
+        test(it, ksize, it, new ByteBufferFactory() {
+
+            @Override
+            public ByteBuffer allocate(long _size) {
+                return ByteBuffer.allocate((int)_size);
+            }
+        });
         System.exit(0);
 
     }
 
-    private static boolean test(int _iterations, int keySize, int _maxSize, ChunkFactory factory) {
+    private static boolean test(int _iterations, int keySize, int _maxSize, ByteBufferFactory factory) {
 
         MapStore pset = new MapStore(new ExtractIndex(), new ExtractKey(), new ExtractPayload());
         int payloadSize = 4;

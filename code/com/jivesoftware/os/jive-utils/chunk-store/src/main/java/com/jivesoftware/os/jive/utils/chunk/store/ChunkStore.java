@@ -1,8 +1,9 @@
 package com.jivesoftware.os.jive.utils.chunk.store;
 
-import com.jivesoftware.os.jive.utils.chunk.store.filers.Filer;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.FilerIO;
-import com.jivesoftware.os.jive.utils.chunk.store.filers.SubsetableFiler;
+import com.jivesoftware.os.jive.utils.io.Filer;
+import com.jivesoftware.os.jive.utils.io.FilerIO;
+import com.jivesoftware.os.jive.utils.io.SubsetableFiler;
+
 
 public class ChunkStore {
 

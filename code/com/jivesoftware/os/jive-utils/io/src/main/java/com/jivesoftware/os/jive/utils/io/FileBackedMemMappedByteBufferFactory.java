@@ -1,4 +1,4 @@
-package com.jivesoftware.os.jive.utils.chunk.store.filers;
+package com.jivesoftware.os.jive.utils.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,11 +14,9 @@ import java.nio.channels.FileChannel;
 public class FileBackedMemMappedByteBufferFactory {
 
     private final File file;
-    private final long size;
 
-    public FileBackedMemMappedByteBufferFactory(File file, long size) {
+    public FileBackedMemMappedByteBufferFactory(File file) {
         this.file = file;
-        this.size = size;
     }
 
     public MappedByteBuffer open() {
@@ -36,7 +34,7 @@ public class FileBackedMemMappedByteBufferFactory {
         }
     }
 
-    public ByteBuffer allocate() {
+    public ByteBuffer allocate(long size) {
         try {
             ensureDirectory(file);
             MappedByteBuffer buf;
