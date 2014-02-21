@@ -186,7 +186,8 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
     }
 
     private MapChunk mmap(final File file, int maxCapacity) throws FileNotFoundException, IOException {
-        final FileBackedMemMappedByteBufferFactory pageFactory = new FileBackedMemMappedByteBufferFactory(file);
+        final FileBackedMemMappedByteBufferFactory pageFactory = new FileBackedMemMappedByteBufferFactory(file,
+                FileBackedMemMappedByteBufferFactory.DEFAULT_64BIT_MAX_BUFF);
         if (file.exists()) {
             MappedByteBuffer buffer = pageFactory.open();
             MapChunk page = new MapChunk(mapStore, buffer);

@@ -6,11 +6,9 @@ import com.jivesoftware.os.jive.utils.map.store.extractors.Extractor;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractorStream;
 
 /**
- * this is a key+payload set that is backed buy a byte array. It is a fixed size set.
- * It will not grow or shrink. You need to be aware and expect that your system will
- * cause the set to throw OverCapacityExceptions. The goal is to create a collection
- * which will page to and from disk or net as fast as possible. Nothing is synchronized
- * to make it thread safe you need to synchronize higher up.
+ * this is a key+payload set that is backed buy a byte array. It is a fixed size set. It will not grow or shrink. You need to be aware and expect that your
+ * system will cause the set to throw OverCapacityExceptions. The goal is to create a collection which will page to and from disk or net as fast as possible.
+ * Nothing is synchronized to make it thread safe you need to synchronize higher up.
  *
  *
  * @author jonathan
@@ -29,7 +27,7 @@ public class MapStore {
     private final int cKeySizeSize = 4;
     private final int cPayloadSize = 4;
     private final int cHeaderSize = cPageFamilySize + cPageVersionSize + cIdSize + cVersion + cCountSize
-        + cMaxCountSize + cMaxCapacitySize + cKeySizeSize + cPayloadSize;
+            + cMaxCountSize + cMaxCapacitySize + cKeySizeSize + cPayloadSize;
     private final int cPageFamilyOffset = 0;
     private final int cPageVersionOffset = cPageFamilySize;
     private final int cIdOffset = cPageFamilySize + cPageVersionSize;
@@ -93,13 +91,13 @@ public class MapStore {
      * @return
      */
     final public MapChunk allocate(byte pageFamily,
-        byte pageVersion,
-        byte[] id,
-        long version,
-        int maxCount,
-        int keySize,
-        int payloadSize,
-        ByteBufferFactory factory) {
+            byte pageVersion,
+            byte[] id,
+            long version,
+            int maxCount,
+            int keySize,
+            int payloadSize,
+            ByteBufferFactory factory) {
         if (id == null || id.length != cIdSize) {
             throw new RuntimeException("Malformed ID");
         }
@@ -284,39 +282,29 @@ public class MapStore {
         return cHeaderSize + (1 + keySize + payloadSize) * _arrayIndex;
     }
 
-    /**
-     *
-     * @param page
-     * @param mode typically 1
-     * @param key
-     * @param payload
-     * @return Returns the index the entry was inserted at or -1
-     */
     final public int add(MapChunk page, byte mode, byte[] key, byte[] payload) {
         return add(page, mode, key, 0, payload, 0);
-
     }
 
-    /**
-     *
-     * @param page
-     * @param mode
-     * @param key
-     * @param keyOffset
-     * @param payload
-     * @param _payloadOffset
-     * @return
-     */
+    final public int add(MapChunk page, byte mode, long keyHash, byte[] key, byte[] payload) {
+        return add(page, mode, keyHash, key, 0, payload, 0);
+    }
+
     final public int add(MapChunk page, byte mode, byte[] key, int keyOffset, byte[] payload, int _payloadOffset) {
+        int keySize = page.keySize;
+        return add(page, mode, hash(key, keyOffset, keySize), key, keyOffset, payload, _payloadOffset);
+    }
+
+    final public int add(MapChunk page, byte mode, long keyHash, byte[] key, int keyOffset, byte[] payload, int _payloadOffset) {
         int capacity = page.capacity;
         if (getCount(page) >= page.maxCount) {
             throw new OverCapacityException(getCount(page) + " > " + page.maxCount);
         }
         int keySize = page.keySize;
         int payloadSize = page.payloadSize;
-        for (long i = hash(key, keyOffset, keySize) % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
-            j < k; // max search for available slot
-            i = (++i) % k, j++) { // wraps around table
+        for (long i = keyHash % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
+                j < k; // max search for available slot
+                i = (++i) % k, j++) { // wraps around table
 
             long ai = index(i, keySize, payloadSize);
             if (page.read((int) ai) == cNull || page.read((int) ai) == cSkip) {
@@ -453,25 +441,25 @@ public class MapStore {
         return get(page, key, 0, extractor);
     }
 
-    /**
-     *
-     * @param <R>
-     * @param page
-     * @param key
-     * @param keyOffset
-     * @param extractor
-     * @return
-     */
+    final public <R> R get(MapChunk page, long keyHash, byte[] key, Extractor<R> extractor) {
+        return get(page, keyHash, key, 0, extractor);
+    }
+
     final public <R> R get(MapChunk page, byte[] key, int keyOffset, Extractor<R> extractor) {
+        int keySize = page.keySize;
+        return get(page, hash(key, keyOffset, keySize), key, keyOffset, extractor);
+    }
+
+    final public <R> R get(MapChunk page, long keyHash, byte[] key, int keyOffset, Extractor<R> extractor) {
         if (key == null || key.length == 0) {
             return extractor.ifNull();
         }
         int capacity = page.capacity;
         int keySize = page.keySize;
         int payloadSize = page.payloadSize;
-        for (long i = hash(key, keyOffset, keySize) % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
-            j < k; // max search for key
-            i = (++i) % k, j++) { // wraps around table
+        for (long i = keyHash % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
+                j < k; // max search for key
+                i = (++i) % k, j++) { // wraps around table
 
             long ai = index(i, keySize, payloadSize);
             if (page.read((int) ai) == cSkip) {
@@ -487,34 +475,28 @@ public class MapStore {
         return extractor.ifNull();
     }
 
-    /**
-     *
-     * @param page
-     * @param key
-     * @return
-     */
     final public byte[] remove(MapChunk page, byte[] key) {
         return remove(page, key, 0);
-
     }
 
-    /**
-     *
-     * @param page
-     * @param key
-     * @param keyOffset
-     * @return
-     */
+    final public byte[] remove(MapChunk page, long keyHash, byte[] key) {
+        return remove(page, keyHash, key, 0);
+    }
+
     final public byte[] remove(MapChunk page, byte[] key, int keyOffset) {
+        return remove(page, hash(key, 0, key.length), key, keyOffset);
+    }
+
+    final public byte[] remove(MapChunk page, long keyHash, byte[] key, int keyOffset) {
         if (key == null || key.length == 0) {
             return null;
         }
         int capacity = page.capacity;
         int keySize = page.keySize;
         int payloadSize = page.payloadSize;
-        for (long i = hash(key, 0, key.length) % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
-            j < k; // max search for key
-            i = (++i) % k, j++) { // wraps around table
+        for (long i = keyHash % (capacity - 1), j = 0, k = capacity; // stack vars for efficiency
+                j < k; // max search for key
+                i = (++i) % k, j++) { // wraps around table
 
             long ai = index(i, keySize, payloadSize);
             if (page.read((int) ai) == cSkip) {
@@ -583,6 +565,7 @@ public class MapStore {
 
     /**
      * Used to gow or shrink a set
+     *
      * @param from
      * @param to
      */
@@ -645,8 +628,8 @@ public class MapStore {
                     continue;
                 }
                 System.out.println("\t" + i + "): "
-                    + extractKey.extract(i, ai, keySize, payloadSize, page) + "->"
-                    + extractPayload.extract(i, ai, keySize, payloadSize, page));
+                        + extractKey.extract(i, ai, keySize, payloadSize, page) + "->"
+                        + extractPayload.extract(i, ai, keySize, payloadSize, page));
             }
         } catch (Exception x) {
             x.printStackTrace();
