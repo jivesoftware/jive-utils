@@ -96,7 +96,6 @@ public class SubsetableFiler implements Filer {
 
     @Override
     final public void write(byte[] b) throws IOException {
-
         filer.write(b);
     }
 

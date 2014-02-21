@@ -529,11 +529,12 @@ public class MapStore {
     /**
      *
      * @param <R>
+     * @param <E>
      * @param page
      * @param _extractor
      * @param _callback
      */
-    final public <R> void get(MapChunk page, Extractor<R> _extractor, ExtractorStream<R> _callback) {
+    final public <R, E extends Exception> void get(MapChunk page, Extractor<R> _extractor, ExtractorStream<R, E> _callback) {
         try {
             int capacity = page.capacity;
             int keySize = page.keySize;

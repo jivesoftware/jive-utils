@@ -26,6 +26,7 @@
         <module>row-column-value-store</module>
         <module>chunk-store</module>
         <module>map-store</module>
+        <module>keyed-store</module>
         <module>io</module>
     </modules>
 

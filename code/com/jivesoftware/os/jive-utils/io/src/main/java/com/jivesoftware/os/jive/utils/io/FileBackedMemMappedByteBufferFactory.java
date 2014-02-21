@@ -18,6 +18,10 @@ public class FileBackedMemMappedByteBufferFactory {
 
     private final File file;
 
+    public FileBackedMemMappedByteBufferFactory(File file) {
+        this(file, DEFAULT_64BIT_MAX_BUFF);
+    }
+
     public FileBackedMemMappedByteBufferFactory(File file, long maxSizeForByteBuffer) {
         this.file = file;
         this.maxSizeForByteBuffer = maxSizeForByteBuffer;
@@ -38,20 +42,21 @@ public class FileBackedMemMappedByteBufferFactory {
         }
     }
 
-    public ByteBuffer allocate(long size) {
+    public ByteBuffer allocate(long length) {
+
+        ensureDirectory(file);
+        MappedByteBuffer buf;
         try {
-            ensureDirectory(file);
-            MappedByteBuffer buf;
-            try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-                raf.setLength(size);
-                raf.seek(0);
-                FileChannel channel = raf.getChannel();
-                buf = channel.map(FileChannel.MapMode.READ_WRITE, 0, (int) channel.size());
-            }
-            return buf;
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            raf.seek(length);
+            raf.write(0);
+            raf.seek(0);
+            FileChannel channel = raf.getChannel();
+            buf = channel.map(FileChannel.MapMode.READ_WRITE, 0, (int) channel.size());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return buf;
     }
 
     // this was borrowed from lucene ByteBufferIndexInput

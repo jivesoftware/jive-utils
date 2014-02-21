@@ -9,7 +9,7 @@ import java.nio.MappedByteBuffer;
  */
 public class MapChunk {
 
-    private final MapStore mapStore;
+    final MapStore mapStore;
     private final ByteBuffer array;
     int keySize; // read only
     int payloadSize; // read only

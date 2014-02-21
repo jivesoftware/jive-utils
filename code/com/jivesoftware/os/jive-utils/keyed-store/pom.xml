@@ -9,24 +9,27 @@
         <relativePath>../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
     </parent>
     <groupId>com.jivesoftware.os.jive.utils</groupId>
-    <artifactId>map-store</artifactId>
+    <artifactId>keyed-store</artifactId>
     <properties>
         <module.type>shared_lib</module.type>
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
+            <groupId>com.jivesoftware.os.jive.utils</groupId>
+            <artifactId>map-store</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
+            <groupId>com.jivesoftware.os.jive.utils</groupId>
+            <artifactId>chunk-store</artifactId>
         </dependency>
         <dependency>
             <groupId>com.jivesoftware.os.jive.utils</groupId>
             <artifactId>io</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-
 </project>
