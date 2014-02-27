@@ -82,6 +82,10 @@ public class FileBackedKeyedStore {
         return filer;
     }
 
+    public long sizeInBytes() {
+        return mapStore.sizeInBytes() + chunkStore.sizeInBytes();
+    }
+
     public void close() {
         // TODO
     }

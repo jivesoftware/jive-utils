@@ -207,4 +207,8 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         }
     }
 
+    public long sizeInBytes() {
+        //TODO
+        return 0;
+    }
 }

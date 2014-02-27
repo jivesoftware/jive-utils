@@ -88,7 +88,7 @@ public class FileBackedMemMappedByteBufferFactory {
     private void ensureDirectory(File _file) {
         if (!_file.exists()) {
             File parent = _file.getParentFile();
-            if (parent != null) {
+            if (parent != null && !parent.exists()) {
                 if (!parent.mkdirs()) {
                     throw new RuntimeException("Failed to create parent:" + parent);
                 }

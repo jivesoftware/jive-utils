@@ -4,6 +4,7 @@ import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
+
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -141,5 +142,4 @@ public class AutoResizingChunkFiler implements Filer {
         }
         return newFiler;
     }
-
 }
