@@ -33,7 +33,7 @@ public class SubsetableFiler implements Filer {
         SubsetableFiler subFiler = subFilers.get(subKey);
         if (subFiler == null) {
             subFiler = new SubsetableFiler(filer, _startOfFP, _endOfFP, _count);
-            SubsetableFiler had = subFilers.putIfAbsent(key, subFiler);
+            SubsetableFiler had = subFilers.putIfAbsent(subKey, subFiler);
             if (had != null) {
                 subFiler = had;
             }
@@ -96,7 +96,6 @@ public class SubsetableFiler implements Filer {
 
     @Override
     final public void write(byte[] b) throws IOException {
-
         filer.write(b);
     }
 

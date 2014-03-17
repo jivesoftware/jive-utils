@@ -38,6 +38,11 @@ public class ChunkStore {
         referenceNumber = _referenceNumber;
     }
 
+    public long sizeInBytes() {
+        //TODO
+        return 0;
+    }
+
     public long bytesNeeded() {
         return Long.MAX_VALUE;
     }

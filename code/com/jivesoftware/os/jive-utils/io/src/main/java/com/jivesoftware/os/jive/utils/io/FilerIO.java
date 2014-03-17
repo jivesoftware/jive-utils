@@ -1,9 +1,7 @@
 package com.jivesoftware.os.jive.utils.io;
 
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  *
@@ -1131,7 +1129,7 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static float readFloat(Readable _filer, String fieldName) throws Exception {
+    public static float readFloat(Readable _filer, String fieldName) throws IOException {
         byte[] bytes = new byte[4];
         _filer.read(bytes);
         int v = 0;
@@ -1184,7 +1182,7 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static double readDouble(Readable _filer, String fieldName) throws Exception {
+    public static double readDouble(Readable _filer, String fieldName) throws IOException {
         byte[] bytes = new byte[8];
         _filer.read(bytes);
         long v = 0;
@@ -1222,7 +1220,7 @@ public class FilerIO {
      * @return
      * @throws Exception
      */
-    public static String readLine(Filer _filer, String fieldName) throws Exception {
+    public static String readLine(Filer _filer, String fieldName) throws IOException {
         StringBuilder input = new StringBuilder();
         int c = -1;
         boolean eol = false;
@@ -1697,4 +1695,183 @@ public class FilerIO {
     public static long chunkLength(long _chunkPower) {
         return (long) Math.pow(2, _chunkPower);
     }
+
+    /**
+     * Returns a {@link DataInput} which delegates to the given {@link Filer}.
+     *
+     * @param _filer the delegated filer
+     * @return a delegating input
+     */
+    public static DataInput asDataInput(final Filer _filer) {
+        return new DataInput() {
+
+            @Override
+            public void readFully(byte[] b) throws IOException {
+                int bytesRead = _filer.read(b);
+                if (bytesRead < b.length) {
+                    throw new EOFException();
+                }
+            }
+
+            @Override
+            public void readFully(byte[] b, int off, int len) throws IOException {
+                int bytesRead = _filer.read(b, off, len);
+                if (bytesRead < len) {
+                    throw new EOFException();
+                }
+            }
+
+            @Override
+            public int skipBytes(int n) throws IOException {
+                long fp = _filer.getFilePointer();
+                return (int) (_filer.skip(n) - fp);
+            }
+
+            @Override
+            public boolean readBoolean() throws IOException {
+                return FilerIO.readBoolean(_filer, null);
+            }
+
+            @Override
+            public byte readByte() throws IOException {
+                return FilerIO.readByte(_filer, null);
+            }
+
+            @Override
+            public int readUnsignedByte() throws IOException {
+                return FilerIO.readUnsignedByte(_filer, null);
+            }
+
+            @Override
+            public short readShort() throws IOException {
+                return FilerIO.readShort(_filer, null);
+            }
+
+            @Override
+            public int readUnsignedShort() throws IOException {
+                return FilerIO.readUnsignedShort(_filer, null);
+            }
+
+            @Override
+            public char readChar() throws IOException {
+                return FilerIO.readChar(_filer, null);
+            }
+
+            @Override
+            public int readInt() throws IOException {
+                return FilerIO.readInt(_filer, null);
+            }
+
+            @Override
+            public long readLong() throws IOException {
+                return FilerIO.readLong(_filer, null);
+            }
+
+            @Override
+            public float readFloat() throws IOException {
+                return FilerIO.readFloat(_filer, null);
+            }
+
+            @Override
+            public double readDouble() throws IOException {
+                return FilerIO.readDouble(_filer, null);
+            }
+
+            @Override
+            public String readLine() throws IOException {
+                return FilerIO.readLine(_filer, null);
+            }
+
+            @Override
+            public String readUTF() throws IOException {
+                int length = readUnsignedShort();
+                byte[] bytes = new byte[length];
+                read(_filer, bytes);
+                return new String(bytes, StandardCharsets.UTF_8);
+            }
+        };
+    }
+
+    /**
+     * Returns a {@link DataOutput} which delegates to the given {@link Filer}.
+     *
+     * @param _filer the delegated filer
+     * @return a delegating output
+     */
+    public static DataOutput asDataOutput(final Filer _filer) {
+        return new DataOutput() {
+            @Override
+            public void write(int b) throws IOException {
+                _filer.write(b);
+            }
+
+            @Override
+            public void write(byte[] b) throws IOException {
+                _filer.write(b);
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                _filer.write(b, off, len);
+            }
+
+            @Override
+            public void writeBoolean(boolean v) throws IOException {
+                FilerIO.writeBoolean(_filer, v, null);
+            }
+
+            @Override
+            public void writeByte(int v) throws IOException {
+                FilerIO.writeByte(_filer, v, null);
+            }
+
+            @Override
+            public void writeShort(int v) throws IOException {
+                FilerIO.writeShort(_filer, v, null);
+            }
+
+            @Override
+            public void writeChar(int v) throws IOException {
+                FilerIO.writeChar(_filer, v, null);
+            }
+
+            @Override
+            public void writeInt(int v) throws IOException {
+                FilerIO.writeInt(_filer, v, null);
+            }
+
+            @Override
+            public void writeLong(long v) throws IOException {
+                FilerIO.writeLong(_filer, v, null);
+            }
+
+            @Override
+            public void writeFloat(float v) throws IOException {
+                FilerIO.writeFloat(_filer, v, null);
+            }
+
+            @Override
+            public void writeDouble(double v) throws IOException {
+                FilerIO.writeDouble(_filer, v, null);
+            }
+
+            @Override
+            public void writeBytes(String s) throws IOException {
+                FilerIO.write(_filer, s.getBytes(), null);
+            }
+
+            @Override
+            public void writeChars(String s) throws IOException {
+                FilerIO.writeCharArray(_filer, s.toCharArray(), null);
+            }
+
+            @Override
+            public void writeUTF(String s) throws IOException {
+                byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
+                FilerIO.writeShort(_filer, bytes.length, null);
+                FilerIO.write(_filer, bytes, null);
+            }
+        };
+    }
+
 }

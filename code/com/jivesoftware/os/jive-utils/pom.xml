@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jivesoftware.os.jive</groupId>
     <artifactId>jive-utils</artifactId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>pom</packaging>
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-repo-management</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
         <relativePath>inheritance-poms/global-repo-management/pom.xml</relativePath>
     </parent>
     <modules>
@@ -26,6 +26,7 @@
         <module>row-column-value-store</module>
         <module>chunk-store</module>
         <module>map-store</module>
+        <module>keyed-store</module>
         <module>io</module>
     </modules>
 
