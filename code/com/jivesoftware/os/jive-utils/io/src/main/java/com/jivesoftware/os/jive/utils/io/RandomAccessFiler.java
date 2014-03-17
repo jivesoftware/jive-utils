@@ -1,5 +1,6 @@
 package com.jivesoftware.os.jive.utils.io;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -17,9 +18,14 @@ public class RandomAccessFiler extends RandomAccessFile implements Filer {
     public long writeByteCount;
     String fileName;
 
-    private RandomAccessFiler(String name, String mode) throws IOException {
+    public RandomAccessFiler(String name, String mode) throws IOException {
         super(name, mode);
         fileName = name;
+    }
+
+    public RandomAccessFiler(File file, String mode) throws IOException {
+        super(file, mode);
+        fileName = file.getName();
     }
 
     @Override

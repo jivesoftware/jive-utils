@@ -37,6 +37,15 @@ public class AutoResizingChunkFiler implements Filer {
         filerReference.set(filer);
     }
 
+    public boolean exists() throws Exception {
+        byte[] value = mapStore.get(key);
+        Filer filer = null;
+        if (value != null) {
+            filer = chunkStore.getFiler(FilerIO.bytesLong(value));
+        }
+        return filer != null;
+    }
+
     private Filer createNewFiler(long initialChunkSize) throws Exception {
         long chunkId = chunkStore.newChunk(initialChunkSize);
         mapStore.add(key, FilerIO.longBytes(chunkId));

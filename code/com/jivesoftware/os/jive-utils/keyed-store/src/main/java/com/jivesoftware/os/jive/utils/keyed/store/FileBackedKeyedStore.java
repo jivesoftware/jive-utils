@@ -77,7 +77,14 @@ public class FileBackedKeyedStore {
     }
 
     public Filer get(byte[] key) throws Exception {
+        return get(key, true);
+    }
+
+    public Filer get(byte[] key, boolean autoCreate) throws Exception {
         AutoResizingChunkFiler filer = new AutoResizingChunkFiler(mapStore, key, chunkStore);
+        if (!autoCreate && !filer.exists()) {
+            return null;
+        }
         filer.init(newFilerInitialCapacity);
         return filer;
     }
