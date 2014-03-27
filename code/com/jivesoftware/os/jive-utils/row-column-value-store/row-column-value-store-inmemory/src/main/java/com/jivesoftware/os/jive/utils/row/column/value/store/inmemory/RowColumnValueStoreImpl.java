@@ -9,6 +9,7 @@
 package com.jivesoftware.os.jive.utils.row.column.value.store.inmemory;
 
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
+import com.jivesoftware.os.jive.utils.base.util.locks.StripingLocksProvider;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.CallbackStreamException;
@@ -46,6 +47,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
     private final Map<T, Map<S, Map<K, Timestamped<V>>>> tenantIdStores = new ConcurrentSkipListMap<>();
+    private final StripingLocksProvider<S> rowLocks = new StripingLocksProvider<>(128);
 
     /**
      *
@@ -67,7 +69,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     @Override
     public void add(T tenantId, S rowKey, K columnKey, V columnValue, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) {
         Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-        synchronized (store) {
+        synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> map = store.get(rowKey);
             if (map == null) {
                 // todo should use sortedMap to more closely mimic cassandra impl
@@ -86,8 +88,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public boolean addIfNotExists(T tenantId, S rowKey, K columnKey, V columnValue, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) {
-        Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-        synchronized (store) {
+        synchronized (rowLocks.lock(rowKey)) {
             V currentVal = get(tenantId, rowKey, columnKey, null, null);
             if (currentVal == null) {
                 add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper);
@@ -101,7 +102,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     @Override
     public V get(T tenantId, S rowKey, K columnKey, Integer overrideNumberOfRetries, Integer overrideConsistency) {
         Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-        synchronized (store) {
+        synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> map = store.get(rowKey);
             if (map == null) {
                 return null;
@@ -117,7 +118,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     @Override
     public void remove(T tenantId, S rowKey, K columnKey, Timestamper overrideTimestamper) {
         Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-        synchronized (store) {
+        synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> map = store.get(rowKey);
             long timestamp = overrideTimestamper == null ? System.currentTimeMillis() : overrideTimestamper.get();
             if (map == null) {
@@ -138,13 +139,17 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
             ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, R> marshall) {
         try {
             Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-            Map<K, Timestamped<V>> map = store.get(rowKey);
-            if (map == null) {
-                callback.callback(null);
-                return;
+
+            Map<K, Timestamped<V>> copy = new ConcurrentSkipListMap<>();
+            synchronized (rowLocks.lock(rowKey)) {
+                Map<K, Timestamped<V>> map = store.get(rowKey);
+                if (map != null) {
+                    copy.putAll(map);
+                }
             }
+
             long count = 0;
-            for (Map.Entry<K, Timestamped<V>> e : map.entrySet()) {
+            for (Map.Entry<K, Timestamped<V>> e : copy.entrySet()) {
                 count++;
                 if (e.getValue().isTombstone()) {
                     continue;
@@ -169,6 +174,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
             }
             //End of stream
             callback.callback(null);
+
         } catch (Exception x) {
             throw new RuntimeException("Failed to get.", x);
         }
@@ -203,13 +209,13 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
             Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callback) {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, callback,
                 new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, ColumnValueAndTimestamp<K, V, TS>>() {
-            @Override
-            public ColumnValueAndTimestamp<K, V, TS> marshall(Map.Entry<K, Timestamped<V>> raw) throws Exception {
-                Map.Entry<K, Timestamped<V>> e = raw;
-                Object t = e.getValue().getTimestamp();
-                return new ColumnValueAndTimestamp<>(e.getKey(), e.getValue().getValue(), (TS) t);
-            }
-        });
+                    @Override
+                    public ColumnValueAndTimestamp<K, V, TS> marshall(Map.Entry<K, Timestamped<V>> raw) throws Exception {
+                        Map.Entry<K, Timestamped<V>> e = raw;
+                        Object t = e.getValue().getTimestamp();
+                        return new ColumnValueAndTimestamp<>(e.getKey(), e.getValue().getValue(), (TS) t);
+                    }
+                });
     }
 
     @Override
@@ -236,16 +242,20 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
         if (columnKeys.length != columnValues.length) {
             throw new RuntimeException("keys.length must equal values.length");
         }
-        for (int i = 0; i < columnKeys.length; i++) {
-            add(tenantId, rowKey, columnKeys[i], columnValues[i], timeToLiveInSeconds, overrideTimestamper);
+        synchronized (rowLocks.lock(rowKey)) {
+            for (int i = 0; i < columnKeys.length; i++) {
+                add(tenantId, rowKey, columnKeys[i], columnValues[i], timeToLiveInSeconds, overrideTimestamper);
+            }
         }
     }
 
     @Override
     public List<V> multiGet(T tenantId, S rowKey, K[] columnKeys, Integer overrideNumberOfRetries, Integer overrideConsistency) {
         List<V> got = new LinkedList<>();
-        for (K k : columnKeys) {
-            got.add(get(tenantId, rowKey, k, overrideNumberOfRetries, overrideConsistency));
+        synchronized (rowLocks.lock(rowKey)) {
+            for (K k : columnKeys) {
+                got.add(get(tenantId, rowKey, k, overrideNumberOfRetries, overrideConsistency));
+            }
         }
         return got;
     }
@@ -264,7 +274,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
             Integer overrideConsistency) {
 
         Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-        synchronized (store) {
+        synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> map = store.get(rowKey);
             if (map == null) {
                 return new ColumnValueAndTimestamp[columnKeys.length];
@@ -290,8 +300,10 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public void multiRemove(T tenantId, S rowKey, K[] columnKeys, Timestamper overrideTimestamper) {
-        for (K k : columnKeys) {
-            remove(tenantId, rowKey, k, overrideTimestamper);
+        synchronized (rowLocks.lock(rowKey)) {
+            for (K k : columnKeys) {
+                remove(tenantId, rowKey, k, overrideTimestamper);
+            }
         }
     }
 
@@ -338,7 +350,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     @Override
     public void removeRow(T tenantId, S rowKey, Timestamper overrideTimestamper) {
         Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-        synchronized (store) {
+        synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> columns = store.get(rowKey);
             if (columns != null) {
                 for (Entry<K, Timestamped<V>> c : columns.entrySet()) {
@@ -378,34 +390,40 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     @Override
     public <TS> void multiRowGetAll(T tenantId, List<KeyedColumnValueCallbackStream<S, K, V, TS>> rowKeyCallbackStreamPairs) {
         Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
-        synchronized (store) {
-            for (KeyedColumnValueCallbackStream<S, K, V, TS> pair : rowKeyCallbackStreamPairs) {
+        for (KeyedColumnValueCallbackStream<S, K, V, TS> pair : rowKeyCallbackStreamPairs) {
+            S rowKey = pair.getKey();
+
+            Map<K, Timestamped<V>> copy = new ConcurrentSkipListMap<>();
+            synchronized (rowLocks.lock(rowKey)) {
                 Map<K, Timestamped<V>> map = store.get(pair.getKey());
-
-                try {
-                    if (map != null) {
-                        CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callbackStream = pair.getCallbackStream();
-
-                        for (Map.Entry<K, Timestamped<V>> columnAndTimestamped : map.entrySet()) {
-                            K column = columnAndTimestamped.getKey();
-                            Timestamped<V> got = columnAndTimestamped.getValue();
-                            if (got.isTombstone()) {
-                                continue;
-                            }
-
-                            try {
-                                callbackStream.callback(new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp()));
-                            } catch (Exception ex) {
-                                throw new CallbackStreamException(ex);
-                            }
-                        }
-
-                        //eos
-                        callbackStream.callback(null);
-                    }
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
+                if (map != null) {
+                    copy.putAll(map);
                 }
+            }
+
+            try {
+                CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callbackStream = pair.getCallbackStream();
+
+                for (Map.Entry<K, Timestamped<V>> columnAndTimestamped : copy.entrySet()) {
+                    K column = columnAndTimestamped.getKey();
+                    Timestamped<V> got = columnAndTimestamped.getValue();
+                    if (got.isTombstone()) {
+                        continue;
+                    }
+
+                    try {
+                        callbackStream.callback(new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp()));
+                    } catch (Exception ex) {
+                        throw new CallbackStreamException(ex);
+                    }
+                }
+
+                //eos
+                callbackStream.callback(null);
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+
             }
         }
     }
@@ -415,34 +433,38 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
         for (TenantKeyedColumnValueCallbackStream<T, S, K, V, TS> pair : rowKeyCallbackStreamPairs) {
             Map<S, Map<K, Timestamped<V>>> store = getStore(pair.getTenantId());
-            synchronized (store) {
+            S rowKey = pair.getKey();
+            Map<K, Timestamped<V>> copy = new ConcurrentSkipListMap<>();
+            synchronized (rowLocks.lock(rowKey)) {
                 Map<K, Timestamped<V>> map = store.get(pair.getKey());
-
-                try {
-                    if (map != null) {
-                        CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callbackStream = pair.getCallbackStream();
-
-                        for (Map.Entry<K, Timestamped<V>> columnAndTimestamped : map.entrySet()) {
-                            K column = columnAndTimestamped.getKey();
-                            Timestamped<V> got = columnAndTimestamped.getValue();
-                            if (got.isTombstone()) {
-                                continue;
-                            }
-
-                            try {
-                                callbackStream.callback(new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp()));
-                            } catch (Exception ex) {
-                                throw new CallbackStreamException(ex);
-                            }
-                        }
-
-                        //eos
-                        callbackStream.callback(null);
-                    }
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
+                if (map != null) {
+                    copy.putAll(map);
                 }
             }
+
+            try {
+                CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callbackStream = pair.getCallbackStream();
+
+                for (Map.Entry<K, Timestamped<V>> columnAndTimestamped : copy.entrySet()) {
+                    K column = columnAndTimestamped.getKey();
+                    Timestamped<V> got = columnAndTimestamped.getValue();
+                    if (got.isTombstone()) {
+                        continue;
+                    }
+
+                    try {
+                        callbackStream.callback(new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp()));
+                    } catch (Exception ex) {
+                        throw new CallbackStreamException(ex);
+                    }
+                }
+
+                //eos
+                callbackStream.callback(null);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
         }
     }
 }
