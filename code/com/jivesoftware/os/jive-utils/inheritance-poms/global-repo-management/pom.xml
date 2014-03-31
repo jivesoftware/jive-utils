@@ -16,10 +16,11 @@
         </license>
     </licenses>
     <scm>
-		<url>https://github.com/jivesoftware/tasmo</url>
-		<connection>scm:git:git://github.com/jivesoftware/tasmo.git</connection>
-		<developerConnection>scm:git:git@github.com:jivesoftware/tasmo.git</developerConnection>
-	</scm>
+        <connection>scm:git:ssh://github.com/jivesoftware/tasmo.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jivesoftware/tasmo.git</developerConnection>
+        <url>https://github.com/jivesoftware/tasmo</url>
+        <tag>HEAD</tag>
+    </scm>
     <repositories>
         <repository>
             <id>cloudera</id>
