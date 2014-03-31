@@ -8,6 +8,12 @@
     <packaging>pom</packaging>
 
     <inceptionYear>2013</inceptionYear>
+    <organization>
+        <name>Jive Software</name>
+        <url>https://developers.jivesoftware.com</url>
+
+    </organization>
+    <url>https://developers.jivesoftware.com</url>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -16,9 +22,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:ssh://github.com/jivesoftware/tasmo.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/jivesoftware/tasmo.git</developerConnection>
-        <url>https://github.com/jivesoftware/tasmo</url>
+        <connection>scm:git:ssh://github.com/jivesoftware/jive-utils.git</connection>
+        <developerConnection>scm:git:git://git@github.com/jivesoftware/jive-utils.git</developerConnection>
+        <url>https://github.com/jivesoftware/jive-utils</url>
         <tag>HEAD</tag>
     </scm>
     <repositories>
