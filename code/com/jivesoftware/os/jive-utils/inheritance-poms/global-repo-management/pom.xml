@@ -15,6 +15,11 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    <scm>
+		<url>https://github.com/jivesoftware/tasmo</url>
+		<connection>scm:git:git://github.com/jivesoftware/tasmo.git</connection>
+		<developerConnection>scm:git:git@github.com:jivesoftware/tasmo.git</developerConnection>
+	</scm>
     <repositories>
         <repository>
             <id>cloudera</id>
@@ -22,10 +27,11 @@
         </repository>
     </repositories>
     <distributionManagement>
-            <repository>
-                <id>modified-thirdparty</id>
-                <name>Jive Internal Repository</name>
-                <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
-            </repository>
-        </distributionManagement>
+        <repository>
+            <id>modified-thirdparty</id>
+            <name>Jive Internal Repository</name>
+            <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
+        </repository>
+    </distributionManagement>
+
 </project>
