@@ -135,7 +135,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
         }
     }
 
-    private <R> void get(T tenantId, S rowKey, Object startColumnKey, Long maxCount, int batchSize, boolean reversed, CallbackStream<R> callback,
+    private <R> void get(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, CallbackStream<R> callback,
             ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, R> marshall) {
         try {
             Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
@@ -181,7 +181,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     }
 
     @Override
-    public void getKeys(T tenantId, S rowKey, Object startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
+    public void getKeys(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
             Integer overrideConsistency, CallbackStream<K> callback) {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, callback, new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, K>() {
             @Override
@@ -193,7 +193,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     }
 
     @Override
-    public void getValues(T tenantId, S rowKey, Object startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
+    public void getValues(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
             Integer overrideConsistency, CallbackStream<V> callback) {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, callback, new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, V>() {
             @Override
@@ -205,7 +205,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     }
 
     @Override
-    public <TS> void getEntrys(T tenantId, S rowKey, Object startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
+    public <TS> void getEntrys(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
             Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callback) {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, callback,
                 new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, ColumnValueAndTimestamp<K, V, TS>>() {

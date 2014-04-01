@@ -38,6 +38,7 @@ public class HBaseTableConfiguration {
     private final String tableNameSpace;
     private final String tableName;
     private final String columnFamilyName;
+    private final String[] columnFamilyNames;
     private final int timeToLiveInSeconds;
     private final int minVersions;
     private final int maxVersions;
@@ -46,13 +47,30 @@ public class HBaseTableConfiguration {
         String tableNameSpace,
         String tableName,
         String columnFamilyName) {
-        this(configuration, tableNameSpace, tableName, columnFamilyName, -1, -1, -1);
+        this(configuration, tableNameSpace, tableName, new String[] { columnFamilyName });
+    }
+
+    public HBaseTableConfiguration(Configuration configuration,
+        String tableNameSpace,
+        String tableName,
+        String[] columnFamilyNames) {
+        this(configuration, tableNameSpace, tableName, columnFamilyNames, -1, -1, -1);
     }
 
     public HBaseTableConfiguration(Configuration configuration,
         String tableNameSpace,
         String tableName,
         String columnFamilyName,
+        int ttlInSeconds,
+        int minVersions,
+        int maxVersions) {
+        this(configuration, tableNameSpace, tableName, new String[] { columnFamilyName }, ttlInSeconds, minVersions, maxVersions);
+    }
+
+    public HBaseTableConfiguration(Configuration configuration,
+        String tableNameSpace,
+        String tableName,
+        String[] columnFamilyNames,
         int ttlInSeconds,
         int minVersions,
         int maxVersions) {
@@ -63,7 +81,8 @@ public class HBaseTableConfiguration {
         }
         this.tableNameSpace = tableNameSpace.trim();
         this.tableName = tableName;
-        this.columnFamilyName = columnFamilyName;
+        this.columnFamilyName = columnFamilyNames[0];
+        this.columnFamilyNames = columnFamilyNames;
         this.timeToLiveInSeconds = ttlInSeconds;
         this.minVersions = minVersions;
         this.maxVersions = maxVersions;
@@ -85,24 +104,26 @@ public class HBaseTableConfiguration {
         }
         if (tableDescriptor == null) {
             tableDescriptor = new HTableDescriptor(finalName);
-            HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(columnFamilyName);
-            if (timeToLiveInSeconds > -1) {
-                hColumnDescriptor.setTimeToLive(timeToLiveInSeconds);
-            }
-            if (maxVersions > -1) {
-                hColumnDescriptor.setMaxVersions(maxVersions);
-            }
-            if (minVersions > -1) {
-                hColumnDescriptor.setMinVersions(minVersions);
-            }
+            for (String columnFamily : columnFamilyNames) {
+                HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(columnFamily);
+                if (timeToLiveInSeconds > -1) {
+                    hColumnDescriptor.setTimeToLive(timeToLiveInSeconds);
+                }
+                if (maxVersions > -1) {
+                    hColumnDescriptor.setMaxVersions(maxVersions);
+                }
+                if (minVersions > -1) {
+                    hColumnDescriptor.setMinVersions(minVersions);
+                }
 
-            tableDescriptor.addFamily(hColumnDescriptor);
+                tableDescriptor.addFamily(hColumnDescriptor);
+            }
             try {
                 admin.createTable(tableDescriptor);
-                LOG.info("Created table: " + finalName + " with column family name: " + columnFamilyName);
+                LOG.info("Created table: " + finalName + " with column family names: " + columnFamilyNames);
             } catch (TableExistsException tee) {
-                LOG.info("Cannot create table since it already exists: " + finalName + " with column family name: "
-                    + columnFamilyName, tee);
+                LOG.info("Cannot create table since it already exists: " + finalName + " with column family names: "
+                    + columnFamilyNames, tee);
             }
         } else {
             HColumnDescriptor column = tableDescriptor.getFamily(columnFamilyName.getBytes());

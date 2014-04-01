@@ -26,6 +26,11 @@ public interface SetOfSortedMapsImplInitializer<E extends Exception> {
         Timestamper timestamper) throws IOException;
 
     <T, R, C, V> RowColumnValueStore<T, R, C, V, E> initialize(
+        String tableNameSpace, String tableName, String columnFamilyName, String[] additionalColumnFamilies,
+        RowColumnValueStoreMarshaller<T, R, C, V> marshaller,
+        Timestamper timestamper) throws IOException;
+
+    <T, R, C, V> RowColumnValueStore<T, R, C, V, E> initialize(
         String tableNameSpace, String tableName, String columnFamilyName,
         int ttlInSeconds, int minVersions, int maxVersions,
         RowColumnValueStoreMarshaller<T, R, C, V> marshaller,
