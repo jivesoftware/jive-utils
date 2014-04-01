@@ -131,19 +131,19 @@ public class MasterSlaveHASetOfSortedMaps<T, R, C, V, E extends Exception> imple
     }
 
     @Override
-    public void getKeys(T tenantId, R rowKey, Object start, Long maxCount, int batchSize,
+    public void getKeys(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
     boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<C> callback) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void getValues(T tenantId, R rowKey, Object start, Long maxCount, int batchSize,
+    public void getValues(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
     boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<V> callback) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public <TS> void getEntrys(T tenantId, R rowKey, Object start, Long maxCount, int batchSize,
+    public <TS> void getEntrys(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
     boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<C, V, TS>> callback) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

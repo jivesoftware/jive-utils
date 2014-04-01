@@ -49,6 +49,8 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.ColumnRangeFilter;
+import org.apache.hadoop.hbase.filter.Filter;
 
 /**
  * HBase implementation of RowColumnValueStore generic interface. In any method that has an Integer overrideConsistency, that argument is ignored. In any method
@@ -552,7 +554,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @param callback
      */
     @Override
-    public void getKeys(final T tenantId, R rowKey, Object startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overrideNumberOfRetries,
+    public void getKeys(final T tenantId, R rowKey, C startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overrideNumberOfRetries,
             Integer overrideConsistency, CallbackStream<C> callback) throws Exception {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback,
                 new ValueStoreMarshaller<KeyValue, C>() {
@@ -575,7 +577,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @param callback
      */
     @Override
-    public void getValues(final T tenantId, R rowKey, Object startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overrideNumberOfRetries,
+    public void getValues(final T tenantId, R rowKey, C startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overrideNumberOfRetries,
             Integer overrideConsistency, CallbackStream<V> callback) throws Exception {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback,
                 new ValueStoreMarshaller<KeyValue, V>() {
@@ -599,7 +601,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @param callback
      */
     @Override
-    public <TS> void getEntrys(final T tenantId, R rowKey, Object startColumnKey, Long maxCount, int batchSize, boolean reversed,
+    public <TS> void getEntrys(final T tenantId, R rowKey, C startColumnKey, Long maxCount, int batchSize, boolean reversed,
             Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<C, V, TS>> callback) throws Exception {
 
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback,
@@ -626,7 +628,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @param marshall
      * @param <K>
      */
-    private <K> void get(final T tenantId, final R rowKey, final Object startColumnKey, final Long maxCount, int batchSize,
+    private <K> void get(final T tenantId, final R rowKey, final C startColumnKey, final Long maxCount, int batchSize,
             final boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency,
             final CallbackStream<K> callback, final ValueStoreMarshaller<KeyValue, K> marshall) throws Exception {
 
@@ -639,13 +641,17 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
         HTableInterface t = tablePool.getTable(table);
         try {
             final byte[] rawRowKey = marshaller.toRowKeyBytes(tenantId, rowKey);
-            final byte[] startcolumnKey = (startColumnKey == null) ? NULL : marshaller.toColumnKeyBytes((C) startColumnKey);
+            final byte[] startColumnKeyBytes = (startColumnKey == null) ? null : marshaller.toColumnKeyBytes(startColumnKey);
 
             Get get = new Get(rawRowKey);
             get.addFamily(family);
             get.setMaxVersions(1);
             Scan scan = new Scan(get);
             scan.setBatch(desiredBatchSize);
+            if (startColumnKeyBytes != null) {
+                Filter columnRangeFilter = new ColumnRangeFilter(startColumnKeyBytes, true, null, true);
+                scan.setFilter(columnRangeFilter);
+            }
             ResultScanner resultScanner = t.getScanner(scan);
             EOS:
             for (Result result : resultScanner) {

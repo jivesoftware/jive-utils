@@ -211,7 +211,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
     }
 
     @Override
-    public void getKeys(T tenantId, R rowKey, Object start, Long maxCount, int batchSize,
+    public void getKeys(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
             boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<C> callback) {
         while (true) {
             try {
@@ -229,7 +229,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
     }
 
     @Override
-    public void getValues(T tenantId, R rowKey, Object start, Long maxCount, int batchSize,
+    public void getValues(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
             boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<V> callback) {
         while (true) {
             try {
@@ -247,7 +247,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
     }
 
     @Override
-    public <TS> void getEntrys(T tenantId, R rowKey, Object start, Long maxCount, int batchSize,
+    public <TS> void getEntrys(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
             boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<C, V, TS>> callback) {
         while (true) {
             try {

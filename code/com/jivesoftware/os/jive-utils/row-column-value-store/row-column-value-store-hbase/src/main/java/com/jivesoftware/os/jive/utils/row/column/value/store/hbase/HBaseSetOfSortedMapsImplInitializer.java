@@ -74,6 +74,32 @@ public class HBaseSetOfSortedMapsImplInitializer implements SetOfSortedMapsImplI
     }
 
     @Override
+    public <T, R, C, V> RowColumnValueStore<T, R, C, V, Exception> initialize(String tableNameSpace, String tableName, String columnFamilyName,
+        String[] additionalColumnFamilies, RowColumnValueStoreMarshaller<T, R, C, V> marshaller, Timestamper timestamper) throws IOException {
+
+        String[] columnFamilies = new String[additionalColumnFamilies.length + 1];
+        columnFamilies[0] = columnFamilyName;
+        for (int i = 0; i < additionalColumnFamilies.length; i++) {
+            columnFamilies[i + 1] = additionalColumnFamilies[i];
+        }
+
+        HBaseTableConfiguration hBaseTableConfiguration = new HBaseTableConfiguration(
+            hbaseConfig,
+            tableNameSpace,
+            tableName,
+            columnFamilies);
+
+        hBaseTableConfiguration.ensureTableProvisioned(true);
+
+        return new HBaseSetOfSortedMapsImpl<>(
+            new HTablePool(hbaseConfig, POOL_SIZE),
+            hBaseTableConfiguration.getFinalName(),
+            hBaseTableConfiguration.getColumnFamilyName(),
+            marshaller,
+            timestamper);
+    }
+
+    @Override
     public <T, R, C, V> RowColumnValueStore<T, R, C, V, Exception> initialize(
         String tableNameSpace, String tableName, String columnFamilyName,
         int ttlInSeconds, int minVersions, int maxVersions,

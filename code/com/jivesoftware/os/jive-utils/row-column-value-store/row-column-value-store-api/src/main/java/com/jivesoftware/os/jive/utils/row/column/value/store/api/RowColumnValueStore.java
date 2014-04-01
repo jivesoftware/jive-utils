@@ -148,7 +148,7 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      * @param callback
      * @throws Exception
      */
-    void getKeys(T tenantId, R rowKey, Object start, Long maxCount, int batchSize, boolean reversed,
+    void getKeys(T tenantId, R rowKey, C start, Long maxCount, int batchSize, boolean reversed,
             Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<C> callback) throws E;
 
     /**
@@ -163,7 +163,7 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      * @param overrideConsistency
      * @param callback
      */
-    void getValues(T tenantId, R rowKey, Object start, Long maxCount, int batchSize, boolean reversed,
+    void getValues(T tenantId, R rowKey, C start, Long maxCount, int batchSize, boolean reversed,
             Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<V> callback) throws E;
 
     /**
@@ -179,7 +179,7 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      * @param overrideConsistency
      * @param callback
      */
-    <TS> void getEntrys(T tenantId, R rowKey, Object start, Long maxCount, int batchSize, boolean reversed,
+    <TS> void getEntrys(T tenantId, R rowKey, C start, Long maxCount, int batchSize, boolean reversed,
             Integer overrideNumberOfRetries, Integer overrideConsistency,
             CallbackStream<ColumnValueAndTimestamp<C, V, TS>> callback) throws E;
 
