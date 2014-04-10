@@ -4,6 +4,8 @@ import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.io.SubsetableFiler;
 
+import java.io.IOException;
+
 
 public class ChunkStore {
 
@@ -38,9 +40,8 @@ public class ChunkStore {
         referenceNumber = _referenceNumber;
     }
 
-    public long sizeInBytes() {
-        //TODO
-        return 0;
+    public long sizeInBytes() throws IOException {
+        return filer.getSize();
     }
 
     public long bytesNeeded() {
