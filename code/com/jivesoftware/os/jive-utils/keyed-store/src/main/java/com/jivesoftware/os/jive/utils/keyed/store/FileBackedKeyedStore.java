@@ -7,6 +7,7 @@ import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.SubsetableFiler;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -89,7 +90,7 @@ public class FileBackedKeyedStore {
         return filer;
     }
 
-    public long sizeInBytes() {
+    public long sizeInBytes() throws IOException {
         return mapStore.sizeInBytes() + chunkStore.sizeInBytes();
     }
 

@@ -2,20 +2,29 @@ package com.jivesoftware.os.jive.utils.map.store;
 
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
+import com.jivesoftware.os.jive.utils.logger.MetricLogger;
+import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.mutable.MutableLong;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
-import org.apache.commons.io.FileUtils;
 
 /**
  * @author jonathan
@@ -23,6 +32,8 @@ import org.apache.commons.io.FileUtils;
  * @param <V>
  */
 public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
+
+    private static final MetricLogger LOG = MetricLoggerFactory.getLogger(true);
 
     private final ExtractPayload extractPayload = new ExtractPayload();
     private final MapStore mapStore = new MapStore(new ExtractIndex(), new ExtractKey(), extractPayload);
@@ -207,8 +218,25 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         }
     }
 
-    public long sizeInBytes() {
-        //TODO
-        return 0;
+    public long sizeInBytes() throws IOException {
+        // TODO - Cache this value and only recalculate when add or remove is called?
+
+        final MutableLong size = new MutableLong(0);
+
+        Files.walkFileTree(new File(pathToPartitions).toPath(), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                size.add(attrs.size());
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                LOG.warn("Unable to calculate size of file: " + file, exc);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+        return size.longValue();
     }
 }
