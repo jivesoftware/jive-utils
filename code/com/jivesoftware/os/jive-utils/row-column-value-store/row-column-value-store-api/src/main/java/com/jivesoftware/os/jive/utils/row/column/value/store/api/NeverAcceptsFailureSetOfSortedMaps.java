@@ -219,7 +219,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
                 store.getKeys(tenantId, rowKey, start, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback);
                 return;
             } catch (CallbackStreamException cex) {
-                LOG.error("Caught exception invoking callback stream", cex);
+                throw cex;
             } catch (Exception x) {
                 thunderingHerd.pushback();
             } finally {
@@ -237,7 +237,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
                 store.getValues(tenantId, rowKey, start, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback);
                 return;
             } catch (CallbackStreamException cex) {
-                LOG.error("Caught exception invoking callback stream", cex);
+                throw cex;
             } catch (Exception x) {
                 thunderingHerd.pushback();
             } finally {
@@ -255,7 +255,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
                 store.getEntrys(tenantId, rowKey, start, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback);
                 return;
             } catch (CallbackStreamException cex) {
-                LOG.error("Caught exception invoking callback stream", cex);
+                throw cex;
             } catch (Exception x) {
                 thunderingHerd.pushback();
             } finally {
@@ -272,7 +272,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
                 store.getAllRowKeys(batchSize, overrideNumberOfRetries, callback);
                 return;
             } catch (CallbackStreamException cex) {
-                LOG.error("Caught exception invoking callback stream", cex);
+                throw cex;
             } catch (Exception x) {
                 thunderingHerd.pushback();
             } finally {
@@ -333,7 +333,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
                 store.multiRowGetAll(tenantId, rowKeyCallbackStreamPairs);
                 return;
             } catch (CallbackStreamException cex) {
-                LOG.error("Caught exception invoking callback stream", cex);
+                throw cex;
             } catch (Exception x) {
                 thunderingHerd.pushback();
             } finally {
@@ -350,7 +350,7 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
                 store.multiRowGetAll(tenantRowKeyCallbackStreamPairs);
                 return;
             } catch (CallbackStreamException cex) {
-                LOG.error("Caught exception invoking callback stream", cex);
+                throw cex;
             } catch (Exception x) {
                 thunderingHerd.pushback();
             } finally {
