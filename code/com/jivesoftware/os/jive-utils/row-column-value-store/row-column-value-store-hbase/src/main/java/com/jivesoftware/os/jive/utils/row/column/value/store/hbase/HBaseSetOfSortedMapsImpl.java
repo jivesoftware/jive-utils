@@ -683,7 +683,11 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                 }
             }
             // EOS end of stream
-            callback.callback(null);
+            try {
+                callback.callback(null);
+            } catch (Exception ex) {
+                throw new CallbackStreamException(ex);
+            }
 
         } catch (Exception ex) {
             LOG.error("Failed to get slice. customer=" + tenantId + " key=" + rowKey + " start=" + startColumnKey, ex);
@@ -719,9 +723,13 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                     try {
                         byte[] rawRowKey = keyValue.getRow();
                         TenantIdAndRow<T, R> entry = marshaller.fromRowKeyBytes(rawRowKey);
-                        if (callback.callback(entry) != entry) {
-                            // stop stream requested
-                            break;
+                        try {
+                            if (callback.callback(entry) != entry) {
+                                // stop stream requested
+                                break;
+                            }
+                        } catch (Exception ex) {
+                            throw new CallbackStreamException(ex);
                         }
                     } catch (Exception x) {
                         LOG.error("unable to handle keySlice.", x);
@@ -729,7 +737,11 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                 }
             }
             // EOS end of stream
-            callback.callback(null);
+            try {
+                callback.callback(null);
+            } catch (Exception ex) {
+                throw new CallbackStreamException(ex);
+            }
 
         } catch (Exception ex) {
             throw ex;
@@ -918,7 +930,11 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
 
                 if (result == null || result.isEmpty()) {
                     //eos
-                    callbackStream.callback(null);
+                    try {
+                        callbackStream.callback(null);
+                    } catch (Exception ex) {
+                        throw new CallbackStreamException(ex);
+                    }
                 } else {
                     for (KeyValue keyValue : result.list()) {
                         C fromColumnKeyBytes = marshaller.fromColumnKeyBytes(keyValue.getQualifier());
@@ -933,7 +949,11 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                         }
 
                     }
-                    callbackStream.callback(null);
+                    try {
+                        callbackStream.callback(null);
+                    } catch (Exception ex) {
+                        throw new CallbackStreamException(ex);
+                    }
                     counters.got(1);
                 }
             }
@@ -976,7 +996,11 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
 
                 if (result == null || result.isEmpty()) {
                     //eos
-                    callbackStream.callback(null);
+                    try {
+                        callbackStream.callback(null);
+                    } catch (Exception ex) {
+                        throw new CallbackStreamException(ex);
+                    }
                 } else {
                     for (KeyValue keyValue : result.list()) {
                         C fromColumnKeyBytes = marshaller.fromColumnKeyBytes(keyValue.getQualifier());
@@ -991,7 +1015,11 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                         }
 
                     }
-                    callbackStream.callback(null);
+                    try {
+                        callbackStream.callback(null);
+                    } catch (Exception ex) {
+                        throw new CallbackStreamException(ex);
+                    }
                     counters.got(1);
                 }
             }
