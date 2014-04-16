@@ -655,6 +655,6 @@ public class MapStore {
             seed = x;
             hash += (_key[_start + i] + 128) * x;
         }
-        return hash;
+        return Math.abs(hash);
     }
 }
