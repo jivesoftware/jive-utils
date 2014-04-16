@@ -1,8 +1,7 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
-import com.jivesoftware.os.jive.utils.io.Filer;
-import com.jivesoftware.os.jive.utils.io.FilerIO;
+import com.jivesoftware.os.jive.utils.io.*;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
 
 import java.io.IOException;
@@ -135,20 +134,42 @@ public class AutoResizingChunkFiler implements Filer {
         Filer newFiler = currentFiler;
         if (capacity >= currentFiler.length()) {
             try {
-                long newChunkId = chunkStore.newChunk(FilerIO.chunkPower(capacity, 8));
-                newFiler = chunkStore.getFiler(newChunkId);
                 long currentOffset = currentFiler.getFilePointer();
-                currentFiler.seek(0);
-                FilerIO.copy(currentFiler, newFiler, -1);
-                newFiler.seek(currentOffset);
+                long newChunkId = chunkStore.newChunk(capacity);
+                newFiler = chunkStore.getFiler(newChunkId);
+                copy(currentFiler, newFiler, -1);
                 long chunkId = FilerIO.bytesLong(mapStore.get(key));
                 mapStore.add(key, FilerIO.longBytes(newChunkId));
                 filerReference.set(newFiler);
                 chunkStore.remove(chunkId);
+                // copying and chunkStore removal each manipulate the pointer, so restore pointer afterward
+                newFiler.seek(currentOffset);
             } catch (Exception e) {
                 throw new IOException(e);
             }
         }
         return newFiler;
+    }
+
+    private long copy(Filer _from, Filer _to, long _bufferSize) throws Exception {
+        long byteCount = _bufferSize;
+        if (_bufferSize < 1) {
+            byteCount = 1024 * 1024; //1MB
+        }
+        byte[] chunk = new byte[(int) byteCount];
+        int bytesRead;
+        long size = 0;
+        synchronized (_from.lock()) {
+            synchronized (_to.lock()) {
+                _from.seek(0);
+                while ((bytesRead = _from.read(chunk)) > -1) {
+                    _to.seek(size);
+                    _to.write(chunk, 0, bytesRead);
+                    size += bytesRead;
+                    _from.seek(size);
+                }
+                return size;
+            }
+        }
     }
 }

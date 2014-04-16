@@ -81,7 +81,7 @@ public class ByteBufferBackedFiler implements Filer {
     @Override
     public int read(byte[] b, int _offset, int _len) throws IOException {
         buffer.get(b, _offset, _len);
-        return b.length;
+        return _len;
     }
 
     @Override

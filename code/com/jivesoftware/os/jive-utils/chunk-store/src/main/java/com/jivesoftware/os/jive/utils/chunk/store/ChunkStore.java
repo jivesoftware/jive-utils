@@ -106,10 +106,10 @@ public class ChunkStore {
         }
     }
 
-    public long newChunk(long _chunkLength) throws Exception {
+    public long newChunk(long _capacity) throws Exception {
         long resultFP;
         synchronized (filer.lock()) {
-            long chunkPower = FilerIO.chunkPower(_chunkLength, cMinPower);
+            long chunkPower = FilerIO.chunkPower(_capacity, cMinPower);
             resultFP = resuseChunk(chunkPower);
             if (resultFP == -1) {
                 long chunkLength = FilerIO.chunkLength(chunkPower);
@@ -129,7 +129,7 @@ public class ChunkStore {
                     FilerIO.writeLong(filer, cMagicNumber, "magicNumber");
                     FilerIO.writeLong(filer, chunkPower, "chunkPower");
                     FilerIO.writeLong(filer, -1, "chunkNexFreeChunkFP");
-                    FilerIO.writeLong(filer, _chunkLength, "chunkLength");
+                    FilerIO.writeLong(filer, chunkLength, "chunkLength");
                     lengthOfFile += chunkLength;
                     filer.seek(0);
                     FilerIO.writeLong(filer, lengthOfFile, "lengthOfFile");

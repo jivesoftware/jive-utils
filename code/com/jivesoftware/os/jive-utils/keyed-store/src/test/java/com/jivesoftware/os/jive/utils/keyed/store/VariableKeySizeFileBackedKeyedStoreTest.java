@@ -1,0 +1,97 @@
+package com.jivesoftware.os.jive.utils.keyed.store;
+
+import com.google.common.base.Charsets;
+import com.jivesoftware.os.jive.utils.io.Filer;
+import com.jivesoftware.os.jive.utils.io.FilerIO;
+import org.apache.commons.math.util.MathUtils;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.io.File;
+import java.nio.file.Files;
+
+/**
+ *
+ */
+public class VariableKeySizeFileBackedKeyedStoreTest {
+
+    private File mapDirectory;
+    private File chunkDirectory;
+
+    @BeforeMethod
+    public void setUp() throws Exception {
+        mapDirectory = Files.createTempDirectory(getClass().getSimpleName()).toFile();
+        chunkDirectory = Files.createTempDirectory(getClass().getSimpleName()).toFile();
+    }
+
+    @Test
+    public void testFilerAutoCreate() throws Exception {
+        final int[] keySizeThresholds = new int[]{4, 16, 64, 256, 1024};
+        File chunks = new File(chunkDirectory, "chunks");
+        int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
+        VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(mapDirectory, chunks, keySizeThresholds, 100,
+                chunkStoreCapacityInBytes, 512);
+
+        for (int keySize : keySizeThresholds) {
+            Filer filer = keyedStore.get(keyOfLength(keySize), true);
+            synchronized (filer.lock()) {
+                filer.seek(0);
+                FilerIO.writeInt(filer, keySize, "keySize");
+            }
+        }
+
+        for (int keySize : keySizeThresholds) {
+            Filer filer = keyedStore.get(keyOfLength(keySize), false);
+            synchronized (filer.lock()) {
+                filer.seek(0);
+                int actual = FilerIO.readInt(filer, "keySize");
+                Assert.assertEquals(actual, keySize);
+            }
+        }
+    }
+
+    @Test
+    public void testFilerGrowsCapacity() throws Exception {
+        final int[] keySizeThresholds = new int[]{4, 16};
+        File chunks = new File(chunkDirectory, "chunks");
+        int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
+        int newFilerInitialCapacity = 512;
+        VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(mapDirectory, chunks, keySizeThresholds, 100,
+                chunkStoreCapacityInBytes, newFilerInitialCapacity);
+
+        int numberOfIntsInInitialCapacity = newFilerInitialCapacity / 4;
+        int numberOfIntsInActualCapacity = numberOfIntsInInitialCapacity * 2; // actual capacity is doubled
+        int numberOfTimesToGrow = 3;
+        int totalNumberOfInts = numberOfIntsInActualCapacity * MathUtils.pow(2, numberOfTimesToGrow - 1);
+
+        for (int keySize : keySizeThresholds) {
+            Filer filer = keyedStore.get(keyOfLength(keySize), true);
+            synchronized (filer.lock()) {
+                filer.seek(0);
+                for (int i = 0; i < totalNumberOfInts; i++) {
+                    FilerIO.writeInt(filer, i, String.valueOf(i));
+                }
+            }
+        }
+
+        for (int keySize : keySizeThresholds) {
+            Filer filer = keyedStore.get(keyOfLength(keySize), true);
+            synchronized (filer.lock()) {
+                filer.seek(0);
+                for (int i = 0; i < totalNumberOfInts; i++) {
+                    int actual = FilerIO.readInt(filer, String.valueOf(i));
+                    Assert.assertEquals(actual, i);
+                }
+            }
+        }
+    }
+
+    private byte[] keyOfLength(int length) {
+        StringBuilder buf = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            buf.append('a');
+        }
+        return buf.toString().getBytes(Charsets.US_ASCII);
+    }
+}

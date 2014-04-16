@@ -22,10 +22,10 @@ fi
 echo "/-------------------------------------------------------"
 echo "| checking for outstanding commits"
 echo "\-------------------------------------------------------"
-OUT_STANDING_COMMITS=`git status | grep "nothing to commit" | wc -l`
+OUT_STANDING_COMMITS=`git status | grep "nothing to commit" | wc -l | tr -d ' '`
 if [ "$OUT_STANDING_COMMITS" != "1" ]
 then
-	UNTRACKED=`git status | grep "nothing added to commit" | wc -l`
+	UNTRACKED=`git status | grep "nothing added to commit" | wc -l | tr -d ' '`
 	if [ "$UNTRACKED" != "1" ]
 	then
 		git status		
@@ -50,7 +50,7 @@ then
 	
 fi
 
-VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | tr '-' ' ' | awk '{ print $1 }'`
+VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -v 'Downloading' | tr '-' ' ' | awk '{ print $1 }'`
 
 
 echo "/-------------------------------------------------------"

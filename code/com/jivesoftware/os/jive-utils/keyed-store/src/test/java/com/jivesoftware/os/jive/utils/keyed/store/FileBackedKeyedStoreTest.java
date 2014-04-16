@@ -10,16 +10,14 @@ package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 /**
- *
  * @author jonathan.colt
  */
 public class FileBackedKeyedStoreTest {
@@ -31,8 +29,9 @@ public class FileBackedKeyedStoreTest {
             Path chunksDir = Files.createTempDirectory("chunks");
             File chunks = new File(chunksDir.toFile(), "chunks.data");
 
+            ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
             FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), 4, 100,
-                    chunks.getAbsolutePath(), 30 * 1024 * 1024, 512);
+                    chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 30 * 1024 * 1024), 512);
 
             Filer filer = fileBackedKeyedStore.get(FilerIO.intBytes(10));
             synchronized (filer.lock()) {
@@ -40,7 +39,7 @@ public class FileBackedKeyedStoreTest {
             }
 
             fileBackedKeyedStore = new FileBackedKeyedStore(chunks.getParentFile().getAbsolutePath(), 4, 100,
-                    chunks.getAbsolutePath(), 30 * 1024 * 1024, 512);
+                    chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 30 * 1024 * 1024), 512);
             filer = fileBackedKeyedStore.get(FilerIO.intBytes(10));
             synchronized (filer.lock()) {
                 filer.seek(0);

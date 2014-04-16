@@ -48,7 +48,7 @@ public class SubsetableFiler implements Filer {
 
     @Override
     public String toString() {
-        return "SOF=" + startOfFP + " EOF:" + endOfFP + " Count=" + count;
+        return "SOF=" + startOfFP + " EOF=" + endOfFP + " Count=" + count;
     }
 
     final public long getSize() throws IOException {
@@ -76,31 +76,51 @@ public class SubsetableFiler implements Filer {
 
     @Override
     final public int read() throws IOException {
+        long fp = filer.getFilePointer();
+        if (fp < startOfFP || fp > endOfFP) {
+            throw new IndexOutOfBoundsException();
+        } else if (fp == endOfFP) {
+            return -1;
+        }
         return filer.read();
     }
 
     @Override
     final public int read(byte[] b) throws IOException {
-        return filer.read(b);
+        return read(b, 0, b.length);
     }
 
     @Override
     public synchronized int read(byte b[], int _offset, int _len) throws IOException {
-        return filer.read(b, _offset, _len);
+        long fp = filer.getFilePointer();
+        if (fp < startOfFP || fp > endOfFP) {
+            throw new IndexOutOfBoundsException();
+        } else if (fp == endOfFP) {
+            return -1;
+        }
+        return filer.read(b, _offset, (int) Math.min(endOfFP - fp, _len));
     }
 
     @Override
     final public void write(int b) throws IOException {
+        long fp = filer.getFilePointer();
+        if (fp < startOfFP || fp >= endOfFP) {
+            throw new IndexOutOfBoundsException();
+        }
         filer.write(b);
     }
 
     @Override
     final public void write(byte[] b) throws IOException {
-        filer.write(b);
+        write(b, 0, b.length);
     }
 
     @Override
     public synchronized void write(byte b[], int _offset, int _len) throws IOException {
+        long fp = filer.getFilePointer();
+        if (fp < startOfFP || fp > (endOfFP - _len)) {
+            throw new IndexOutOfBoundsException();
+        }
         filer.write(b, _offset, _len);
     }
 
@@ -116,7 +136,10 @@ public class SubsetableFiler implements Filer {
 
     @Override
     final public long skip(long position) throws IOException {
-
+        long fp = filer.getFilePointer() + position;
+        if (fp < startOfFP || fp > endOfFP) {
+            throw new IndexOutOfBoundsException();
+        }
         return filer.skip(position);
     }
 
