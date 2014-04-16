@@ -2,6 +2,14 @@
 
 NEXT_VERSION=$1
 
+if [ -z "$NEXT_VERSION" ]
+then
+    echo "Usage: ./release.sh <NEXT_VERSION>"
+    echo "  e.g. ./release.sh 1.0"
+    cd -
+    exit 1;
+fi
+
 echo "/-------------------------------------------------------"
 echo "| checking running from develop branch. "
 echo "\-------------------------------------------------------"
