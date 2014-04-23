@@ -8,6 +8,7 @@
  */
 package com.jivesoftware.os.jive.utils.keyed.store;
 
+import com.jivesoftware.os.jive.utils.chunk.store.ChunkStoreInitializer;
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
 import org.testng.Assert;
@@ -38,7 +39,7 @@ public class FileBackedKeyedStoreTest {
                 FilerIO.writeInt(filer, 10, "");
             }
 
-            fileBackedKeyedStore = new FileBackedKeyedStore(chunks.getParentFile().getAbsolutePath(), 4, 100,
+            fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), 4, 100,
                     chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 30 * 1024 * 1024), 512);
             filer = fileBackedKeyedStore.get(FilerIO.intBytes(10));
             synchronized (filer.lock()) {
