@@ -8,33 +8,24 @@
  */
 package com.jivesoftware.os.jive.utils.chunk.store;
 
-import com.jivesoftware.os.jive.utils.io.ByteBufferBackedFiler;
-import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
-import com.jivesoftware.os.jive.utils.io.SubsetableFiler;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import java.io.File;
+
+import static org.testng.Assert.assertEquals;
+
 /**
- *
  * @author jonathan.colt
  */
 public class ChunkStoreTest {
 
     @Test
-    public void chunkStoreTest() throws IOException, Exception {
+    public void testNewChunkStore() throws Exception {
         int size = 1024 * 10;
-        File tmp = File.createTempFile("chunk", "1");
-        FileBackedMemMappedByteBufferFactory bufferFactory = new FileBackedMemMappedByteBufferFactory(tmp);
-        ByteBuffer byteBuffer = bufferFactory.allocate(size);
-        ByteBufferBackedFiler byteBufferBackedFiler = new ByteBufferBackedFiler(tmp, byteBuffer);
-
-        ChunkStore chunkStore = new ChunkStore();
-        chunkStore.open(new SubsetableFiler(byteBufferBackedFiler, 0, size, 0));
+        File chunkFile = File.createTempFile("testNewChunkStore", "1");
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), size);
 
         long chunk10 = chunkStore.newChunk(10);
         System.out.println("chunkId:" + chunk10);
@@ -48,7 +39,35 @@ public class ChunkStoreTest {
             filer.seek(0);
             int ten = FilerIO.readInt(filer, "");
             System.out.println("ten:" + ten);
-            Assert.assertEquals(ten, 10);
+            assertEquals(ten, 10);
+        }
+    }
+
+    @Test
+    public void testExistingChunkStore() throws Exception {
+        int size = 1024 * 10;
+        File chunkFile = File.createTempFile("testExistingChunkStore", "1");
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), size);
+
+        long chunk10 = chunkStore.newChunk(10);
+        System.out.println("chunkId:" + chunk10);
+        Filer filer = chunkStore.getFiler(chunk10);
+        synchronized (filer.lock()) {
+            FilerIO.writeInt(filer, 10, "");
+        }
+        filer.close();
+
+        long expectedReferenceNumber = chunkStore.getReferenceNumber();
+
+        chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), size);
+        assertEquals(chunkStore.getReferenceNumber(), expectedReferenceNumber);
+
+        filer = chunkStore.getFiler(chunk10);
+        synchronized (filer.lock()) {
+            filer.seek(0);
+            int ten = FilerIO.readInt(filer, "");
+            System.out.println("ten:" + ten);
+            assertEquals(ten, 10);
         }
     }
 }

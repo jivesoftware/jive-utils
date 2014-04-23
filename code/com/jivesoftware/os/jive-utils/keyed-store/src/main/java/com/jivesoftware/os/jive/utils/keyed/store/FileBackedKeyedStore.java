@@ -67,6 +67,10 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
         return mapStore.sizeInBytes() + chunkStore.sizeInBytes();
     }
 
+    public long mapStoreSizeInBytes() throws IOException {
+        return mapStore.sizeInBytes();
+    }
+
     @Override
     public void close() {
         // TODO
