@@ -58,12 +58,18 @@ then
 	
 fi
 
-VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -v 'Downloading' | tr '-' ' ' | awk '{ print $1 }'`
+# some ideas: http://stackoverflow.com/questions/3545292/how-to-get-maven-project-version-to-the-bash-command-line
+# original
+#VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -v 'Downloading' | tr '-' ' ' | awk '{ print $1 }'`
+
+# http://stackoverflow.com/a/19257954
+VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | egrep -v '^\[|Downloading:' | sed 's/[^0-9\.]//g' | awk 1 ORS=''`
 
 
 echo "/-------------------------------------------------------"
 echo "| setting version to "${VERSION}
 echo "\-------------------------------------------------------"
+sleep 1
 find . -name "pom.xml" | xargs -n 1 mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION} -pl
 git add -A
 git commit -m "release "${VERSION}
