@@ -1,7 +1,6 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
-import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
 
 import java.io.IOException;
@@ -12,13 +11,15 @@ import java.io.IOException;
 public class FileBackedKeyedStore implements KeyedFilerStore {
 
     private final FileBackMapStore<byte[], byte[]> mapStore;
+    private final FileBackMapStore<byte[], byte[]> swapStore;
     private final ChunkStore chunkStore;
     private final long newFilerInitialCapacity;
 
-    public FileBackedKeyedStore(String mapDirectory, int mapKeySize, long initialMapKeyCapacity,
+    public FileBackedKeyedStore(String mapDirectory, String swapDirectory, int mapKeySize, long initialMapKeyCapacity,
             ChunkStore chunkStore, long newFilerInitialCapacity) throws Exception
     {
         this.mapStore = initializeMapStore(mapDirectory, mapKeySize, initialMapKeyCapacity);
+        this.swapStore = initializeMapStore(swapDirectory, mapKeySize, initialMapKeyCapacity);
         this.chunkStore = chunkStore;
         this.newFilerInitialCapacity = newFilerInitialCapacity;
     }
@@ -48,18 +49,18 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
     }
 
     @Override
-    public Filer get(byte[] key) throws Exception {
+    public SwappableFiler get(byte[] key) throws Exception {
         return get(key, true);
     }
 
     @Override
-    public Filer get(byte[] key, boolean autoCreate) throws Exception {
+    public SwappableFiler get(byte[] key, boolean autoCreate) throws Exception {
         AutoResizingChunkFiler filer = new AutoResizingChunkFiler(mapStore, key, chunkStore);
         if (!autoCreate && !filer.exists()) {
             return null;
         }
         filer.init(newFilerInitialCapacity);
-        return filer;
+        return new AutoResizingChunkSwappableFiler(filer, chunkStore, key, mapStore, swapStore);
     }
 
     @Override

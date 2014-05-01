@@ -1,6 +1,8 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.google.common.base.Charsets;
+import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
+import com.jivesoftware.os.jive.utils.chunk.store.ChunkStoreInitializer;
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
 import org.apache.commons.math.util.MathUtils;
@@ -17,11 +19,13 @@ import java.nio.file.Files;
 public class VariableKeySizeFileBackedKeyedStoreTest {
 
     private File mapDirectory;
+    private File swapDirectory;
     private File chunkDirectory;
 
     @BeforeMethod
     public void setUp() throws Exception {
         mapDirectory = Files.createTempDirectory(getClass().getSimpleName()).toFile();
+        swapDirectory = Files.createTempDirectory(getClass().getSimpleName()).toFile();
         chunkDirectory = Files.createTempDirectory(getClass().getSimpleName()).toFile();
     }
 
@@ -30,8 +34,9 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         final int[] keySizeThresholds = new int[]{4, 16, 64, 256, 1024};
         File chunks = new File(chunkDirectory, "chunks");
         int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
-        VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(mapDirectory, chunks, keySizeThresholds, 100,
-                chunkStoreCapacityInBytes, 512);
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes);
+        VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
+                mapDirectory, swapDirectory, chunkStore, keySizeThresholds, 100, 512);
 
         for (int keySize : keySizeThresholds) {
             Filer filer = keyedStore.get(keyOfLength(keySize), true);
@@ -57,8 +62,9 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         File chunks = new File(chunkDirectory, "chunks");
         int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
         int newFilerInitialCapacity = 512;
-        VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(mapDirectory, chunks, keySizeThresholds, 100,
-                chunkStoreCapacityInBytes, newFilerInitialCapacity);
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes);
+        VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
+                mapDirectory, swapDirectory, chunkStore, keySizeThresholds, 100, newFilerInitialCapacity);
 
         int numberOfIntsInInitialCapacity = newFilerInitialCapacity / 4;
         int numberOfIntsInActualCapacity = numberOfIntsInInitialCapacity * 2; // actual capacity is doubled
