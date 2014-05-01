@@ -32,7 +32,7 @@ public class FileBackedKeyedStoreTest {
         File chunks = new File(chunksDir.toFile(), "chunks.data");
 
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
-        ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 30 * 1024 * 1024);
+        ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 4096, false);
         FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, chunkStore, 512);
 
         byte[] key = FilerIO.intBytes(1010);
@@ -59,7 +59,7 @@ public class FileBackedKeyedStoreTest {
         File chunks = new File(chunksDir.toFile(), "chunks.data");
 
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
-        ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 30 * 1024 * 1024);
+        ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 4096, false);
         FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, chunkStore, 512);
 
         byte[] key = FilerIO.intBytes(1020);

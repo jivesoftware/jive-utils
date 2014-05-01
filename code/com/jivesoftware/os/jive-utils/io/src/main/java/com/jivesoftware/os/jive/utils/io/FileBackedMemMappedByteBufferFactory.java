@@ -11,7 +11,7 @@ import java.nio.channels.FileChannel;
  *
  * @author jonathan.colt
  */
-public class FileBackedMemMappedByteBufferFactory {
+public class FileBackedMemMappedByteBufferFactory implements ByteBufferFactory {
 
     public static final int DEFAULT_64BIT_MAX_BUFF = (1 << 30);
     private final long maxSizeForByteBuffer;
@@ -42,6 +42,7 @@ public class FileBackedMemMappedByteBufferFactory {
         }
     }
 
+    @Override
     public ByteBuffer allocate(long length) {
 
         ensureDirectory(file);
