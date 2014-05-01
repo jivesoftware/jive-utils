@@ -34,7 +34,7 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         final int[] keySizeThresholds = new int[]{4, 16, 64, 256, 1024};
         File chunks = new File(chunkDirectory, "chunks");
         int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
-        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes);
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes, false);
         VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
                 mapDirectory, swapDirectory, chunkStore, keySizeThresholds, 100, 512);
 
@@ -62,7 +62,7 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         File chunks = new File(chunkDirectory, "chunks");
         int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
         int newFilerInitialCapacity = 512;
-        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes);
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes, false);
         VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
                 mapDirectory, swapDirectory, chunkStore, keySizeThresholds, 100, newFilerInitialCapacity);
 
