@@ -18,6 +18,8 @@ package com.jivesoftware.os.jive.utils.row.column.value.store.hbase;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import java.io.IOException;
+import java.util.Arrays;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -113,18 +115,25 @@ public class HBaseTableConfiguration {
             }
             try {
                 admin.createTable(tableDescriptor);
-                LOG.info("Created table: " + finalName + " with column family names: " + columnFamilyNames);
+                LOG.info("Created table: " + finalName + " with column family names: " + Arrays.toString(columnFamilyNames));
             } catch (TableExistsException tee) {
                 LOG.info("Cannot create table since it already exists: " + finalName + " with column family names: "
-                    + columnFamilyNames, tee);
+                    + Arrays.toString(columnFamilyNames), tee);
             }
         } else {
             for (String columnFamily : columnFamilyNames) {
                 HColumnDescriptor column = tableDescriptor.getFamily(columnFamily.getBytes());
                 if (column == null) {
                     if (createColumnFamilies) {
-                        HColumnDescriptor hColumnDescriptor = buildHColumnDescriptor(columnFamily);
-                        admin.addColumn(finalName, hColumnDescriptor);
+                        try {
+                            HColumnDescriptor hColumnDescriptor = buildHColumnDescriptor(columnFamily);
+                            if (admin.isTableEnabled(finalName)) {
+                                admin.disableTable(finalName);
+                            }
+                            admin.addColumn(finalName, hColumnDescriptor);
+                        } finally {
+                            admin.enableTable(finalName);
+                        }
                     } else {
                         LOG.error("Table '" + finalName + "' exists, but expected column family name '" + columnFamilyName + "' does not");
                         throw new IOException("Table '" + finalName + "' exists, but expected column family name '" + columnFamilyName + "' does not");
