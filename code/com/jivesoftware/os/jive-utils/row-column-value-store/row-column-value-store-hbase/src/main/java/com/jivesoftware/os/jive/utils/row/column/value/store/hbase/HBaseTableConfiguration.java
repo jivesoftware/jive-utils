@@ -89,8 +89,11 @@ public class HBaseTableConfiguration {
 
     }
 
-
     public byte[] ensureTableProvisioned(boolean createTable) throws IOException {
+        return ensureTableProvisioned(createTable, false);
+    }
+
+    public byte[] ensureTableProvisioned(boolean createTable, boolean createColumnFamilies) throws IOException {
         HBaseAdmin admin = new HBaseAdmin(configuration);
 
         HTableDescriptor tableDescriptor = null;
@@ -105,17 +108,7 @@ public class HBaseTableConfiguration {
         if (tableDescriptor == null) {
             tableDescriptor = new HTableDescriptor(finalName);
             for (String columnFamily : columnFamilyNames) {
-                HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(columnFamily);
-                if (timeToLiveInSeconds > -1) {
-                    hColumnDescriptor.setTimeToLive(timeToLiveInSeconds);
-                }
-                if (maxVersions > -1) {
-                    hColumnDescriptor.setMaxVersions(maxVersions);
-                }
-                if (minVersions > -1) {
-                    hColumnDescriptor.setMinVersions(minVersions);
-                }
-
+                HColumnDescriptor hColumnDescriptor = buildHColumnDescriptor(columnFamily);
                 tableDescriptor.addFamily(hColumnDescriptor);
             }
             try {
@@ -126,14 +119,35 @@ public class HBaseTableConfiguration {
                     + columnFamilyNames, tee);
             }
         } else {
-            HColumnDescriptor column = tableDescriptor.getFamily(columnFamilyName.getBytes());
-            if (column == null) {
-                LOG.error("Table '" + finalName + "' exists, but expected column family name '" + columnFamilyName + "' does not");
-                throw new IOException("Table '" + finalName + "' exists, but expected column family name '" + columnFamilyName + "' does not");
+            for (String columnFamily : columnFamilyNames) {
+                HColumnDescriptor column = tableDescriptor.getFamily(columnFamily.getBytes());
+                if (column == null) {
+                    if (createColumnFamilies) {
+                        HColumnDescriptor hColumnDescriptor = buildHColumnDescriptor(columnFamily);
+                        admin.addColumn(finalName, hColumnDescriptor);
+                    } else {
+                        LOG.error("Table '" + finalName + "' exists, but expected column family name '" + columnFamilyName + "' does not");
+                        throw new IOException("Table '" + finalName + "' exists, but expected column family name '" + columnFamilyName + "' does not");
+                    }
+                }
             }
         }
 
         return finalName.getBytes();
+    }
+
+    private HColumnDescriptor buildHColumnDescriptor(String columnFamily) {
+        HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(columnFamily);
+        if (timeToLiveInSeconds > -1) {
+            hColumnDescriptor.setTimeToLive(timeToLiveInSeconds);
+        }
+        if (maxVersions > -1) {
+            hColumnDescriptor.setMaxVersions(maxVersions);
+        }
+        if (minVersions > -1) {
+            hColumnDescriptor.setMinVersions(minVersions);
+        }
+        return hColumnDescriptor;
     }
 
     public String getTableNameSpace() {
