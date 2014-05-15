@@ -15,17 +15,17 @@
  */
 package com.jivesoftware.os.jive.utils.logger;
 
-import org.apache.log4j.Category;
-import org.apache.log4j.Priority;
-import org.apache.log4j.spi.LoggingEvent;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.LoggingEvent;
 
 public class MetricLogEvent extends LoggingEvent {
 
     private final String[] tags;
 
-    public MetricLogEvent(String fqnOfCategoryClass, Category logger,
-            Priority level, String[] tags, Object message, Throwable throwable) {
-        super(fqnOfCategoryClass, logger, level, message, throwable);
+    public MetricLogEvent(String fqnOfCategoryClass, Logger logger,
+            Level level, String[] tags, String message, Throwable throwable) {
+        super(fqnOfCategoryClass, logger, level, message, throwable, null);
         this.tags = tags;
     }
 

@@ -15,10 +15,12 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.endpoints.logging.level;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.google.inject.Singleton;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
-import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -30,7 +32,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 @Path("/logging")
@@ -61,17 +63,13 @@ public class LogLevelRestEndpoints {
     }
 
     private void changeLogLevel(String loggerName, String loggerLevel) {
-        org.apache.log4j.Logger loggerForName;
-        if (loggerName.equals(org.apache.log4j.LogManager.getRootLogger().getName())) {
-            loggerForName = org.apache.log4j.LogManager.getRootLogger();
-        } else {
-            loggerForName = org.apache.log4j.LogManager.getLogger(loggerName);
-        }
+        ch.qos.logback.classic.Logger loggerForName = (ch.qos.logback.classic.Logger) LoggerFactory
+                .getLogger(loggerName);
 
         if (loggerForName != null) {
-            org.apache.log4j.Level level = null;
+            Level level = null;
             if (!loggerLevel.equals("null")) {
-                level = org.apache.log4j.Level.toLevel(loggerLevel);
+                level = Level.toLevel(loggerLevel);
             }
             loggerForName.setLevel(level);
             log.info("set logger=" + loggerForName.getName() + " to level=" + level);
@@ -87,20 +85,13 @@ public class LogLevelRestEndpoints {
 
         List<JsonLogLevel> logLevels = new LinkedList<JsonLogLevel>();
 
-        @SuppressWarnings("rawtypes")
-        Enumeration enumeration = org.apache.log4j.LogManager.getCurrentLoggers();
-        if (enumeration != null) {
-            while (enumeration.hasMoreElements()) {
-                Object next = enumeration.nextElement();
-                if (next instanceof org.apache.log4j.Logger) {
-                    addToLogLevels((Logger) next, logLevels);
-                } else {
-                    log.warn("unexpected logger class " + next);
-                }
-            }
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        List<Logger> loggerList = lc.getLoggerList();
+        for (Logger logger : loggerList) {
+            addToLogLevels(logger, logLevels);
         }
 
-        org.apache.log4j.Logger rl = org.apache.log4j.LogManager.getRootLogger();
+        Logger rl = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         addToLogLevels(rl, logLevels);
         return new JsonLogLevels(tenantId, logLevels);
     }

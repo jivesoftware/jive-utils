@@ -273,7 +273,7 @@ public class MetricEvent {
 
     private static final class MetricImpl implements Metric {
 
-        private static final MetricEventWriter DEFAULT_METRIC_WRITER = new Log4jMetricEventWriter();
+        private static final MetricEventWriter DEFAULT_METRIC_WRITER = new LogbackMetricEventWriter();
         private String name;
         private Map<String, Object> properties;
 
