@@ -20,11 +20,12 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Resource {
-    private static final Logger log = Logger.getLogger(Resource.class);
+    private static final Logger log = LoggerFactory.getLogger(Resource.class);
 
     private List<String> welcomeFiles = new ArrayList<String>(Arrays.asList("index.html"));
     private boolean allowDirectoryListing = false;

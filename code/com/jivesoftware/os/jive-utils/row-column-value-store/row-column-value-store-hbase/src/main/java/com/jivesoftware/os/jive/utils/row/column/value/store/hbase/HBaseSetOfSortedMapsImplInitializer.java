@@ -89,7 +89,7 @@ public class HBaseSetOfSortedMapsImplInitializer implements SetOfSortedMapsImplI
             tableName,
             columnFamilies);
 
-        hBaseTableConfiguration.ensureTableProvisioned(true);
+        hBaseTableConfiguration.ensureTableProvisioned(true, true);
 
         return new HBaseSetOfSortedMapsImpl<>(
             new HTablePool(hbaseConfig, POOL_SIZE),

@@ -2,7 +2,6 @@ package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.google.common.base.Preconditions;
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
-import com.jivesoftware.os.jive.utils.chunk.store.ChunkStoreInitializer;
 import com.jivesoftware.os.jive.utils.io.Filer;
 
 import java.io.File;
@@ -10,14 +9,12 @@ import java.io.IOException;
 
 public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
 
-    private final ChunkStore chunkStore;
     private final int[] keySizeThresholds;
     private final FileBackedKeyedStore[] keyedStores;
 
-    public VariableKeySizeFileBackedKeyedStore(File baseMapDirectory, File chunkFile, int[] keySizeThresholds,
-            long initialMapKeyCapacity, long chunkStoreCapacityInBytes, long newFilerInitialCapacity) throws Exception
+    public VariableKeySizeFileBackedKeyedStore(File baseMapDirectory, File baseSwapDirectory, ChunkStore chunkStore, int[] keySizeThresholds,
+            long initialMapKeyCapacity, long newFilerInitialCapacity) throws Exception
     {
-        this.chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), chunkStoreCapacityInBytes);
         this.keySizeThresholds = keySizeThresholds;
         this.keyedStores = new FileBackedKeyedStore[keySizeThresholds.length];
         for (int i = 0; i < keySizeThresholds.length; i++) {
@@ -25,7 +22,8 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
 
             final int keySize = keySizeThresholds[i];
             String mapDirectory = new File(baseMapDirectory, String.valueOf(keySize)).getAbsolutePath();
-            keyedStores[i] = new FileBackedKeyedStore(mapDirectory, keySize, initialMapKeyCapacity, chunkStore, newFilerInitialCapacity);
+            String swapDirectory = new File(baseSwapDirectory, String.valueOf(keySize)).getAbsolutePath();
+            keyedStores[i] = new FileBackedKeyedStore(mapDirectory, swapDirectory, keySize, initialMapKeyCapacity, chunkStore, newFilerInitialCapacity);
         }
     }
 
@@ -55,18 +53,18 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
     }
 
     @Override
-    public Filer get(byte[] key) throws Exception {
+    public SwappableFiler get(byte[] key) throws Exception {
         return getKeyedStore(key).get(pad(key));
     }
 
     @Override
-    public Filer get(byte[] key, boolean autoCreate) throws Exception {
+    public SwappableFiler get(byte[] key, boolean autoCreate) throws Exception {
         return getKeyedStore(key).get(pad(key), autoCreate);
     }
 
     @Override
     public long sizeInBytes() throws IOException {
-        long sizeInBytes = chunkStore.sizeInBytes();
+        long sizeInBytes = 0;
         for (FileBackedKeyedStore keyedStore : keyedStores) {
             sizeInBytes += keyedStore.mapStoreSizeInBytes();
         }

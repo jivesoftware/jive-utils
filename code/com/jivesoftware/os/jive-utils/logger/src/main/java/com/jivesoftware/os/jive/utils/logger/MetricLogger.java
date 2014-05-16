@@ -15,12 +15,12 @@
  */
 package com.jivesoftware.os.jive.utils.logger;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * This is an wrapper around a log4j logger that makes it as easy as possible for the developer to gather metrics.
+ * This is an wrapper around a logback logger that makes it as easy as possible for the developer to gather metrics.
  *
  * @author jonathan
  */
@@ -47,7 +47,7 @@ public final class MetricLogger {
     MetricLogger(String fullQualifiedClassName, LoggerSummary loggerSummary) {
         this.fullQualifiedClassName = fullQualifiedClassName;
         countersAndTimers = CountersAndTimers.getOrCreate(fullQualifiedClassName);
-        logger = LogManager.getLogger(fullQualifiedClassName);
+        logger = (Logger) LoggerFactory.getLogger(fullQualifiedClassName);
         loggerErrorsCount = new LazyCounter(countersAndTimers, ValueType.COUNT, "logged.errors");
         loggerWarnsCount = new LazyCounter(countersAndTimers, ValueType.COUNT, "logged.warns");
         loggerDebugsCount = new LazyCounter(countersAndTimers, ValueType.COUNT, "logged.debugs");
@@ -64,7 +64,7 @@ public final class MetricLogger {
         return logger.getName();
     }
 
-    /** Is the underlying log4j logger enabled at Level.TRACE level. */
+    /** Is the underlying logback logger enabled at Level.TRACE level. */
     public boolean isTraceEnabled() {
         return logger.isEnabledFor(Level.TRACE);
     }
@@ -202,7 +202,7 @@ public final class MetricLogger {
         logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.TRACE, null, msg, t));
     }
 
-    /** Is the underlying log4j logger enabled at Level.DEBUG level. */
+    /** Is the underlying logback logger enabled at Level.DEBUG level. */
     public boolean isDebugEnabled() {
         return logger.isEnabledFor(Level.DEBUG);
     }
@@ -320,7 +320,7 @@ public final class MetricLogger {
         logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.DEBUG, null, msg, t));
     }
 
-    /** Is the underlying log4j logger enabled at Level.WARN level. */
+    /** Is the underlying logback logger enabled at Level.WARN level. */
     public boolean isWarnEnabled() {
         return logger.isEnabledFor(Level.WARN);
     }
@@ -425,7 +425,7 @@ public final class MetricLogger {
         loggerSummary.lastNWarns.add(msg + (t != null ? " " + t.toString() : ""));
     }
 
-    /** Is the underlying log4j logger enabled at Level.INFO level. */
+    /** Is the underlying logback logger enabled at Level.INFO level. */
     public boolean isInfoEnabled() {
         return logger.isEnabledFor(Level.INFO);
     }
@@ -516,7 +516,7 @@ public final class MetricLogger {
     /**
      * Logs a String message at Level.INFO with an exception.
      *
-     * @param msg null is ok.
+     * @param messagePattern null is ok.
      * @param t null is NOT ok.
      */
     public void info(String messagePattern, Throwable t) {
@@ -530,7 +530,7 @@ public final class MetricLogger {
         loggerSummary.lastNInfos.add(messagePattern + (t != null ? " " + t.toString() : ""));
     }
 
-    /** Is the underlying log4j logger enabled at Level.ERROR level. */
+    /** Is the underlying logback logger enabled at Level.ERROR level. */
     public boolean isErrorEnabled() {
         return logger.isEnabledFor(Level.ERROR);
     }
@@ -661,7 +661,7 @@ public final class MetricLogger {
     /**
      * Logs a String message at Level.ERROR with an exception.
      *
-     * @param msg null is ok.
+     * @param messagePattern null is ok.
      * @param t null is NOT ok.
      */
     public void error(String messagePattern, Throwable t) {
@@ -678,7 +678,7 @@ public final class MetricLogger {
     /**
      * Logs a String[] of tags with String message at Level.ERROR with an exception.
      *
-     * @param msg null is ok.
+     * @param messagePattern null is ok.
      * @param t null is NOT ok.
      */
     public void error(String[] tags, String messagePattern, Throwable t) {

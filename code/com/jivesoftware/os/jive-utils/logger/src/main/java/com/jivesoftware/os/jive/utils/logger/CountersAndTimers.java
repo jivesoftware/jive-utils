@@ -15,6 +15,9 @@
  */
 package com.jivesoftware.os.jive.utils.logger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -27,15 +30,13 @@ import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 /**
  * @author jonathan
  */
 public final class CountersAndTimers {
 
-    private final static Logger logger = LogManager.getLogger(CountersAndTimers.class.getName());
+    private final static Logger logger = LoggerFactory.getLogger(CountersAndTimers.class.getName());
     private final static ConcurrentHashMap<String, CountersAndTimers> loggers = new ConcurrentHashMap<>();
 
     public static CountersAndTimers getOrCreate(Class _class) {

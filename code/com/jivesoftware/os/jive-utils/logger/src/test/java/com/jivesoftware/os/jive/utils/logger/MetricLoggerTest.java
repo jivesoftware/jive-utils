@@ -15,25 +15,25 @@
  */
 package com.jivesoftware.os.jive.utils.logger;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.LoggerContextVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.testng.PowerMockTestCase;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-@SuppressStaticInitializationFor({"org.apache.log4j.LogManager" })
-@PrepareForTest({LogManager.class, Logger.class })
+@SuppressStaticInitializationFor({"org.slf4j.LoggerFactory" })
+@PrepareForTest({ LoggerFactory.class, Logger.class, LoggerContext.class, LoggerContextVO.class })
 @PowerMockIgnore("javax.management.*")
 public class MetricLoggerTest extends PowerMockTestCase {
 
@@ -41,8 +41,9 @@ public class MetricLoggerTest extends PowerMockTestCase {
 
     @BeforeMethod
     public void setUp() throws Exception {
-        PowerMockito.mockStatic(LogManager.class);
-        Mockito.when(LogManager.getLogger(CountersAndTimers.class.getName())).thenReturn(PowerMockito.mock(Logger.class));
+        PowerMockito.mockStatic(LoggerFactory.class);
+        Logger loggerMock = PowerMockito.mock(Logger.class);
+        Mockito.when(LoggerFactory.getLogger(CountersAndTimers.class.getName())).thenReturn(loggerMock);
     }
 
     @Test
@@ -271,18 +272,18 @@ public class MetricLoggerTest extends PowerMockTestCase {
                 new Object[]{"value1", "value2", "value3"});
         executor.logMessageWithException(disabledMetricLogger, "exception message", exception);
 
-        Mockito.verify(disabledLogger, Mockito.never()).log(Mockito.anyString(), Matchers.<Priority>any(), Mockito.anyString(),
-                Matchers.<Throwable>any());
-
         cat = CountersAndTimers.getOrCreate(disabledLoggerName);
         Assert.assertEquals(cat.counter(ValueType.COUNT, counterName).getCount(), 0l);
     }
 
     private Logger createLogger(String loggerName) {
-        Logger logger = PowerMockito.mock(Logger.class);
-        Mockito.when(LogManager.getLogger(loggerName)).thenReturn(logger);
-
-        return logger;
+        Logger loggerMock = PowerMockito.mock(Logger.class);
+        Mockito.when(loggerMock.getName()).thenReturn("MetricLoggerTest");
+        LoggerContext loggerContextMock = PowerMockito.mock(LoggerContext.class);
+        Mockito.when(loggerContextMock.getLoggerContextRemoteView()).thenReturn(PowerMockito.mock(LoggerContextVO.class));
+        Mockito.when(loggerMock.getLoggerContext()).thenReturn(loggerContextMock);
+        Mockito.when(LoggerFactory.getLogger(loggerName)).thenReturn(loggerMock);
+        return loggerMock;
     }
 
     private interface LoggingCallExecutor {
