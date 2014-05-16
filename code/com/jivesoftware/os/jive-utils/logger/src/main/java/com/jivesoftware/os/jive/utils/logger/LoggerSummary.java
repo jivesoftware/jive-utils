@@ -15,9 +15,9 @@
  */
 package com.jivesoftware.os.jive.utils.logger;
 
+import com.jivesoftware.os.jive.utils.base.util.ISO8601DateFormat;
 import com.jivesoftware.os.jive.utils.base.util.LastN;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -27,11 +27,7 @@ import java.util.TimeZone;
  */
 public class LoggerSummary {
 
-    // ISO 8601 formatter
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
-    static {
-        DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
+    private static final ISO8601DateFormat DATE_FORMAT = new ISO8601DateFormat(TimeZone.getTimeZone("GMT"));
     public static LoggerSummary INSTANCE = new LoggerSummary();
     public static LoggerSummary INSTANCE_EXTERNAL_INTERACTIONS = new LoggerSummary();
     public long infos;
