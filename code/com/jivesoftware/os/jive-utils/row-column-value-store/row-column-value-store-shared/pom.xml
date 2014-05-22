@@ -4,12 +4,12 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>shared-lib-build-management</artifactId>
-        <version>0.13</version>
+        <version>0.14</version>
         <relativePath>../../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
     </parent>
     <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
     <artifactId>row-column-value-store-shared</artifactId>
-    <version>0.13</version>
+    <version>0.14</version>
     <properties>
         <module.type>shared_lib</module.type>
     </properties>
