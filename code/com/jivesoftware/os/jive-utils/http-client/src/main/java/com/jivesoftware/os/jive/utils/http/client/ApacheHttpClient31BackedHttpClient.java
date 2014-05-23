@@ -56,66 +56,87 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
     @Override
     public HttpResponse get(String path) throws HttpClientException {
-        return get(path, -1);
+        return get(HttpRequestParams.newBuilder().setPath(path).build());
     }
 
     @Override
     public HttpResponse get(String path, int socketTimeoutMillis) throws HttpClientException {
-        GetMethod get = new GetMethod(path);
-        if (socketTimeoutMillis > 0) {
-            get.getParams().setSoTimeout(socketTimeoutMillis);
+        return get(HttpRequestParams.newBuilder().setPath(path).setTimeout(socketTimeoutMillis).build());
+    }
+
+    @Override
+    public HttpResponse get(HttpRequestParams params) throws HttpClientException {
+        GetMethod get = new GetMethod(params.getPath());
+
+        applyHeadersForRequest(get, params.getAdditionalHeaders());
+
+        if (params.getTimeout() > 0) {
+            get.getParams().setSoTimeout(params.getTimeout());
         }
         try {
             return execute(get);
         } catch (Exception e) {
             throw new HttpClientException("Error executing GET request to: " + client.getHostConfiguration().getHostURL()
-                + " path: " + path, e);
+                + " path: " + params.getPath(), e);
         }
     }
 
     @Override
     public HttpResponse postJson(String path, String postJsonBody) throws HttpClientException {
-        return postJson(path, postJsonBody, -1);
+        return postJson(HttpRequestParams.newBuilder().setPath(path).build(), postJsonBody);
     }
 
     @Override
     public HttpResponse postJson(String path, String postJsonBody, int socketTimeoutMillis) throws HttpClientException {
+        return postJson(HttpRequestParams.newBuilder().setPath(path).setTimeout(socketTimeoutMillis).build(), postJsonBody);
+    }
+
+    @Override
+    public HttpResponse postJson(HttpRequestParams params, String postJsonBody) throws HttpClientException {
+
         try {
-            PostMethod post = new PostMethod(path);
+            PostMethod post = new PostMethod(params.getPath());
+            applyHeadersForRequest(post, params.getAdditionalHeaders());
             post.setRequestEntity(new StringRequestEntity(postJsonBody, Constants.APPLICATION_JSON_CONTENT_TYPE, "UTF-8"));
             post.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_JSON_CONTENT_TYPE);
-            if (socketTimeoutMillis > 0) {
-                post.getParams().setSoTimeout(socketTimeoutMillis);
+            if (params.getTimeout() > 0) {
+                post.getParams().setSoTimeout(params.getTimeout());
             }
             return execute(post);
         } catch (Exception e) {
             String trimmedPostBody =
                 (postJsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ? postJsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : postJsonBody;
             throw new HttpClientException("Error executing POST request to: "
-                + client.getHostConfiguration().getHostURL() + " path: " + path + " JSON body: " + trimmedPostBody, e);
+                + client.getHostConfiguration().getHostURL() + " path: " + params.getPath() + " JSON body: " + trimmedPostBody, e);
         }
     }
 
     @Override
     public HttpResponse postBytes(String path, byte[] postBytes) throws HttpClientException {
-        return postBytes(path, postBytes, -1);
+        return postBytes(HttpRequestParams.newBuilder().setPath(path).build(), postBytes);
     }
 
     @Override
     public HttpResponse postBytes(String path, byte[] postBytes, int socketTimeoutMillis) throws HttpClientException {
+        return postBytes(HttpRequestParams.newBuilder().setPath(path).setTimeout(socketTimeoutMillis).build(), postBytes);
+    }
+
+    @Override
+    public HttpResponse postBytes(HttpRequestParams params, byte[] postBytes) throws HttpClientException {
         try {
-            PostMethod post = new PostMethod(path);
+            PostMethod post = new PostMethod(params.getPath());
+            applyHeadersForRequest(post, params.getAdditionalHeaders());
             post.setRequestEntity(new ByteArrayRequestEntity(postBytes, Constants.APPLICATION_JSON_CONTENT_TYPE));
             post.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_OCTET_STREAM_TYPE);
-            if (socketTimeoutMillis > 0) {
-                post.getParams().setSoTimeout(socketTimeoutMillis);
+            if (params.getTimeout() > 0) {
+                post.getParams().setSoTimeout(params.getTimeout());
             }
             return execute(post);
         } catch (Exception e) {
             String trimmedPostBody =
                 (postBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ? new String(postBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(postBytes);
             throw new HttpClientException("Error executing POST request to:"
-                + client.getHostConfiguration().getHostURL() + " path: " + path + " byte body: " + trimmedPostBody, e);
+                + client.getHostConfiguration().getHostURL() + " path: " + params.getPath() + " byte body: " + trimmedPostBody, e);
         }
     }
 
@@ -209,6 +230,12 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
     private void applyHeadersCommonToAllRequests(HttpMethod method) {
         for (Map.Entry<String, String> headerEntry : headersForEveryRequest.entrySet()) {
+            method.addRequestHeader(headerEntry.getKey(), headerEntry.getValue());
+        }
+    }
+
+    private void applyHeadersForRequest(HttpMethod method, Map<String, String> additionalHeaders) {
+        for (Map.Entry<String, String> headerEntry : additionalHeaders.entrySet()) {
             method.addRequestHeader(headerEntry.getKey(), headerEntry.getValue());
         }
     }

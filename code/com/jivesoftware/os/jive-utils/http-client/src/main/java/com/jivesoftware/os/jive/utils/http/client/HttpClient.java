@@ -16,7 +16,6 @@
 package com.jivesoftware.os.jive.utils.http.client;
 
 public interface HttpClient {
-    //TODO need to create request object to pass as param to these methods.
 
     /**
      *
@@ -34,6 +33,14 @@ public interface HttpClient {
      * @throws HttpClientException
      */
     HttpResponse get(String path, int socketTimeoutMillis) throws HttpClientException;
+
+    /**
+     *
+     * @param requestParams
+     * @return
+     * @throws HttpClientException
+     */
+    HttpResponse get(HttpRequestParams requestParams) throws HttpClientException;
 
     /**
      *
@@ -56,6 +63,14 @@ public interface HttpClient {
 
     /**
      *
+     * @param requestParams
+     * @return
+     * @throws HttpClientException
+     */
+    HttpResponse postJson(HttpRequestParams requestParams, String postJsonBody) throws HttpClientException;
+
+    /**
+     *
      * @param path everything but the leading "http/s://host:port"
      * @param postBytes
      * @return
@@ -72,4 +87,13 @@ public interface HttpClient {
      * @throws HttpClientException
      */
     HttpResponse postBytes(String path, byte[] postBytes, int socketTimeoutMillis) throws HttpClientException;
+
+    /**
+     *
+     * @param requestParams
+     * @param postBytes
+     * @return
+     * @throws HttpClientException
+     */
+    HttpResponse postBytes(HttpRequestParams requestParams, byte[] postBytes) throws HttpClientException;
 }
