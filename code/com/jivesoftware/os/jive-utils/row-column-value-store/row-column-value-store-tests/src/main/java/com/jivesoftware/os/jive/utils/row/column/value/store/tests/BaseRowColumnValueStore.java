@@ -4,6 +4,8 @@
  */
 package com.jivesoftware.os.jive.utils.row.column.value.store.tests;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ColumnValueAndTimestamp;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.KeyedColumnValueCallbackStream;
@@ -13,6 +15,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueS
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.ConstantTimestamper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.testng.Assert;
 
 abstract public class BaseRowColumnValueStore<E extends Exception> {
@@ -452,5 +455,25 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         }));
 
         store.multiRowGetAll(tenantId, get);
+    }
+
+    public void testMultiRowMultiGet() throws E {
+        List<RowColumValueTimestampAdd<String, String, String>> add = new ArrayList<>();
+        add.add(new RowColumValueTimestampAdd<>("rowKey1", "columnKey1", "a", new ConstantTimestamper(1)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey2", "columnKey1", "b", new ConstantTimestamper(2)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey1", "c", new ConstantTimestamper(3)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey1", "columnKey2", "d", new ConstantTimestamper(4)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey2", "columnKey2", "e", new ConstantTimestamper(5)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey2", "f", new ConstantTimestamper(6)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey1", "columnKey3", "g", new ConstantTimestamper(7)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey2", "columnKey3", "h", new ConstantTimestamper(8)));
+        add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey3", "i", new ConstantTimestamper(9)));
+        store.multiRowsMultiAdd(tenantId, add);
+
+        List<Map<String, String>> result = store.multiRowMultiGet(tenantId, ImmutableList.of("rowKey1", "rowKey2"), ImmutableList.of("columnKey1", "columnKey3"),
+                -1, -1);
+        Assert.assertEquals(result.size(), 2);
+        Assert.assertEquals(result.get(0), ImmutableMap.of("columnKey1", "a", "columnKey3", "g"));
+        Assert.assertEquals(result.get(1), ImmutableMap.of("columnKey1", "b", "columnKey3", "h"));
     }
 }
