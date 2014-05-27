@@ -34,6 +34,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.ValueStoreMarsh
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.shared.RowColumnValueStoreCounters;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -851,16 +852,16 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
             throws Exception {
         List<Get> gets = new ArrayList<>(rowKeys.size());
 
-        List<byte[]> rawColumnKeys;
+        Map<ByteBuffer, C> rawColumnKeys;
         try {
-            rawColumnKeys = new ArrayList<>(columnKeys.size());
+            rawColumnKeys = new HashMap<>(columnKeys.size());
             for (C columnKey : columnKeys) {
-                rawColumnKeys.add(marshaller.toColumnKeyBytes(columnKey));
+                rawColumnKeys.put(ByteBuffer.wrap(marshaller.toColumnKeyBytes(columnKey)), columnKey);
             }
             for (R rowKey : rowKeys) {
                 Get get = new Get(marshaller.toRowKeyBytes(tenantId, rowKey));
-                for (byte[] rawColumnKey : rawColumnKeys) {
-                    get.addColumn(family, rawColumnKey);
+                for (ByteBuffer rawColumnKey : rawColumnKeys.keySet()) {
+                    get.addColumn(family, rawColumnKey.array());
                 }
                 gets.add(get);
             }
@@ -878,12 +879,9 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                 if (!result.isEmpty()) {
                     Map<C, V> map = new HashMap<>(columnKeys.size());
                     values.add(map);
-                    for (int i = 0; i < rawColumnKeys.size(); i++) {
-                        byte[] rawColumnKey = rawColumnKeys.get(i);
-                        KeyValue value = result.getColumnLatest(family, rawColumnKey);
-                        if (value != null) {
-                            map.put(columnKeys.get(i), marshaller.fromValueBytes(value.getValue()));
-                        }
+                    for (KeyValue keyValue : result.list()) {
+                        byte[] rawColumnKey = keyValue.getQualifier();
+                        map.put(rawColumnKeys.get(ByteBuffer.wrap(rawColumnKey)), marshaller.fromValueBytes(keyValue.getValue()));
                     }
                 } else {
                     values.add(null);
