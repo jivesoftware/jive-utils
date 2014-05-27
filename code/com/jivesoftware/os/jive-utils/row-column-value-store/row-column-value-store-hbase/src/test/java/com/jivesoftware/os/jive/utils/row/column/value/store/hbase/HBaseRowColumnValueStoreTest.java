@@ -98,6 +98,12 @@ public class HBaseRowColumnValueStoreTest extends BaseRowColumnValueStore {
 
     @Test(groups = "slow")
     @Override
+    public void testMultiRowMultiGet() throws Exception {
+        super.testMultiRowMultiGet();
+    }
+
+    @Test(groups = "slow")
+    @Override
     public void testMultiGetEntries() throws Exception {
         super.testMultiGetEntries();
     }
