@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-repo-management</artifactId>
-        <version>0.17-SNAPSHOT</version>
+        <version>0.17</version>
         <relativePath>../global-repo-management/pom.xml</relativePath>
     </parent>
     <artifactId>global-version-management</artifactId>
@@ -14,82 +14,82 @@
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>io</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>map-store</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>keyed-store</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>chunk-store</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>jaxrs-util</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>base</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>logger</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>http-client</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>http-client-rest</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
                 <artifactId>row-column-value-store-api</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>merlin-config</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
                 <artifactId>row-column-value-store-shared</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
                 <artifactId>row-column-value-store-tests</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
                 <artifactId>row-column-value-store-marshall-primatives</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
                 <artifactId>row-column-value-store-marshall-api</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
                 <artifactId>row-column-value-store-hbase</artifactId>
-                <version>0.17-SNAPSHOT</version>
+                <version>0.17</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>
