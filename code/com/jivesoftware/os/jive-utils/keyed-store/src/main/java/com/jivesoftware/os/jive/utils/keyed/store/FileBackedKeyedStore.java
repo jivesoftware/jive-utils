@@ -10,8 +10,8 @@ import java.io.IOException;
  */
 public class FileBackedKeyedStore implements KeyedFilerStore {
 
-    private final FileBackMapStore<byte[], byte[]> mapStore;
-    private final FileBackMapStore<byte[], byte[]> swapStore;
+    private final FileBackMapStore<IBA, IBA> mapStore;
+    private final FileBackMapStore<IBA, IBA> swapStore;
     private final ChunkStore chunkStore;
     private final long newFilerInitialCapacity;
 
@@ -24,26 +24,26 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
         this.newFilerInitialCapacity = newFilerInitialCapacity;
     }
 
-    private FileBackMapStore<byte[], byte[]> initializeMapStore(String mapDirectory, int mapKeySize, long initialMapKeyCapacity) throws Exception {
-        return new FileBackMapStore<byte[], byte[]>(mapDirectory, mapKeySize, 8, (int) initialMapKeyCapacity, 100, null) {
+    private FileBackMapStore<IBA, IBA> initializeMapStore(String mapDirectory, int mapKeySize, long initialMapKeyCapacity) throws Exception {
+        return new FileBackMapStore<IBA, IBA>(mapDirectory, mapKeySize, 8, (int) initialMapKeyCapacity, 100, null) {
             @Override
-            public String keyPartition(byte[] bytes) {
+            public String keyPartition(IBA key) {
                 return "_";
             }
 
             @Override
-            public byte[] keyBytes(byte[] bytes) {
-                return bytes;
+            public byte[] keyBytes(IBA key) {
+                return key.getBytes();
             }
 
             @Override
-            public byte[] valueBytes(byte[] bytes) {
-                return bytes;
+            public byte[] valueBytes(IBA value) {
+                return value.getBytes();
             }
 
             @Override
-            public byte[] bytesValue(byte[] key, byte[] value, int valueOffset) {
-                return value;
+            public IBA bytesValue(IBA key, byte[] value, int valueOffset) {
+                return new IBA(value);
             }
         };
     }
@@ -54,7 +54,8 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
     }
 
     @Override
-    public SwappableFiler get(byte[] key, boolean autoCreate) throws Exception {
+    public SwappableFiler get(byte[] keyBytes, boolean autoCreate) throws Exception {
+        IBA key = new IBA(keyBytes);
         AutoResizingChunkFiler filer = new AutoResizingChunkFiler(mapStore, key, chunkStore);
         if (!autoCreate && !filer.exists()) {
             return null;

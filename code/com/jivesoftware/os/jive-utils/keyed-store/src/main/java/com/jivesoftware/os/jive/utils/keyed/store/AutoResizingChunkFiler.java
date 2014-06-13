@@ -1,7 +1,8 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
-import com.jivesoftware.os.jive.utils.io.*;
+import com.jivesoftware.os.jive.utils.io.Filer;
+import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
 
 import java.io.IOException;
@@ -14,10 +15,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AutoResizingChunkFiler implements Filer {
     private final AtomicReference<Filer> filerReference;
     private final ChunkStore chunkStore;
-    private final byte[] key;
-    private final FileBackMapStore<byte[], byte[]> mapStore;
+    private final IBA key;
+    private final FileBackMapStore<IBA, IBA> mapStore;
 
-    public AutoResizingChunkFiler(FileBackMapStore<byte[], byte[]> mapStore, byte[] key, ChunkStore chunkStore) {
+    public AutoResizingChunkFiler(FileBackMapStore<IBA, IBA> mapStore, IBA key, ChunkStore chunkStore) {
         this.chunkStore = chunkStore;
         this.mapStore = mapStore;
         this.key = key;
@@ -25,10 +26,10 @@ public class AutoResizingChunkFiler implements Filer {
     }
 
     public void init(long initialChunkSize) throws Exception {
-        byte[] value = mapStore.get(key);
+        IBA value = mapStore.get(key);
         Filer filer = null;
         if (value != null) {
-            filer = chunkStore.getFiler(FilerIO.bytesLong(value));
+            filer = chunkStore.getFiler(FilerIO.bytesLong(value.getBytes()));
         }
         if (filer == null) {
             filer = createNewFiler(initialChunkSize);
@@ -36,18 +37,30 @@ public class AutoResizingChunkFiler implements Filer {
         filerReference.set(filer);
     }
 
-    public boolean exists() throws Exception {
-        byte[] value = mapStore.get(key);
+    public void reinit() throws Exception {
+        IBA value = mapStore.get(key);
         Filer filer = null;
         if (value != null) {
-            filer = chunkStore.getFiler(FilerIO.bytesLong(value));
+            filer = chunkStore.getFiler(FilerIO.bytesLong(value.getBytes()));
+        }
+        if (filer == null) {
+            throw new IllegalStateException("Attempted reinit without a chunk");
+        }
+        filerReference.set(filer);
+    }
+
+    public boolean exists() throws Exception {
+        IBA value = mapStore.get(key);
+        Filer filer = null;
+        if (value != null) {
+            filer = chunkStore.getFiler(FilerIO.bytesLong(value.getBytes()));
         }
         return filer != null;
     }
 
     private Filer createNewFiler(long initialChunkSize) throws Exception {
         long chunkId = chunkStore.newChunk(initialChunkSize);
-        mapStore.add(key, FilerIO.longBytes(chunkId));
+        mapStore.add(key, new IBA(FilerIO.longBytes(chunkId)));
         return chunkStore.getFiler(chunkId);
     }
 
@@ -138,8 +151,8 @@ public class AutoResizingChunkFiler implements Filer {
                 long newChunkId = chunkStore.newChunk(capacity);
                 newFiler = chunkStore.getFiler(newChunkId);
                 copy(currentFiler, newFiler, -1);
-                long chunkId = FilerIO.bytesLong(mapStore.get(key));
-                mapStore.add(key, FilerIO.longBytes(newChunkId));
+                long chunkId = FilerIO.bytesLong(mapStore.get(key).getBytes());
+                mapStore.add(key, new IBA(FilerIO.longBytes(newChunkId)));
                 filerReference.set(newFiler);
                 chunkStore.remove(chunkId);
                 // copying and chunkStore removal each manipulate the pointer, so restore pointer afterward

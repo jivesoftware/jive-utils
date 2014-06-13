@@ -2,7 +2,6 @@ package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.google.common.base.Preconditions;
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
-import com.jivesoftware.os.jive.utils.io.Filer;
 
 import java.io.File;
 import java.io.IOException;

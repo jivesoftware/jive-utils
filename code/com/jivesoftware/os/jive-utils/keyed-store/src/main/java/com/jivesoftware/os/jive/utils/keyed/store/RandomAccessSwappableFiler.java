@@ -33,6 +33,12 @@ public class RandomAccessSwappableFiler implements SwappableFiler {
     }
 
     @Override
+    public void sync() throws IOException {
+        filerReference.get().close();
+        filerReference.set(new RandomAccessFiler(path, "rw"));
+    }
+
+    @Override
     public Object lock() {
         return filerReference.get().lock();
     }

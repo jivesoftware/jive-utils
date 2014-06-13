@@ -41,7 +41,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
     private final int keySize;
     private final int payloadSize;
     private final int initialPageCapacity;
-    private final StripingLocksProvider<K> keyLocksProvider;
+    private final StripingLocksProvider<String> keyLocksProvider;
     private final Map<String, MapChunk> indexPages;
     private final V returnWhenGetReturnsNull;
 
@@ -71,7 +71,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         if (rawChildActivity == null) {
             return;
         }
-        synchronized (keyLocksProvider.lock(key)) {
+        synchronized (keyLocksProvider.lock(keyPartition(key))) {
             MapChunk index = index(key);
 
             try {
@@ -115,7 +115,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         }
 
         byte[] keyBytes = keyBytes(key);
-        synchronized (keyLocksProvider.lock(key)) {
+        synchronized (keyLocksProvider.lock(keyPartition(key))) {
             MapChunk index = index(key);
             mapStore.remove(index, keyBytes);
         }
@@ -146,7 +146,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         MapChunk index = index(key);
         byte[] keyBytes = keyBytes(key);
         byte[] payload;
-        synchronized (keyLocksProvider.lock(key)) {
+        synchronized (keyLocksProvider.lock(keyPartition(key))) {
             payload = mapStore.get(index, keyBytes, extractPayload);
         }
         if (payload == null) {
@@ -168,7 +168,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 return got;
             }
 
-            synchronized (keyLocksProvider.lock(key)) {
+            synchronized (keyLocksProvider.lock(pageId)) {
                 got = indexPages.get(pageId);
                 if (got != null) {
                     return got;

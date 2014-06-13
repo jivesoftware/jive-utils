@@ -65,6 +65,7 @@ public class FileBackedKeyedStoreTest {
         byte[] key = FilerIO.intBytes(1020);
         SwappableFiler filer = fileBackedKeyedStore.get(key);
         synchronized (filer.lock()) {
+            filer.sync();
             FilerIO.writeInt(filer, 10, "");
 
             SwappingFiler swappingFiler = filer.swap(4);
@@ -75,6 +76,7 @@ public class FileBackedKeyedStoreTest {
         fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, chunkStore, 512);
         filer = fileBackedKeyedStore.get(key);
         synchronized (filer.lock()) {
+            filer.sync();
             filer.seek(0);
             int twenty = FilerIO.readInt(filer, "");
             System.out.println("twenty:" + twenty);
