@@ -16,12 +16,12 @@ public class AutoResizingChunkSwappableFiler implements SwappableFiler {
 
     private final AtomicReference<AutoResizingChunkFiler> filerReference;
     private final ChunkStore chunkStore;
-    private final byte[] key;
-    private final FileBackMapStore<byte[], byte[]> mapStore;
-    private final FileBackMapStore<byte[], byte[]> swapStore;
+    private final IBA key;
+    private final FileBackMapStore<IBA, IBA> mapStore;
+    private final FileBackMapStore<IBA, IBA> swapStore;
 
-    public AutoResizingChunkSwappableFiler(AutoResizingChunkFiler filer, ChunkStore chunkStore, byte[] key,
-            FileBackMapStore<byte[], byte[]> mapStore, FileBackMapStore<byte[], byte[]> swapStore)
+    public AutoResizingChunkSwappableFiler(AutoResizingChunkFiler filer, ChunkStore chunkStore, IBA key,
+            FileBackMapStore<IBA, IBA> mapStore, FileBackMapStore<IBA, IBA> swapStore)
     {
         this.filerReference = new AtomicReference<>(filer);
         this.chunkStore = chunkStore;
@@ -34,6 +34,15 @@ public class AutoResizingChunkSwappableFiler implements SwappableFiler {
         AutoResizingChunkFiler filer = new AutoResizingChunkFiler(swapStore, key, chunkStore);
         filer.init(initialChunkSize);
         return new AutoResizingChunkSwappingFiler(filer);
+    }
+
+    @Override
+    public void sync() throws IOException {
+        try {
+            filerReference.get().reinit();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
@@ -121,11 +130,11 @@ public class AutoResizingChunkSwappableFiler implements SwappableFiler {
 
         @Override
         public void commit() throws Exception {
-            byte[] oldChunk = mapStore.get(key);
-            byte[] newChunk = swapStore.get(key);
+            IBA oldChunk = mapStore.get(key);
+            IBA newChunk = swapStore.get(key);
             mapStore.add(key, newChunk);
             swapStore.remove(key);
-            chunkStore.remove(FilerIO.bytesLong(oldChunk));
+            chunkStore.remove(FilerIO.bytesLong(oldChunk.getBytes()));
         }
 
         @Override

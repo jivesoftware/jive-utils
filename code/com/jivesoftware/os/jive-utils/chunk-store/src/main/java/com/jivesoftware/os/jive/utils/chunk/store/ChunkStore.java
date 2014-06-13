@@ -143,13 +143,14 @@ public class ChunkStore {
 
     private long resuseChunk(long _chunkPower) throws Exception {
         synchronized (filer.lock()) {
-            filer.seek(freeSeek(_chunkPower));
+            long position = freeSeek(_chunkPower);
+            filer.seek(position);
             long reuseFP = FilerIO.readLong(filer, "free");
             if (reuseFP == -1) {
                 return reuseFP;
             }
             long nextFree = readNextFree(reuseFP);
-            filer.seek(freeSeek(_chunkPower));
+            filer.seek(position);
             FilerIO.writeLong(filer, nextFree, "free");
             return reuseFP;
         }
@@ -207,15 +208,16 @@ public class ChunkStore {
             }
             filer.flush();
             // save as free chunk
-            filer.seek(freeSeek(chunkPower));
+            long position = freeSeek(chunkPower);
+            filer.seek(position);
             long freeFP = FilerIO.readLong(filer, "free");
             if (freeFP == -1) {
-                filer.seek(freeSeek(chunkPower));
+                filer.seek(position);
                 FilerIO.writeLong(filer, _chunkFP, "free");
                 filer.flush();
             } else {
                 long nextFree = readNextFree(freeFP);
-                filer.seek(freeSeek(chunkPower));
+                filer.seek(position);
                 FilerIO.writeLong(filer, _chunkFP, "free");
                 writeNextFree(_chunkFP, nextFree);
                 filer.flush();
