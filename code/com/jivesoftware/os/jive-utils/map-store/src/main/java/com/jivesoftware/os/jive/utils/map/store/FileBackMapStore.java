@@ -219,11 +219,16 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
     }
 
     public long sizeInBytes() throws IOException {
+        File partitionsDir = new File(this.pathToPartitions);
+        if (!partitionsDir.exists()) {
+            return 0;
+        }
+
         // TODO - Cache this value and only recalculate when add or remove is called?
 
         final MutableLong size = new MutableLong(0);
 
-        Files.walkFileTree(new File(pathToPartitions).toPath(), new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(partitionsDir.toPath(), new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 size.add(attrs.size());
