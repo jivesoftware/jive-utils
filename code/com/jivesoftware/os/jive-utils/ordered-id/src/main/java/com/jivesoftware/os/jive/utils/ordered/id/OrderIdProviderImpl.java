@@ -25,20 +25,16 @@ public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider 
     private final int maxOrderId;
     final private TimestampProvider timestampProvider;
     private final IdPacker idPacker;
-    final private int writerId;
+    final private WriterIdProvider writerIdProvider;
     final private AtomicReference<TimeAndOrder> state;
 
-    public OrderIdProviderImpl(int writerId) {
-        this(writerId, new SnowflakeIdPacker(), new JiveEpochTimestampProvider());
+    public OrderIdProviderImpl(WriterIdProvider writerIdProvider) {
+        this(writerIdProvider, new SnowflakeIdPacker(), new JiveEpochTimestampProvider());
     }
 
-    public OrderIdProviderImpl(int writerId, IdPacker idPacker, TimestampProvider timestampProvider) {
-        int maxWritterId = (int) Math.pow(2, idPacker.bitsPrecisionOfWriterId()) - 1;
-        if (writerId < 0 || writerId > maxWritterId) {
-            throw new IllegalArgumentException("writerId is out of range must be 0.." + maxWritterId);
-        }
+    public OrderIdProviderImpl(WriterIdProvider writerIdProvider, IdPacker idPacker, TimestampProvider timestampProvider) {
         this.maxOrderId = (int) Math.pow(2, idPacker.bitsPrecisionOfOrderId()) - 1;
-        this.writerId = writerId;
+        this.writerIdProvider = writerIdProvider;
         this.idPacker = idPacker;
         this.timestampProvider = timestampProvider;
         this.state = new AtomicReference<>(new TimeAndOrder(timestampProvider.getTimestamp(), 0));
@@ -75,6 +71,11 @@ public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider 
                 }
 
                 if (state.compareAndSet(current, next)) {
+                    int maxWritterId = (int) Math.pow(2, idPacker.bitsPrecisionOfWriterId()) - 1;
+                    int writerId = writerIdProvider.getWriterId();
+                    if (writerId < 0 || writerId > maxWritterId) {
+                        throw new IllegalArgumentException("writerId is out of range must be 0.." + maxWritterId);
+                    }
                     return idPacker.pack(next.time, writerId, next.order);
                 }
             }

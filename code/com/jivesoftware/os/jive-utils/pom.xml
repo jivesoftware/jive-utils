@@ -27,6 +27,7 @@
         <module>map-store</module>
         <module>keyed-store</module>
         <module>io</module>
+        <module>id</module>
     </modules>
 
 </project>
