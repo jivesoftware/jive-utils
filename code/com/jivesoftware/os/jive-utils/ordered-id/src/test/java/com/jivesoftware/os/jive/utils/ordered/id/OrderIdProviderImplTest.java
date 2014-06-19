@@ -32,7 +32,7 @@ public class OrderIdProviderImplTest {
 
     @Test
     public void testMonotonicity() throws Exception {
-        OrderIdProvider orderIdProvider = new OrderIdProviderImpl(1);
+        OrderIdProvider orderIdProvider = new OrderIdProviderImpl(new ConstantWriterIdProvider(1));
         long firstOrderId = orderIdProvider.nextId();
         long secondOrderId = orderIdProvider.nextId();
         int compare = (firstOrderId < secondOrderId) ? -1 : ((firstOrderId == secondOrderId) ? 0 : 1);
@@ -87,19 +87,19 @@ public class OrderIdProviderImplTest {
     @SuppressWarnings ("unused")
     @Test (expectedExceptions = IllegalArgumentException.class)
     public void testWriterIdUnderBound() {
-        new OrderIdProviderImpl(-1);
+        new OrderIdProviderImpl(new ConstantWriterIdProvider(-1)).nextId();
     }
 
     @SuppressWarnings ("unused")
     @Test (expectedExceptions = IllegalArgumentException.class)
     public void testWriterIdOverBounds() {
-        new OrderIdProviderImpl(1024);
+        new OrderIdProviderImpl(new ConstantWriterIdProvider(1024)).nextId();
     }
 
     @Test (groups = "slow")
     public void testMultiThreadedUniqueIds() throws InterruptedException {
         final Set<Long> generated = new ConcurrentSkipListSet<>();
-        final OrderIdProviderImpl provider = new OrderIdProviderImpl(2);
+        final OrderIdProviderImpl provider = new OrderIdProviderImpl(new ConstantWriterIdProvider(2));
         final int numIterations = 1000000;
 
         int numThreads = 10;
