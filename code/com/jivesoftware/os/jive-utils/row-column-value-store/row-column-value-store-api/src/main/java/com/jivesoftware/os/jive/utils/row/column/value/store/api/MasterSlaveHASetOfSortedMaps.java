@@ -65,6 +65,11 @@ public class MasterSlaveHASetOfSortedMaps<T, R, C, V, E extends Exception> imple
     }
 
     @Override
+    public boolean replaceIfEqualToExpected(T tenantId, R rowKey, C columnKey, V columnValue, V expectedValue, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws E {
+        return master.replaceIfEqualToExpected(tenantId, rowKey, columnKey, columnValue, expectedValue, timeToLiveInSeconds, overrideTimestamper);
+    }
+
+    @Override
     public void multiAdd(T tenantId, R rowKey, C[] columnKeys, V[] columnValues, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws E {
         master.multiAdd(tenantId, rowKey, columnKeys, columnValues, timeToLiveInSeconds, overrideTimestamper);
     }
@@ -133,24 +138,29 @@ public class MasterSlaveHASetOfSortedMaps<T, R, C, V, E extends Exception> imple
     @Override
     public void getKeys(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
     boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<C> callback) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void getValues(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
     boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<V> callback) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public <TS> void getEntrys(T tenantId, R rowKey, C start, Long maxCount, int batchSize,
     boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<C, V, TS>> callback) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void getAllRowKeys(int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet.");    
     }
 
     @Override
@@ -181,11 +191,11 @@ public class MasterSlaveHASetOfSortedMaps<T, R, C, V, E extends Exception> imple
 
     @Override
     public <TS> void multiRowGetAll(T tenantId, List<KeyedColumnValueCallbackStream<R, C, V, TS>> rowKeyCallbackStreamPairs) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public <TS> void multiRowGetAll(List<TenantKeyedColumnValueCallbackStream<T, R, C, V, TS>> tenantRowKeyCallbackStreamPairs) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

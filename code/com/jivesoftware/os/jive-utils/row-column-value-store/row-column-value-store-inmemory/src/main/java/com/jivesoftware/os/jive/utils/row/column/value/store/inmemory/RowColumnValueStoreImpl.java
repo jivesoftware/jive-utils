@@ -24,12 +24,14 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumV
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumnTimestampRemove;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
@@ -46,7 +48,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<T, S, K, V, RuntimeException> {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
-    private final Map<T, Map<S, Map<K, Timestamped<V>>>> tenantIdStores = new ConcurrentSkipListMap<>();
+    private final Map<T, NavigableMap<S, NavigableMap<K, Timestamped<V>>>> tenantIdStores = new ConcurrentSkipListMap<>();
     private final StripingLocksProvider<S> rowLocks = new StripingLocksProvider<>(128);
 
     /**
@@ -55,9 +57,9 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     public RowColumnValueStoreImpl() {
     }
 
-    private Map<S, Map<K, Timestamped<V>>> getStore(T tenantId) {
+    private NavigableMap<S, NavigableMap<K, Timestamped<V>>> getStore(T tenantId) {
         synchronized (tenantIdStores) {
-            Map<S, Map<K, Timestamped<V>>> store = tenantIdStores.get(tenantId);
+            NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = tenantIdStores.get(tenantId);
             if (store == null) {
                 store = new ConcurrentSkipListMap<>();
                 tenantIdStores.put(tenantId, store);
@@ -68,9 +70,9 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public void add(T tenantId, S rowKey, K columnKey, V columnValue, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) {
-        Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
         synchronized (rowLocks.lock(rowKey)) {
-            Map<K, Timestamped<V>> map = store.get(rowKey);
+            NavigableMap<K, Timestamped<V>> map = store.get(rowKey);
             if (map == null) {
                 // todo should use sortedMap to more closely mimic cassandra impl
                 map = new ConcurrentSkipListMap<>();
@@ -100,8 +102,21 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     }
 
     @Override
+    public boolean replaceIfEqualToExpected(T tenantId, S rowKey, K columnKey, V columnValue, V expectedValue, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws RuntimeException {
+        synchronized (rowLocks.lock(rowKey)) {
+            V currentVal = get(tenantId, rowKey, columnKey, null, null);
+            if (currentVal == expectedValue) {
+                add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    @Override
     public V get(T tenantId, S rowKey, K columnKey, Integer overrideNumberOfRetries, Integer overrideConsistency) {
-        Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
         synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> map = store.get(rowKey);
             if (map == null) {
@@ -117,9 +132,9 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public void remove(T tenantId, S rowKey, K columnKey, Timestamper overrideTimestamper) {
-        Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
         synchronized (rowLocks.lock(rowKey)) {
-            Map<K, Timestamped<V>> map = store.get(rowKey);
+            NavigableMap<K, Timestamped<V>> map = store.get(rowKey);
             long timestamp = overrideTimestamper == null ? System.currentTimeMillis() : overrideTimestamper.get();
             if (map == null) {
                 // todo should use sortedMap to more closely mimic cassandra impl
@@ -138,7 +153,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     private <R> void get(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, CallbackStream<R> callback,
             ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, R> marshall) {
         try {
-            Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
+            NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
 
             Map<K, Timestamped<V>> copy = new ConcurrentSkipListMap<>();
             synchronized (rowLocks.lock(rowKey)) {
@@ -273,7 +288,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     public ColumnValueAndTimestamp<K, V, Long>[] multiGetEntries(T tenantId, S rowKey, K[] columnKeys, Integer overrideNumberOfRetries,
             Integer overrideConsistency) {
 
-        Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
         synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> map = store.get(rowKey);
             if (map == null) {
@@ -326,9 +341,38 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public void getAllRowKeys(int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, S>> callback) {
-        for (Entry<T, Map<S, Map<K, Timestamped<V>>>> entry : tenantIdStores.entrySet()) {
-            for (S row : entry.getValue().keySet()) {
-                TenantIdAndRow<T, S> rowKey = new TenantIdAndRow<>(entry.getKey(), row);
+        getRowKeys(null, null, null, batchSize, overrideNumberOfRetries, callback);
+    }
+
+    @Override
+    public void getRowKeys(T tenantId, S startRowKey, S stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, S>> callback) {
+        if (tenantId != null) {
+            NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
+            getRowKeysForTenant(tenantId, store, startRowKey, stopRowKey, batchSize, overrideNumberOfRetries, callback);
+        }
+        else {
+            for (Entry<T, NavigableMap<S, NavigableMap<K, Timestamped<V>>>> entry : tenantIdStores.entrySet()) {
+                getRowKeysForTenant(entry.getKey(), entry.getValue(), startRowKey, stopRowKey, batchSize, overrideNumberOfRetries, callback);
+            }
+        }
+
+        try {
+            callback.callback(null);
+        } catch (Exception ex) {
+            LOG.error("calling callback EOS.", ex);
+        }
+    }
+
+    private void getRowKeysForTenant(T tenantId, NavigableMap<S, NavigableMap<K, Timestamped<V>>> rows, S startRowKey, S stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, S>> callback) {
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> rowsFromStart;
+        rowsFromStart = startRowKey != null ? rows.tailMap(startRowKey, true) : rows;
+
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> rowsInRange;
+        rowsInRange = stopRowKey != null ? rowsFromStart.headMap(stopRowKey, false) : rowsFromStart;
+
+        for (S row : rowsInRange.keySet()) {
+            synchronized (rowLocks.lock(row)) {
+                TenantIdAndRow<T, S> rowKey = new TenantIdAndRow<>(tenantId, row);
                 TenantIdAndRow<T, S> returned = null;
                 try {
                     returned = callback.callback(rowKey);
@@ -340,16 +384,11 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
                 }
             }
         }
-        try {
-            callback.callback(null);
-        } catch (Exception ex) {
-            LOG.error("calling callback EOS.", ex);
-        }
     }
 
     @Override
     public void removeRow(T tenantId, S rowKey, Timestamper overrideTimestamper) {
-        Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
         synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> columns = store.get(rowKey);
             if (columns != null) {
@@ -389,7 +428,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public <TS> void multiRowGetAll(T tenantId, List<KeyedColumnValueCallbackStream<S, K, V, TS>> rowKeyCallbackStreamPairs) {
-        Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
+        NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(tenantId);
         for (KeyedColumnValueCallbackStream<S, K, V, TS> pair : rowKeyCallbackStreamPairs) {
             S rowKey = pair.getKey();
 
@@ -432,7 +471,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     public <TS> void multiRowGetAll(List<TenantKeyedColumnValueCallbackStream<T, S, K, V, TS>> rowKeyCallbackStreamPairs) {
 
         for (TenantKeyedColumnValueCallbackStream<T, S, K, V, TS> pair : rowKeyCallbackStreamPairs) {
-            Map<S, Map<K, Timestamped<V>>> store = getStore(pair.getTenantId());
+            NavigableMap<S, NavigableMap<K, Timestamped<V>>> store = getStore(pair.getTenantId());
             S rowKey = pair.getKey();
             Map<K, Timestamped<V>> copy = new ConcurrentSkipListMap<>();
             synchronized (rowLocks.lock(rowKey)) {
