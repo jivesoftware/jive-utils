@@ -13,11 +13,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.jivesoftware.os.jive.utils.permit;
+package com.jivesoftware.os.jive.utils.row.column.value.store.api;
 
-import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStoreMarshaller;
-import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStoreMarshallerException;
-import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantIdAndRow;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
 
 import java.util.Arrays;
@@ -33,6 +30,9 @@ import java.util.Arrays;
  *
  * where the length of the tenantId bytes is stored in a single byte. This then means that any tenantId string provided to this class MUST have a length of less
  * than or equal to 256 characters.
+ *
+ * This is useful mainly for row scanning: since the tenant ID length and tenant ID appear at the beginning, a range can
+ * be constructed for scanning between one row key and some other row key, all pertaining to a single tenant.
  *
  * @param <R> the type of objects that are used for the row key of the table
  * @param <C> the type of objects that are used for the column key of the table

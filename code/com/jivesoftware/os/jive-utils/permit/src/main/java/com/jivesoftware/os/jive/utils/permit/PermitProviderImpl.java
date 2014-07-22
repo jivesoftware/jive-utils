@@ -1,17 +1,22 @@
 package com.jivesoftware.os.jive.utils.permit;
 
+import com.google.common.base.Preconditions;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ColumnValueAndTimestamp;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.NeverAcceptsFailureSetOfSortedMaps;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMapsImplInitializer;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantIdAndRow;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantKeyedColumnValueCallbackStream;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantLengthAndTenantFirstRowColumnValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.LongTypeMarshaller;
+import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.VoidTypeMarshaller;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,13 +32,16 @@ public final class PermitProviderImpl<T> implements PermitProvider {
     private final int countIds;
     private final long expires;
 
-    NeverAcceptsFailureSetOfSortedMaps<T, PermitRowKey, Void, Long> permitStore;
+    RowColumnValueStore<T, PermitRowKey, Void, Long, RuntimeException> permitStore;
 
     public PermitProviderImpl(
             T tenantId, int pool, int minId, int countIds, long expires, String tableNameSpace,
             TypeMarshaller<T> tenantIdMarshaller,
             SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer
     ) throws IOException {
+        Preconditions.checkArgument(countIds > 0, "Permit pool must have at least one available permit.");
+        Preconditions.checkArgument(expires > 0, "A permit must expire in the future.");
+
         this.tenantId = tenantId;
         this.pool = pool;
         this.minId = minId;
@@ -60,10 +68,10 @@ public final class PermitProviderImpl<T> implements PermitProvider {
     public Permit requestPermit() throws OutOfPermitsException {
         long now = System.currentTimeMillis();
 
-        Set<Integer> takenPermits = new TreeSet<>();
-        Permit permit = claimExpiredPermit(now, takenPermits);
+        PermitIdGenerator permitIdGenerator = new PermitIdGenerator(minId, countIds);
+        Permit permit = claimExpiredPermit(now, permitIdGenerator);
         if (permit == null) {
-            permit = claimAvailablePermit(now, takenPermits);
+            permit = claimAvailablePermit(now, permitIdGenerator);
         }
 
         if (permit == null) {
@@ -73,8 +81,8 @@ public final class PermitProviderImpl<T> implements PermitProvider {
         return permit;
     }
 
-    private Permit claimExpiredPermit(long now, Set<Integer> takenPermits) {
-        List<IssuedPermit> issuedPermits = getIssuedPermits();
+    private Permit claimExpiredPermit(long now, PermitIdGenerator permitIdGenerator) {
+        List<IssuedPermit> issuedPermits = queryIssuedPermits();
 
         for (IssuedPermit permit : issuedPermits) {
             if (permit.issued < now - expires) {
@@ -83,20 +91,14 @@ public final class PermitProviderImpl<T> implements PermitProvider {
                 }
             }
 
-            takenPermits.add(permit.rowKey.id);
+            permitIdGenerator.markCurrent(permit.rowKey.id);
         }
 
         return null;
     }
 
-    private Permit claimAvailablePermit(long now, Set<Integer> takenPermits) {
-        Set<Integer> availablePermits = new TreeSet<>();
-        for (int i = minId; i < minId + countIds; i++) {
-            availablePermits.add(i);
-        }
-        availablePermits.removeAll(takenPermits);
-
-        for (int permit : availablePermits) {
+    private Permit claimAvailablePermit(long now, PermitIdGenerator permitIdGenerator) {
+        for (int permit : permitIdGenerator.listAvailablePermitIds()) {
             if (attemptToIssue(new PermitRowKey(pool, permit), null, now)) {
                 return new Permit(pool, permit);
             }
@@ -109,7 +111,7 @@ public final class PermitProviderImpl<T> implements PermitProvider {
         return permitStore.replaceIfEqualToExpected(tenantId, rowKey, null, now, expectedIssued, null, null);
     }
 
-    private List<IssuedPermit> getIssuedPermits() {
+    private List<IssuedPermit> queryIssuedPermits() {
         final List<IssuedPermit> issuedPermits = new ArrayList<>();
 
         final List<TenantKeyedColumnValueCallbackStream<T, PermitRowKey, Void, Long, Long>> streams = new ArrayList<>();
@@ -146,5 +148,30 @@ public final class PermitProviderImpl<T> implements PermitProvider {
         permitStore.multiRowGetAll(streams);
 
         return issuedPermits;
+    }
+
+    static class PermitIdGenerator {
+        private final int minId;
+        private final int countIds;
+        private final Set<Integer> currentPermits = new TreeSet<>();
+
+        private PermitIdGenerator(int minId, int countIds) {
+            this.minId = minId;
+            this.countIds = countIds;
+        }
+
+        public void markCurrent(int id) {
+            currentPermits.add(id);
+        }
+
+        public List<Integer> listAvailablePermitIds() {
+            List<Integer> availablePermits = new ArrayList<>();
+            for (int i = minId; i < minId + countIds; i++) {
+                availablePermits.add(i);
+            }
+            availablePermits.removeAll(currentPermits);
+            Collections.shuffle(availablePermits);
+            return availablePermits;
+        }
     }
 }

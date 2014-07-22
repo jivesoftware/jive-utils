@@ -1,4 +1,4 @@
-package com.jivesoftware.os.jive.utils.permit;
+package com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives;
 
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
 

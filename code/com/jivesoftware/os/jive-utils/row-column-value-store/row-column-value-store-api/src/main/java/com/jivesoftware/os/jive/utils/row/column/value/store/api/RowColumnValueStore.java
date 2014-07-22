@@ -205,7 +205,7 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      * @param callback
      * @throws Exception
      */
-    void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws Exception;
+    void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws E;
 
     /**
      *

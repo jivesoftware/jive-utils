@@ -159,7 +159,7 @@ public class MasterSlaveHASetOfSortedMaps<T, R, C, V, E extends Exception> imple
     }
 
     @Override
-    public void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws Exception {
+    public void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws E {
         throw new UnsupportedOperationException("Not supported yet.");    
     }
 
