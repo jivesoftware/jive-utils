@@ -10,9 +10,7 @@ import com.jivesoftware.os.jive.utils.permit.PermitProvider;
  * Writer ID provider backed by PermitProvider.
  *
  * In order to use a writer ID and ensure that it hasn't expired (due to GC pause, etc), check that the writer ID is
- * still valid after it has been used. When a writer ID is expired, the underlying permit may still be valid. Use
- * {@link com.jivesoftware.os.jive.utils.ordered.id.PermitBackedWriterIdProvider#keepAlive()} to renew the
- * permit, and try again.
+ * still valid after it has been used. If it is invalid, try again.
  */
 public class PermitBackedWriterIdProvider implements WriterIdProvider {
     private final PermitProvider permitProvider;
