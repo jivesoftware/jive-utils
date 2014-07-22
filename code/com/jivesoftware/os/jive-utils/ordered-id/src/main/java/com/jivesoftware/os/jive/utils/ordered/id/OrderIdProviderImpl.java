@@ -74,18 +74,29 @@ public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider 
                     WriterId writerId;
                     long id;
                     do {
-                        try {
-                            writerId = writerIdProvider.getWriterId();
-                        } catch (OutOfWriterIdsException e) {
-                            throw new RuntimeException("Ran out of writer IDs. This should never happen. Failing fast.", e);
-                        }
-
+                        writerId = getWriterId();
                         id = idPacker.pack(next.time, writerId.getId(), next.order);
                     } while (!writerId.isValid());
                     return id;
                 }
             }
         }
+    }
+
+    private WriterId getWriterId() {
+        WriterId writerId;
+        try {
+            writerId = writerIdProvider.getWriterId();
+        } catch (OutOfWriterIdsException e) {
+            throw new RuntimeException("Ran out of writer IDs. This should never happen. Failing fast.", e);
+        }
+
+        int maxWritterId = (int) Math.pow(2, idPacker.bitsPrecisionOfWriterId()) - 1;
+        if (writerId.getId() < 0 || writerId.getId() > maxWritterId) {
+            throw new IllegalArgumentException("writerId is out of range must be 0.." + maxWritterId);
+        }
+
+        return writerId;
     }
 
     /**
