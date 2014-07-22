@@ -25,15 +25,12 @@ public class PermitBackedWriterIdProvider implements WriterIdProvider {
 
     @Override
     public synchronized WriterId getWriterId() throws OutOfWriterIdsException {
-        if (state.isPresent()) {
-            WriterId writerId = state.get().writerId;
-            if (!writerId.isValid()) {
-                keepAlive();
-            }
+        if (doesPermitNeedRenewed()) {
+            keepAlive();
+        }
 
-            if (writerId.isValid()) {
-                return writerId;
-            }
+        if (isWriterIdValid()) {
+            return state.get().writerId;
         }
 
         long now = System.currentTimeMillis();
@@ -44,6 +41,14 @@ public class PermitBackedWriterIdProvider implements WriterIdProvider {
         } catch (OutOfPermitsException e) {
             throw new OutOfWriterIdsException(e);
         }
+    }
+
+    private boolean doesPermitNeedRenewed() {
+        return state.isPresent() && !state.get().writerId.isValid();
+    }
+
+    private boolean isWriterIdValid() {
+        return state.isPresent() && state.get().writerId.isValid();
     }
 
     private void keepAlive() {
