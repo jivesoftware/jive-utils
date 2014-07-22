@@ -71,12 +71,18 @@ public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider 
                 }
 
                 if (state.compareAndSet(current, next)) {
-                    int maxWritterId = (int) Math.pow(2, idPacker.bitsPrecisionOfWriterId()) - 1;
-                    int writerId = writerIdProvider.getWriterId();
-                    if (writerId < 0 || writerId > maxWritterId) {
-                        throw new IllegalArgumentException("writerId is out of range must be 0.." + maxWritterId);
-                    }
-                    return idPacker.pack(next.time, writerId, next.order);
+                    WriterId writerId;
+                    long id;
+                    do {
+                        try {
+                            writerId = writerIdProvider.getWriterId();
+                        } catch (OutOfWriterIdsException e) {
+                            throw new RuntimeException("Ran out of writer IDs. This should never happen. Failing fast.", e);
+                        }
+
+                        id = idPacker.pack(next.time, writerId.getId(), next.order);
+                    } while (!writerId.isValid());
+                    return id;
                 }
             }
         }

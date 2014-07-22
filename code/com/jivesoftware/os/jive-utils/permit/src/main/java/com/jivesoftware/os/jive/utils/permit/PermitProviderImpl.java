@@ -19,7 +19,7 @@ import java.util.TreeSet;
 /**
  * Permit provider that stores the state of issued permits in HBase.
  */
-public final class PermitProviderImpl<T> implements PermitProvider<T> {
+public final class PermitProviderImpl<T> implements PermitProvider {
     private final T tenantId;
 
     private final int pool;
@@ -103,7 +103,7 @@ public final class PermitProviderImpl<T> implements PermitProvider<T> {
     }
 
     private boolean isExpired(long issuedTimestamp, long now) {
-        return (issuedTimestamp < now - expires);
+        return issuedTimestamp <= now - expires;
     }
 
     private Optional<Permit> attemptToIssue(PermitRowKey rowKey, Long expectedIssued, Long now) {

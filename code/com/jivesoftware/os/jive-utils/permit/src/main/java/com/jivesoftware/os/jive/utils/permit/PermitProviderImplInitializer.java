@@ -51,7 +51,7 @@ public class PermitProviderImplInitializer {
         this.config = config;
     }
 
-    public <T> PermitProvider<T> initialize(
+    public <T> PermitProvider initialize(
             T tenantId, int minId, int countIds, long expires,
             TypeMarshaller<T> tenantIdMarshaller,
             SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer
@@ -61,7 +61,7 @@ public class PermitProviderImplInitializer {
         );
     }
 
-    public <T> PermitProvider<T> initialize(
+    public <T> PermitProvider initialize(
             T tenantId, int pool, int minId, int countIds, long expires,
             TypeMarshaller<T> tenantIdMarshaller,
             SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer
@@ -71,7 +71,7 @@ public class PermitProviderImplInitializer {
         );
     }
 
-    private <T> PermitProvider<T> initPermitProvider(
+    private <T> PermitProvider initPermitProvider(
             T tenantId, int pool, int minId, int countIds, long expires,
             TypeMarshaller<T> tenantIdMarshaller,
             SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer

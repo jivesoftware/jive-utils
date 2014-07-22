@@ -16,6 +16,10 @@
     <dependencies>
         <dependency>
             <groupId>com.jivesoftware.os.jive.utils</groupId>
+            <artifactId>permit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils</groupId>
             <artifactId>merlin-config</artifactId>
         </dependency>
         <dependency>
