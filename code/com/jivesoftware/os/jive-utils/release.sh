@@ -71,7 +71,7 @@ echo "/-------------------------------------------------------"
 echo "| setting version to "${VERSION}
 echo "\-------------------------------------------------------"
 sleep 1
-find . -name "pom.xml" | xargs -n 1 mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION} -pl
+mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION} -pl com.jivesoftware.os.jive.utils.inheritance.poms:global-repo-management
 git add -A
 git commit -m "release "${VERSION}
 git push origin ${ON_BRANCH}
@@ -98,7 +98,7 @@ git checkout ${ON_BRANCH}
 echo "/-------------------------------------------------------"
 echo "| setting version to "${NEXT_VERSION}"-SNAPSHOT on branch "${ON_BRANCH}
 echo "\-------------------------------------------------------"
-find . -name "pom.xml" | xargs -n 1 mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${NEXT_VERSION}-SNAPSHOT -pl
+versions:set -DgenerateBackupPoms=false -DnewVersion=${NEXT_VERSION}-SNAPSHOT -pl com.jivesoftware.os.jive.utils.inheritance.poms:global-repo-management
 git add -A
 git commit -m "begin "${NEXT_VERSION}"-SNAPSHOT"
 git push origin ${ON_BRANCH}
