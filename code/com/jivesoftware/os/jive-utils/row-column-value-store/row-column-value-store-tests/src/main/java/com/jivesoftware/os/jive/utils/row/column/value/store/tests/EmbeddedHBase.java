@@ -13,10 +13,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.jivesoftware.os.jive.utils.row.column.value.store.hbase;
+package com.jivesoftware.os.jive.utils.row.column.value.store.tests;
 
-import com.jivesoftware.os.jive.utils.logger.MetricLogger;
-import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -34,7 +32,6 @@ import org.apache.hadoop.mapred.MiniMRCluster;
  */
 public class EmbeddedHBase {
 
-    private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
     private HBaseTestingUtility hBaseTestingUtility;
     private MiniMRCluster mrCluster;
 
@@ -42,7 +39,7 @@ public class EmbeddedHBase {
         System.setProperty("java.security.krb5.realm", "");
         System.setProperty("java.security.krb5.kdc", "");
 
-        LOG.info("Starting HBase");
+        System.out.println("Starting HBase");
         Configuration configuration = HBaseConfiguration.create();
         // HBase won't automaticlly pick a master info port.
         configuration.set("hbase.master.info.port", String.valueOf(60000));
@@ -68,7 +65,7 @@ public class EmbeddedHBase {
         return new HTablePool(hBaseTestingUtility.getConfiguration(), 5);
     }
 
-    public HBaseAdmin getHBaseAdmin() throws MasterNotRunningException, ZooKeeperConnectionException {
+    public HBaseAdmin getHBaseAdmin() throws MasterNotRunningException, ZooKeeperConnectionException, IOException {
         return new HBaseAdmin(getConfiguration());
     }
 

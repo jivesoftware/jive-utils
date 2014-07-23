@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.TimeZone;
 
 // Source ripped from log4j 1.2.16
-
 /**
  Formats a {@link java.util.Date} in the format "HH:mm:ss,SSS" for example,
  "15:49:37,459".
@@ -19,39 +18,40 @@ import java.util.TimeZone;
  @since 0.7.5
  */
 public class AbsoluteTimeDateFormat extends DateFormat {
+
     private static final long serialVersionUID = -388856345976723342L;
 
     /**
      String constant used to specify {@link
-    org.apache.log4j.helpers.AbsoluteTimeDateFormat} in layouts. Current
+     org.apache.log4j.helpers.AbsoluteTimeDateFormat} in layouts. Current
      value is <b>ABSOLUTE</b>.  */
     public final static String ABS_TIME_DATE_FORMAT = "ABSOLUTE";
 
     /**
      String constant used to specify {@link
-    org.apache.log4j.helpers.DateTimeDateFormat} in layouts.  Current
+     org.apache.log4j.helpers.DateTimeDateFormat} in layouts.  Current
      value is <b>DATE</b>.
      */
     public final static String DATE_AND_TIME_DATE_FORMAT = "DATE";
 
     /**
      String constant used to specify {@link
-    org.apache.log4j.helpers.ISO8601DateFormat} in layouts. Current
+     org.apache.log4j.helpers.ISO8601DateFormat} in layouts. Current
      value is <b>ISO8601</b>.
      */
     public final static String ISO8601_DATE_FORMAT = "ISO8601";
 
     public
-    AbsoluteTimeDateFormat() {
+        AbsoluteTimeDateFormat() {
         setCalendar(Calendar.getInstance());
     }
 
     public
-    AbsoluteTimeDateFormat(TimeZone timeZone) {
+        AbsoluteTimeDateFormat(TimeZone timeZone) {
         setCalendar(Calendar.getInstance(timeZone));
     }
 
-    private static long   previousTime;
+    private static long previousTime;
     private static char[] previousTimeWithoutMillis = new char[9]; // "HH:mm:ss."
 
     /**
@@ -63,11 +63,11 @@ public class AbsoluteTimeDateFormat extends DateFormat {
      @param fieldPosition remains untouched
      */
     public
-    StringBuffer format(Date date, StringBuffer sbuf,
-                        FieldPosition fieldPosition) {
+        StringBuffer format(Date date, StringBuffer sbuf,
+            FieldPosition fieldPosition) {
 
         long now = date.getTime();
-        int millis = (int)(now % 1000);
+        int millis = (int) (now % 1000);
 
         if ((now - millis) != previousTime || previousTimeWithoutMillis[0] == 0) {
             // We reach this point at most once per second
@@ -79,21 +79,21 @@ public class AbsoluteTimeDateFormat extends DateFormat {
             int start = sbuf.length();
 
             int hour = calendar.get(Calendar.HOUR_OF_DAY);
-            if(hour < 10) {
+            if (hour < 10) {
                 sbuf.append('0');
             }
             sbuf.append(hour);
             sbuf.append(':');
 
             int mins = calendar.get(Calendar.MINUTE);
-            if(mins < 10) {
+            if (mins < 10) {
                 sbuf.append('0');
             }
             sbuf.append(mins);
             sbuf.append(':');
 
             int secs = calendar.get(Calendar.SECOND);
-            if(secs < 10) {
+            if (secs < 10) {
                 sbuf.append('0');
             }
             sbuf.append(secs);
@@ -103,17 +103,16 @@ public class AbsoluteTimeDateFormat extends DateFormat {
             sbuf.getChars(start, sbuf.length(), previousTimeWithoutMillis, 0);
 
             previousTime = now - millis;
-        }
-        else {
+        } else {
             sbuf.append(previousTimeWithoutMillis);
         }
 
-
-
-        if(millis < 100)
+        if (millis < 100) {
             sbuf.append('0');
-        if(millis < 10)
+        }
+        if (millis < 10) {
             sbuf.append('0');
+        }
 
         sbuf.append(millis);
         return sbuf;
@@ -123,7 +122,7 @@ public class AbsoluteTimeDateFormat extends DateFormat {
      This method does not do anything but return <code>null</code>.
      */
     public
-    Date parse(String s, ParsePosition pos) {
+        Date parse(String s, ParsePosition pos) {
         return null;
     }
 }

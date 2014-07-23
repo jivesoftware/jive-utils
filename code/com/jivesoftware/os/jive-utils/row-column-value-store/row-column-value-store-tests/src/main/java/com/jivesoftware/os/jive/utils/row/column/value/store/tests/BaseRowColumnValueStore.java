@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.jivesoftware.os.jive.utils.row.column.value.store.tests;
 
 import com.google.common.collect.ImmutableList;
@@ -74,8 +70,8 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         Assert.assertNull(got);
 
         store.multiAdd(tenantId, "rowKey1",
-            new String[] { "columnKey1", "columnKey2" },
-            new String[] { "foo", "bar" }, null, new ConstantTimestamper(10));
+            new String[]{ "columnKey1", "columnKey2" },
+            new String[]{ "foo", "bar" }, null, new ConstantTimestamper(10));
         got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
         Assert.assertEquals(got, "foo");
         got = store.get(tenantId, "rowKey1", "columnKey2", null, null);
@@ -83,8 +79,8 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
 
         // update with earlier timestamp
         store.multiAdd(tenantId, "rowKey1",
-            new String[] { "columnKey1", "columnKey2" },
-            new String[] { "red", "green" }, null, new ConstantTimestamper(9));
+            new String[]{ "columnKey1", "columnKey2" },
+            new String[]{ "red", "green" }, null, new ConstantTimestamper(9));
         got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
         Assert.assertEquals(got, "foo");
         got = store.get(tenantId, "rowKey1", "columnKey2", null, null);
@@ -92,8 +88,8 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
 
         // update with later timestamp
         store.multiAdd(tenantId, "rowKey1",
-            new String[] { "columnKey1", "columnKey2" },
-            new String[] { "red", "green" }, null, new ConstantTimestamper(11));
+            new String[]{ "columnKey1", "columnKey2" },
+            new String[]{ "red", "green" }, null, new ConstantTimestamper(11));
         got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
         Assert.assertEquals(got, "red");
         got = store.get(tenantId, "rowKey1", "columnKey2", null, null);
@@ -126,11 +122,11 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         add.add(new RowColumValueTimestampAdd<>("rowKey2", "columnKey2", "d", new ConstantTimestamper(8)));
         store.multiRowsMultiAdd(tenantId, add);
 
-        List<String> got = store.multiGet(tenantId, "rowKey1", new String[] { "columnKey1", "columnKey2" }, null, null);
+        List<String> got = store.multiGet(tenantId, "rowKey1", new String[]{ "columnKey1", "columnKey2" }, null, null);
         Assert.assertEquals(got.get(0), "a");
         Assert.assertEquals(got.get(1), "c");
 
-        got = store.multiGet(tenantId, "rowKey1", new String[] { "miss2", "miss2" }, null, null);
+        got = store.multiGet(tenantId, "rowKey1", new String[]{ "miss2", "miss2" }, null, null);
         Assert.assertNull(got.get(0));
         Assert.assertNull(got.get(1));
 
@@ -145,11 +141,11 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         store.multiRowsMultiAdd(tenantId, add);
 
         ColumnValueAndTimestamp<String, String, Long>[] got =
-            store.multiGetEntries(tenantId, "rowKey1", new String[] { "columnKey1", "columnKey2" }, null, null);
+            store.multiGetEntries(tenantId, "rowKey1", new String[]{ "columnKey1", "columnKey2" }, null, null);
         Assert.assertEquals(got[0].getValue(), "a");
         Assert.assertEquals(got[1].getValue(), "c");
 
-        got = store.multiGetEntries(tenantId, "rowKey1", new String[] { "miss2", "miss2" }, null, null);
+        got = store.multiGetEntries(tenantId, "rowKey1", new String[]{ "miss2", "miss2" }, null, null);
         Assert.assertNull(got[0]);
         Assert.assertNull(got[1]);
 
@@ -190,17 +186,17 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         store.multiRowsMultiAdd(tenantId, add);
 
         ColumnValueAndTimestamp<String, String, Long>[] got =
-            store.multiGetEntries(tenantId, "rowKey1", new String[] { "columnKey1", "columnKey2" }, null, null);
+            store.multiGetEntries(tenantId, "rowKey1", new String[]{ "columnKey1", "columnKey2" }, null, null);
         Assert.assertEquals(got[0].getValue(), "a");
         Assert.assertEquals(got[1].getValue(), "c");
 
-        store.multiRemove(tenantId, "rowKey1", new String[] { "columnKey1", "columnKey2" }, new ConstantTimestamper(6));
-        got = store.multiGetEntries(tenantId, "rowKey1", new String[] { "columnKey1", "columnKey2" }, null, null);
+        store.multiRemove(tenantId, "rowKey1", new String[]{ "columnKey1", "columnKey2" }, new ConstantTimestamper(6));
+        got = store.multiGetEntries(tenantId, "rowKey1", new String[]{ "columnKey1", "columnKey2" }, null, null);
         Assert.assertNull(got[0], "got[0] = " + got[0]);
         Assert.assertEquals(got[1].getValue(), "c");
 
-        store.multiRemove(tenantId, "rowKey1", new String[] { "columnKey1", "columnKey2" }, new ConstantTimestamper(12));
-        got = store.multiGetEntries(tenantId, "rowKey1", new String[] { "columnKey1", "columnKey2" }, null, null);
+        store.multiRemove(tenantId, "rowKey1", new String[]{ "columnKey1", "columnKey2" }, new ConstantTimestamper(12));
+        got = store.multiGetEntries(tenantId, "rowKey1", new String[]{ "columnKey1", "columnKey2" }, null, null);
         Assert.assertNull(got[0]);
         Assert.assertNull(got[1]);
 
@@ -300,7 +296,7 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey3", "i", new ConstantTimestamper(9)));
         store.multiRowsMultiAdd(tenantId, add);
 
-        final String[] expected = new String[] {
+        final String[] expected = new String[]{
             "columnKey1",
             "columnKey2",
             "columnKey3"
@@ -332,7 +328,7 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey3", "i", new ConstantTimestamper(9)));
         store.multiRowsMultiAdd(tenantId, add);
 
-        final String[] expected = new String[] {
+        final String[] expected = new String[]{
             "a",
             "d",
             "g"
@@ -364,12 +360,12 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey3", "i", new ConstantTimestamper(9)));
         store.multiRowsMultiAdd(tenantId, add);
 
-        final String[] expectedKeys = new String[] {
+        final String[] expectedKeys = new String[]{
             "columnKey1",
             "columnKey2",
             "columnKey3"
         };
-        final String[] expectedValues = new String[] {
+        final String[] expectedValues = new String[]{
             "a",
             "d",
             "g"
@@ -403,23 +399,23 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey3", "i", new ConstantTimestamper(9)));
         store.multiRowsMultiAdd(tenantId, add);
 
-        final String[] rowKey1_expectedKeys = new String[] {
+        final String[] rowKey1_expectedKeys = new String[]{
             "columnKey1",
             "columnKey2",
             "columnKey3"
         };
-        final String[] rowKey1_expectedValues = new String[] {
+        final String[] rowKey1_expectedValues = new String[]{
             "a",
             "d",
             "g"
         };
 
-        final String[] rowKey2_expectedKeys = new String[] {
+        final String[] rowKey2_expectedKeys = new String[]{
             "columnKey1",
             "columnKey2",
             "columnKey3"
         };
-        final String[] rowKey2_expectedValues = new String[] {
+        final String[] rowKey2_expectedValues = new String[]{
             "b",
             "e",
             "h"
@@ -470,7 +466,8 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         add.add(new RowColumValueTimestampAdd<>("rowKey3", "columnKey3", "i", new ConstantTimestamper(9)));
         store.multiRowsMultiAdd(tenantId, add);
 
-        List<Map<String, String>> result = store.multiRowMultiGet(tenantId, ImmutableList.of("rowKey1", "rowKey2"), ImmutableList.of("columnKey1", "columnKey3"),
+        List<Map<String, String>> result = store.
+            multiRowMultiGet(tenantId, ImmutableList.of("rowKey1", "rowKey2"), ImmutableList.of("columnKey1", "columnKey3"),
                 -1, -1);
         Assert.assertEquals(result.size(), 2);
         Assert.assertEquals(result.get(0), ImmutableMap.of("columnKey1", "a", "columnKey3", "g"));

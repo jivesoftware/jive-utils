@@ -21,6 +21,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMaps
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.StringTypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.tests.BaseRowColumnValueStore;
+import com.jivesoftware.os.jive.utils.row.column.value.store.tests.EmbeddedHBase;
 import java.util.UUID;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
