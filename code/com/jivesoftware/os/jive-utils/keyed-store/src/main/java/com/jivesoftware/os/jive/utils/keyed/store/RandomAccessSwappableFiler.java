@@ -40,7 +40,7 @@ public class RandomAccessSwappableFiler implements SwappableFiler {
 
     @Override
     public Object lock() {
-        return filerReference.get().lock();
+        return filerReference;
     }
 
     @Override
