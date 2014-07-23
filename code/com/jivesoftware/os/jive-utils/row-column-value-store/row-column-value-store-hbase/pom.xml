@@ -4,12 +4,12 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>shared-lib-build-management</artifactId>
-        <version>0.23</version>
+        <version>0.24</version>
         <relativePath>../../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
     </parent>
     <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
     <artifactId>row-column-value-store-hbase</artifactId>
-    <version>0.23</version>
+    <version>0.24</version>
     <properties>
         <module.type>shared_lib</module.type>
     </properties>
@@ -50,16 +50,6 @@
             <artifactId>hadoop-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <classifier>tests</classifier>
-        </dependency>
-        <dependency>
             <groupId>com.jivesoftware.os.jive.utils</groupId>
             <artifactId>base</artifactId>
         </dependency>
@@ -70,6 +60,18 @@
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>0.96.0-hadoop2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>0.96.0-hadoop2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

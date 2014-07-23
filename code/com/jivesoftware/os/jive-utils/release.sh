@@ -1,14 +1,18 @@
 #!/bin/bash
 
-NEXT_VERSION=$1
+VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -v 'Downloading' | tr '-' ' ' | awk '{ print $1 }'`
 
-if [ -z "$NEXT_VERSION" ]
-then
-    echo "Usage: ./release.sh <NEXT_VERSION>"
-    echo "  e.g. ./release.sh 1.0"
-    cd -
-    exit 1;
+if [ -z "$1" ]; then
+	echo ""
+	echo "You need provide the next version as the first argument."
+	echo "The current versions is: "${VERSION}
+	echo ""
+	echo "usage: ./release <nextVersions>"
+	echo ""
+	exit 1;
 fi
+
+NEXT_VERSION=$1
 
 echo "/-------------------------------------------------------"
 echo "| checking running from develop branch. "
@@ -58,13 +62,6 @@ then
 	
 fi
 
-# some ideas: http://stackoverflow.com/questions/3545292/how-to-get-maven-project-version-to-the-bash-command-line
-# original
-#VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | grep -v '\[' | grep -v 'Downloading' | tr '-' ' ' | awk '{ print $1 }'`
-
-# http://stackoverflow.com/a/19257954
-mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version -q
-VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | egrep -v '^\[|Downloading:' | sed 's/[^0-9\.]//g' | awk 1 ORS=''`
 
 
 echo "/-------------------------------------------------------"
