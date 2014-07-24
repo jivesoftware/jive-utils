@@ -20,7 +20,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantLengthAnd
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.LongTypeMarshaller;
-import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.VoidTypeMarshaller;
+import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.StringTypeMarshaller;
 import org.merlin.config.Config;
 import org.merlin.config.defaults.IntDefault;
 import org.merlin.config.defaults.StringDefault;
@@ -85,11 +85,12 @@ public class PermitProviderImplInitializer {
                         new TenantLengthAndTenantFirstRowColumnValueStoreMarshaller<>(
                                 tenantIdMarshaller,
                                 new PermitRowKeyMarshaller(),
-                                new VoidTypeMarshaller(),
+                                new StringTypeMarshaller(),
                                 new LongTypeMarshaller()
                         ),
                         new CurrentTimestamper()
-                )
+                ),
+                new CurrentTimestamper()
         );
     }
 }

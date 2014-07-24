@@ -105,12 +105,15 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     public boolean replaceIfEqualToExpected(T tenantId, S rowKey, K columnKey, V columnValue, V expectedValue, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws RuntimeException {
         synchronized (rowLocks.lock(rowKey)) {
             V currentVal = get(tenantId, rowKey, columnKey, null, null);
-            if (currentVal == expectedValue) {
-                add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper);
-                return true;
-            } else {
+            if (expectedValue != null && !expectedValue.equals(currentVal)) {
+                    return false;
+            }
+            else if (expectedValue == null && currentVal != null) {
                 return false;
             }
+
+            add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper);
+            return true;
         }
     }
 
