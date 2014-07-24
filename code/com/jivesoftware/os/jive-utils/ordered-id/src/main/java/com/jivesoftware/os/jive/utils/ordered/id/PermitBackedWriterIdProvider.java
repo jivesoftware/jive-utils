@@ -10,7 +10,17 @@ import com.jivesoftware.os.jive.utils.permit.PermitProvider;
  * Writer ID provider backed by PermitProvider.
  *
  * In order to use a writer ID and ensure that it hasn't expired (due to GC pause, etc), check that the writer ID is
- * still valid after it has been used. If it is invalid, try again.
+ * still valid after it has been used to generate an ID. If it has become invalid, throw away the generated ID and start
+ * over.
+ *
+ * The possibility exists that a context switch will occur immediately after a writer ID is generated, used, and checked
+ * for validity. In this short window, the writer ID could expire and the underlying permit could be granted to another
+ * service. For this reason, writer IDs are set to expire after 1 second, and it is IMPERATIVE that the permit provider
+ * be configured with a longer expiration. Then, in the worst case, the permit will not expire until some time many
+ * milliseconds after the (now-defunct) writer ID has been used, and there can be no conflict.
+ *
+ * At the moment this is enforced by convention, but if necessary we can add a condition to the constructor that it will
+ * not accept PermitProviders with expiration periods less than a few seconds.
  */
 public class PermitBackedWriterIdProvider implements WriterIdProvider {
     private final PermitProvider permitProvider;
