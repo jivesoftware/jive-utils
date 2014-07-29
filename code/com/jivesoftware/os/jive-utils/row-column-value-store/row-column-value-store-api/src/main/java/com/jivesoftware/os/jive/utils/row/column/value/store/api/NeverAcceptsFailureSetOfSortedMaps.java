@@ -358,4 +358,24 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
             }
         }
     }
+
+    @Override
+    public <TS> void rowScan(TenantIdAndRow<T, R> startRow, byte[] rowprefix, C column, int numResults,
+    CallbackStream<TenantRowColumnValueAndTimestamp<T, R, C, V, TS>> callback) throws RuntimeException {
+        while (true) {
+            try {
+                thunderingHerd.herd();
+                store.rowScan(startRow, rowprefix, column, numResults, callback);
+                return;
+            } catch (CallbackStreamException cex) {
+                throw cex;
+            } catch (Exception x) {
+                thunderingHerd.pushback();
+            } finally {
+                thunderingHerd.progress();
+            }
+        }
+    }
+    
+    
 }

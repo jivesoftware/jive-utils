@@ -240,4 +240,17 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      * @param rowKeyCallbackStreamPairs
      */
     <TS> void multiRowGetAll(List<TenantKeyedColumnValueCallbackStream<T, R, C, V, TS>> tenantRowKeyCallbackStreamPairs) throws E;
+    
+   /**
+    * 
+    * @param <TS>
+    * @param startRow
+    * @param rowprefix
+    * @param column
+    * @param numResults
+    * @param callback
+    * @throws E 
+    */
+    public <TS> void rowScan(TenantIdAndRow<T, R> startRow, byte[] rowprefix, C column, int numResults,
+        CallbackStream<TenantRowColumnValueAndTimestamp<T, R, C, V, TS>> callback) throws E;
 }

@@ -22,6 +22,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantIdAndRow;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantKeyedColumnValueCallbackStream;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumValueTimestampAdd;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumnTimestampRemove;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumnValueAndTimestamp;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
 import java.util.ArrayList;
@@ -136,7 +137,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     }
 
     private <R> void get(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, CallbackStream<R> callback,
-            ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, R> marshall) {
+        ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, R> marshall) {
         try {
             Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
 
@@ -182,7 +183,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public void getKeys(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
-            Integer overrideConsistency, CallbackStream<K> callback) {
+        Integer overrideConsistency, CallbackStream<K> callback) {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, callback, new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, K>() {
             @Override
             public K marshall(Map.Entry<K, Timestamped<V>> raw) throws Exception {
@@ -194,7 +195,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public void getValues(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
-            Integer overrideConsistency, CallbackStream<V> callback) {
+        Integer overrideConsistency, CallbackStream<V> callback) {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, callback, new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, V>() {
             @Override
             public V marshall(Map.Entry<K, Timestamped<V>> raw) throws Exception {
@@ -206,16 +207,16 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
 
     @Override
     public <TS> void getEntrys(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overRideNumberOfRetries,
-            Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callback) {
+        Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<K, V, TS>> callback) {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, callback,
-                new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, ColumnValueAndTimestamp<K, V, TS>>() {
-                    @Override
-                    public ColumnValueAndTimestamp<K, V, TS> marshall(Map.Entry<K, Timestamped<V>> raw) throws Exception {
-                        Map.Entry<K, Timestamped<V>> e = raw;
-                        Object t = e.getValue().getTimestamp();
-                        return new ColumnValueAndTimestamp<>(e.getKey(), e.getValue().getValue(), (TS) t);
-                    }
-                });
+            new ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, ColumnValueAndTimestamp<K, V, TS>>() {
+            @Override
+            public ColumnValueAndTimestamp<K, V, TS> marshall(Map.Entry<K, Timestamped<V>> raw) throws Exception {
+                Map.Entry<K, Timestamped<V>> e = raw;
+                Object t = e.getValue().getTimestamp();
+                return new ColumnValueAndTimestamp<>(e.getKey(), e.getValue().getValue(), (TS) t);
+            }
+        });
     }
 
     @Override
@@ -229,11 +230,11 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     public void multiRowsMultiAdd(List<TenantRowColumValueTimestampAdd<T, S, K, V>> multiAdd) {
         for (TenantRowColumValueTimestampAdd<T, S, K, V> add : multiAdd) {
             add(add.getTenantId(),
-                    add.getRowKey(),
-                    add.getColumnKey(),
-                    add.getColumnValue(),
-                    null,
-                    add.getOverrideTimestamper());
+                add.getRowKey(),
+                add.getColumnKey(),
+                add.getColumnValue(),
+                null,
+                add.getOverrideTimestamper());
         }
     }
 
@@ -271,7 +272,7 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
      */
     @Override
     public ColumnValueAndTimestamp<K, V, Long>[] multiGetEntries(T tenantId, S rowKey, K[] columnKeys, Integer overrideNumberOfRetries,
-            Integer overrideConsistency) {
+        Integer overrideConsistency) {
 
         Map<S, Map<K, Timestamped<V>>> store = getStore(tenantId);
         synchronized (rowLocks.lock(rowKey)) {
@@ -318,9 +319,9 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
     public void multiRowsMultiRemove(List<TenantRowColumnTimestampRemove<T, S, K>> multiRemove) {
         for (TenantRowColumnTimestampRemove<T, S, K> remove : multiRemove) {
             remove(remove.getTenantId(),
-                    remove.getRowKey(),
-                    remove.getColumnKey(),
-                    remove.getOverrideTimestamper());
+                remove.getRowKey(),
+                remove.getColumnKey(),
+                remove.getOverrideTimestamper());
         }
     }
 
@@ -466,5 +467,11 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
             }
 
         }
+    }
+
+    @Override
+    public <TS> void rowScan(TenantIdAndRow<T, S> startRow, byte[] rowprefix, K column, int numResults,
+        CallbackStream<TenantRowColumnValueAndTimestamp<T, S, K, V, TS>> callback) throws RuntimeException {
+        throw new UnsupportedOperationException();
     }
 }

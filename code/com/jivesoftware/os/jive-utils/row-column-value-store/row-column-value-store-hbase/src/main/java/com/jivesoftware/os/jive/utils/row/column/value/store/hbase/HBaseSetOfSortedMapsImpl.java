@@ -30,6 +30,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantIdAndRow;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantKeyedColumnValueCallbackStream;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumValueTimestampAdd;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumnTimestampRemove;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumnValueAndTimestamp;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.shared.RowColumnValueStoreCounters;
@@ -52,6 +53,7 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.ColumnRangeFilter;
 import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.PrefixFilter;
 
 /**
  * HBase implementation of RowColumnValueStore generic interface. In any method that has an Integer overrideConsistency, that argument is ignored. In any method
@@ -89,11 +91,11 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @throws IOException
      */
     public HBaseSetOfSortedMapsImpl(
-            HTablePool tablePool,
-            String tableName,
-            String family,
-            RowColumnValueStoreMarshaller<T, R, C, V> marshaller,
-            Timestamper timestamper) throws IOException {
+        HTablePool tablePool,
+        String tableName,
+        String family,
+        RowColumnValueStoreMarshaller<T, R, C, V> marshaller,
+        Timestamper timestamper) throws IOException {
 
         if (timestamper == null) {
             throw new IllegalArgumentException("timestamper cannot be null");
@@ -116,7 +118,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      */
     @Override
     public void multiAdd(final T tenantId, final R rowKey, final C[] columnKeys, final V[] columnValues,
-            final Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws Exception {
+        final Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws Exception {
 
         HTableInterface t = tablePool.getTable(table);
         try {
@@ -136,7 +138,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
             counters.added(puts.size());
         } catch (RowColumnValueStoreMarshallerException | IOException ex) {
             LOG.error("Exception multiAdd to hbase. customer=" + tenantId + " key=" + rowKey + " columnNames="
-                    + columnKeys + " columnValues=" + columnValues, ex);
+                + columnKeys + " columnValues=" + columnValues, ex);
             throw ex;
         } finally {
             try {
@@ -228,18 +230,18 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      */
     @Override
     public void add(final T tenantId, final R rowKey, final C columnKey, final V columnValue,
-            final Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws Exception {
+        final Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws Exception {
         add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper, false);
     }
 
     @Override
     public boolean addIfNotExists(final T tenantId, final R rowKey, final C columnKey, final V columnValue,
-            final Integer timeToLiveInSeconds, final Timestamper overrideTimestamper) throws Exception {
+        final Integer timeToLiveInSeconds, final Timestamper overrideTimestamper) throws Exception {
         return add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper, true);
     }
 
     private boolean add(final T tenantId, final R rowKey, final C columnKey, final V columnValue,
-            final Integer timeToLiveInSeconds, Timestamper overrideTimestamper, boolean checkIfExists) throws Exception {
+        final Integer timeToLiveInSeconds, Timestamper overrideTimestamper, boolean checkIfExists) throws Exception {
 
         HTableInterface t = tablePool.getTable(table);
         try {
@@ -272,7 +274,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                 columnValueAsString = toString((byte[]) columnValue, ".");
             }
             LOG.error("Exception writing to hbase. customer=" + tenantId + " key=" + rowKey + " columName=" + columnKey + " columnValue="
-                    + columnValueAsString, ex);
+                + columnValueAsString, ex);
             throw ex;
         } finally {
             try {
@@ -324,7 +326,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
 
     @Override
     public ColumnValueAndTimestamp<C, V, Long>[] multiGetEntries(T tenantId, R rowKey, C[] columnKeys, Integer overrideNumberOfRetries,
-            Integer overrideConsistency) throws Exception {
+        Integer overrideConsistency) throws Exception {
 
         HTableInterface t = tablePool.getTable(table);
         try {
@@ -556,14 +558,14 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      */
     @Override
     public void getKeys(final T tenantId, R rowKey, C startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overrideNumberOfRetries,
-            Integer overrideConsistency, CallbackStream<C> callback) throws Exception {
+        Integer overrideConsistency, CallbackStream<C> callback) throws Exception {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback,
-                new ValueStoreMarshaller<KeyValue, C>() {
-                    @Override
-                    public C marshall(KeyValue keyValue) throws Exception {
-                        return marshaller.fromColumnKeyBytes(keyValue.getQualifier());
-                    }
-                });
+            new ValueStoreMarshaller<KeyValue, C>() {
+            @Override
+            public C marshall(KeyValue keyValue) throws Exception {
+                return marshaller.fromColumnKeyBytes(keyValue.getQualifier());
+            }
+        });
     }
 
     /**
@@ -579,14 +581,14 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      */
     @Override
     public void getValues(final T tenantId, R rowKey, C startColumnKey, Long maxCount, int batchSize, boolean reversed, Integer overrideNumberOfRetries,
-            Integer overrideConsistency, CallbackStream<V> callback) throws Exception {
+        Integer overrideConsistency, CallbackStream<V> callback) throws Exception {
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback,
-                new ValueStoreMarshaller<KeyValue, V>() {
-                    @Override
-                    public V marshall(KeyValue keyValue) throws Exception {
-                        return marshaller.fromValueBytes(keyValue.getValue());
-                    }
-                });
+            new ValueStoreMarshaller<KeyValue, V>() {
+            @Override
+            public V marshall(KeyValue keyValue) throws Exception {
+                return marshaller.fromValueBytes(keyValue.getValue());
+            }
+        });
     }
 
     /**
@@ -603,17 +605,17 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      */
     @Override
     public <TS> void getEntrys(final T tenantId, R rowKey, C startColumnKey, Long maxCount, int batchSize, boolean reversed,
-            Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<C, V, TS>> callback) throws Exception {
+        Integer overrideNumberOfRetries, Integer overrideConsistency, CallbackStream<ColumnValueAndTimestamp<C, V, TS>> callback) throws Exception {
 
         get(tenantId, rowKey, startColumnKey, maxCount, batchSize, reversed, overrideNumberOfRetries, overrideConsistency, callback,
-                new ValueStoreMarshaller<KeyValue, ColumnValueAndTimestamp<C, V, TS>>() {
-                    @Override
-                    public ColumnValueAndTimestamp<C, V, TS> marshall(KeyValue keyValue) throws Exception {
-                        Object t = keyValue.getTimestamp();
-                        return new ColumnValueAndTimestamp<>(marshaller.fromColumnKeyBytes(keyValue.getQualifier()), marshaller.fromValueBytes(keyValue
-                                        .getValue()), (TS) t);
-                    }
-                });
+            new ValueStoreMarshaller<KeyValue, ColumnValueAndTimestamp<C, V, TS>>() {
+            @Override
+            public ColumnValueAndTimestamp<C, V, TS> marshall(KeyValue keyValue) throws Exception {
+                Object t = keyValue.getTimestamp();
+                return new ColumnValueAndTimestamp<>(marshaller.fromColumnKeyBytes(keyValue.getQualifier()), marshaller.fromValueBytes(keyValue
+                    .getValue()), (TS) t);
+            }
+        });
     }
 
     /**
@@ -630,8 +632,8 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @param <K>
      */
     private <K> void get(final T tenantId, final R rowKey, final C startColumnKey, final Long maxCount, int batchSize,
-            final boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency,
-            final CallbackStream<K> callback, final ValueStoreMarshaller<KeyValue, K> marshall) throws Exception {
+        final boolean reversed, Integer overrideNumberOfRetries, Integer overrideConsistency,
+        final CallbackStream<K> callback, final ValueStoreMarshaller<KeyValue, K> marshall) throws Exception {
 
         if (reversed) {
             throw new RuntimeException("Not supported by hbase");
@@ -849,7 +851,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      */
     @Override
     public List<Map<C, V>> multiRowMultiGet(T tenantId, List<R> rowKeys, List<C> columnKeys, Integer overrideNumberOfRetries, Integer overrideConsistency)
-            throws Exception {
+        throws Exception {
         List<Get> gets = new ArrayList<>(rowKeys.size());
 
         Map<ByteBuffer, C> rawColumnKeys;
@@ -940,8 +942,8 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
 
                         try {
                             callbackStream.callback(new ColumnValueAndTimestamp<>(
-                                    fromColumnKeyBytes, fromValueBytes,
-                                    (TS) (Object) keyValue.getTimestamp()));
+                                fromColumnKeyBytes, fromValueBytes,
+                                (TS) (Object) keyValue.getTimestamp()));
                         } catch (Exception ex) {
                             throw new CallbackStreamException(ex);
                         }
@@ -1006,8 +1008,8 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
 
                         try {
                             callbackStream.callback(new ColumnValueAndTimestamp<>(
-                                    fromColumnKeyBytes, fromValueBytes,
-                                    (TS) (Object) keyValue.getTimestamp()));
+                                fromColumnKeyBytes, fromValueBytes,
+                                (TS) (Object) keyValue.getTimestamp()));
                         } catch (Exception ex) {
                             throw new CallbackStreamException(ex);
                         }
@@ -1024,6 +1026,63 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
 
         } catch (Exception ex) {
             LOG.error("Failed to retrieve keys=" + rowKeyCallbackStreamPairs + " (all columns)", ex);
+            throw ex;
+        } finally {
+            try {
+                t.close();
+            } catch (IOException e) {
+                LOG.error("Failed to close hbase table!", e);
+            }
+        }
+    }
+
+    @Override
+    public <TS> void rowScan(TenantIdAndRow<T, R> startRow, byte[] rowprefix, C column, int numResults,
+        CallbackStream<TenantRowColumnValueAndTimestamp<T, R, C, V, TS>> callback) throws Exception {
+
+        HTableInterface t = tablePool.getTable(table);
+        Scan scan = new Scan();
+        if (startRow != null) {
+            byte[] startBytes = marshaller.toRowKeyBytes(startRow.getTenantId(), startRow.getRow());
+            scan.setStartRow(startBytes);
+        }
+
+        if (rowprefix != null) {
+            Filter filter = new PrefixFilter(rowprefix);
+            scan.setFilter(filter);
+        }
+
+        byte[] columnKey = marshaller.toColumnKeyBytes(column);
+        scan.addColumn(columnKey, family);
+
+        try (ResultScanner scanner = t.getScanner(scan)) {
+
+            Result next = null;
+            int returned = 0;
+            while ((returned++ <= numResults) && (next = scanner.next()) != null) {
+                KeyValue cell = next.getColumnLatest(family, columnKey);
+                V value = marshaller.fromValueBytes(cell.getValue());
+                TenantIdAndRow<T, R> tenantIdAndRow = marshaller.fromRowKeyBytes(cell.getRow());
+
+                TenantRowColumnValueAndTimestamp<T, R, C, V, TS> result =
+                    new TenantRowColumnValueAndTimestamp<>(tenantIdAndRow.getTenantId(), tenantIdAndRow.getRow(),
+                    column, value, (TS) (Object) cell.getTimestamp());
+
+                try {
+                    callback.callback(result);
+                } catch (Exception ex) {
+                    throw new CallbackStreamException(ex);
+                }
+            }
+
+            try {
+                callback.callback(null);
+            } catch (Exception ex) {
+                throw new CallbackStreamException(ex);
+            }
+
+        } catch (Exception ex) {
+            LOG.error("Failed to scan", ex);
             throw ex;
         } finally {
             try {

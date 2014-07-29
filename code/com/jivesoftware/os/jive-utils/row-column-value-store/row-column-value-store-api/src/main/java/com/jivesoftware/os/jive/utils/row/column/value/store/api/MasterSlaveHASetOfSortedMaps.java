@@ -188,4 +188,10 @@ public class MasterSlaveHASetOfSortedMaps<T, R, C, V, E extends Exception> imple
     public <TS> void multiRowGetAll(List<TenantKeyedColumnValueCallbackStream<T, R, C, V, TS>> tenantRowKeyCallbackStreamPairs) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public <TS> void rowScan(TenantIdAndRow<T, R> startRow, byte[] rowprefix, C column, int numResults,
+    CallbackStream<TenantRowColumnValueAndTimestamp<T, R, C, V, TS>> callback) throws E {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
