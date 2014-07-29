@@ -1,11 +1,15 @@
 package com.jivesoftware.os.jive.utils.map.store;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 
 public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueStore<K, V> {
 
@@ -31,6 +35,11 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueS
                 }
 
                 @Override
+                public Iterable<String> keyPartitions() {
+                    return VariableKeySizeFileBackMapStore.this.keyPartitions();
+                }
+
+                @Override
                 public byte[] keyBytes(K key) {
                     byte[] keyBytes = VariableKeySizeFileBackMapStore.this.keyBytes(key);
                     byte[] padded = new byte[keySize];
@@ -41,6 +50,11 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueS
                 @Override
                 public byte[] valueBytes(V value) {
                     return VariableKeySizeFileBackMapStore.this.valueBytes(value);
+                }
+
+                @Override
+                public K bytesKey(byte[] bytes, int offset) {
+                    return VariableKeySizeFileBackMapStore.this.bytesKey(bytes, offset);
                 }
 
                 @Override
@@ -92,5 +106,14 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueS
             sizeInBytes += mapStore.sizeInBytes();
         }
         return sizeInBytes;
+    }
+
+    @Override
+    public Iterator<Entry<K, V>> iterator() {
+        List<Iterator<Entry<K, V>>> iterators = Lists.newArrayListWithCapacity(mapStores.length);
+        for (FileBackMapStore<K, V> mapStore : mapStores) {
+            iterators.add(mapStore.iterator());
+        }
+        return Iterators.concat(iterators.iterator());
     }
 }

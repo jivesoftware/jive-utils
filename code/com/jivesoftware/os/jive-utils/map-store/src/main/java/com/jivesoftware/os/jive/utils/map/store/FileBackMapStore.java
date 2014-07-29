@@ -1,5 +1,8 @@
 package com.jivesoftware.os.jive.utils.map.store;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
@@ -22,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -243,5 +248,32 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         });
 
         return size.longValue();
+    }
+
+    @Override
+    public Iterator<Entry<K, V>> iterator() {
+        List<Iterator<Entry<K, V>>> iterators = Lists.newArrayList();
+        for (String pageId : keyPartitions()) {
+            MapChunk got = indexPages.get(pageId);
+            if (got != null) {
+                iterators.add(Iterators.transform(mapStore.iterator(got), new Function<MapStore.Entry, Entry<K, V>>() {
+                    @Override
+                    public Entry<K, V> apply(final MapStore.Entry input) {
+                        return new Entry<K, V>() {
+                            @Override
+                            public K getKey() {
+                                return bytesKey(input.key, 0);
+                            }
+
+                            @Override
+                            public V getValue() {
+                                return bytesValue(getKey(), input.payload, 0);
+                            }
+                        };
+                    }
+                }));
+            }
+        }
+        return Iterators.concat(iterators.iterator());
     }
 }
