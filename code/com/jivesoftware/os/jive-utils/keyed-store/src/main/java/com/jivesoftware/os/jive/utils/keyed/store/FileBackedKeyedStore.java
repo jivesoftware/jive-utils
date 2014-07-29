@@ -4,6 +4,7 @@ import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
 
 import java.io.IOException;
+import java.util.Collections;
 
 /**
  * @author jonathan
@@ -32,6 +33,11 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
             }
 
             @Override
+            public Iterable<String> keyPartitions() {
+                return Collections.singletonList("_");
+            }
+
+            @Override
             public byte[] keyBytes(IBA key) {
                 return key.getBytes();
             }
@@ -39,6 +45,11 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
             @Override
             public byte[] valueBytes(IBA value) {
                 return value.getBytes();
+            }
+
+            @Override
+            public IBA bytesKey(byte[] keyBytes, int offset) {
+                return new IBA(keyBytes);
             }
 
             @Override

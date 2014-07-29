@@ -16,29 +16,13 @@ public class SubsetableFiler implements Filer {
     private final Filer filer;
     private final long startOfFP;
     private final long endOfFP;
-    private final String key;
-    private final ConcurrentHashMap<String, SubsetableFiler> subFilers = new ConcurrentHashMap<>();
     private final long count;
 
     public SubsetableFiler(Filer filer, long startOfFP, long endOfFP, long count) {
         this.filer = filer;
         this.startOfFP = startOfFP;
         this.endOfFP = endOfFP;
-        this.key = startOfFP + ":" + endOfFP;
         this.count = count;
-    }
-
-    public SubsetableFiler get(long _startOfFP, long _endOfFP, long _count) {
-        String subKey = _startOfFP + ":" + _endOfFP;
-        SubsetableFiler subFiler = subFilers.get(subKey);
-        if (subFiler == null) {
-            subFiler = new SubsetableFiler(filer, _startOfFP, _endOfFP, _count);
-            SubsetableFiler had = subFilers.putIfAbsent(subKey, subFiler);
-            if (had != null) {
-                subFiler = had;
-            }
-        }
-        return subFiler;
     }
 
     @Override

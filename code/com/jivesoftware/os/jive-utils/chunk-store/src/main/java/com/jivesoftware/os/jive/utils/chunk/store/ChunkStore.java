@@ -174,7 +174,7 @@ public class ChunkStore {
         }
 
         try {
-            return filer.get(fp, fp + FilerIO.chunkLength(chunkPower), length);
+            return new SubsetableFiler(filer, fp, fp + FilerIO.chunkLength(chunkPower), length);
         } catch (Exception x) {
             x.printStackTrace();
             System.out.println("_chunkFP=" + _chunkFP);

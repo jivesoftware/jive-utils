@@ -1,12 +1,16 @@
 package com.jivesoftware.os.jive.utils.map.store.api;
 
-public interface KeyValueStore<K, V> {
+public interface KeyValueStore<K, V> extends Iterable<KeyValueStore.Entry<K, V>> {
 
     String keyPartition(K key);
+
+    Iterable<String> keyPartitions();
 
     byte[] keyBytes(K key);
 
     byte[] valueBytes(V value);
+
+    K bytesKey(byte[] bytes, int offset);
 
     V bytesValue(K key, byte[] bytes, int offset);
 
@@ -17,4 +21,10 @@ public interface KeyValueStore<K, V> {
     V get(K key) throws KeyValueStoreException;
 
     long estimatedMaxNumberOfKeys();
+
+    interface Entry<K, V> {
+        K getKey();
+
+        V getValue();
+    }
 }

@@ -5,6 +5,8 @@ import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.extractors.Extractor;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractorStream;
 
+import java.util.Iterator;
+
 /**
  * this is a key+payload set that is backed buy a byte array. It is a fixed size set. It will not grow or shrink. You need to be aware and expect that your
  * system will cause the set to throw OverCapacityExceptions. The goal is to create a collection which will page to and from disk or net as fast as possible.
@@ -656,5 +658,56 @@ public class MapStore {
             hash += (_key[_start + i] + 128) * x;
         }
         return Math.abs(hash);
+    }
+
+    public Iterator<Entry> iterator(final MapChunk page) {
+        return new Iterator<Entry>() {
+
+            private int index = 0;
+
+            private byte[] key;
+            private byte[] payload;
+
+            @Override
+            public boolean hasNext() {
+                seekNext();
+                return key != null;
+            }
+
+            @Override
+            public Entry next() {
+                seekNext();
+                Entry entry = key != null ? new Entry(key, payload) : null;
+                key = null;
+                payload = null;
+                return entry;
+            }
+
+            private void seekNext() {
+                while (index < page.capacity && key == null) {
+                    key = getKeyAtIndex(page, index);
+                    if (key != null) {
+                        payload = getPayloadAtIndex(page, index);
+                    }
+                    index++;
+                }
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    public static class Entry {
+
+        public final byte[] key;
+        public final byte[] payload;
+
+        public Entry(byte[] key, byte[] payload) {
+            this.key = key;
+            this.payload = payload;
+        }
     }
 }

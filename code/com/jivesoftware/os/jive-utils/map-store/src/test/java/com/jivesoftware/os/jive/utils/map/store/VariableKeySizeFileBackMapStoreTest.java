@@ -8,6 +8,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.nio.file.Files;
+import java.util.Collections;
 
 /**
  *
@@ -35,6 +36,11 @@ public class VariableKeySizeFileBackMapStoreTest {
             }
 
             @Override
+            public Iterable<String> keyPartitions() {
+                return Collections.singletonList("0");
+            }
+
+            @Override
             public byte[] keyBytes(String key) {
                 return key.getBytes(Charsets.US_ASCII);
             }
@@ -42,6 +48,11 @@ public class VariableKeySizeFileBackMapStoreTest {
             @Override
             public byte[] valueBytes(Long value) {
                 return FilerIO.longBytes(value);
+            }
+
+            @Override
+            public String bytesKey(byte[] bytes, int offset) {
+                return new String(bytes, offset, bytes.length - offset, Charsets.US_ASCII);
             }
 
             @Override
