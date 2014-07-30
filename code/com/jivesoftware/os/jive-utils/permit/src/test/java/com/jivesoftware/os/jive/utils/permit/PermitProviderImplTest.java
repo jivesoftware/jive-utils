@@ -11,25 +11,26 @@ import org.mockito.stubbing.Answer;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static com.jivesoftware.os.jive.utils.permit.PermitProviderImpl.NULL_KEY;
+import static com.jivesoftware.os.jive.utils.permit.PermitProviderImpl.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.testng.Assert.*;
 
 public class PermitProviderImplTest {
     private PermitProviderImpl<String> permitProviderImpl;
 
-    private RowColumnValueStore<String, PermitRowKey, String, Long, RuntimeException> store;
+    private RowColumnValueStore<String, PermitRowKey, String, String, RuntimeException> store;
     private Timestamper timestamper = new AtomicIncrementingTimestamper(10000);
     private long now, expired;
 
     private static final String TENANT = "permit-test";
     private static final int POOL = 0;
     private static final long EXPIRES = 1000;
+    private static final String LABEL = "permits";
 
     @BeforeMethod
     public void beforeMethod() throws Exception {
-        store = Mockito.spy(new RowColumnValueStoreImpl<String, PermitRowKey, String, Long>());
-        permitProviderImpl = new PermitProviderImpl<>(TENANT, POOL, 0, 512, EXPIRES, store, timestamper);
+        store = Mockito.spy(new RowColumnValueStoreImpl<String, PermitRowKey, String, String>());
+        permitProviderImpl = new PermitProviderImpl<>(TENANT, POOL, 0, 512, EXPIRES, LABEL, store, timestamper);
 
         now = timestamper.get();
         expired = now - EXPIRES;
@@ -37,12 +38,12 @@ public class PermitProviderImplTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRequiresCountIdsGreaterThan0() throws Exception {
-        new PermitProviderImpl<>(TENANT, POOL, 0, 0, EXPIRES, store, timestamper);
+        new PermitProviderImpl<>(TENANT, POOL, 0, 0, EXPIRES, LABEL, store, timestamper);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRequiresPermitsExpireInTheFuture() throws Exception {
-        new PermitProviderImpl<>(TENANT, POOL, 0, 0, 0, store, timestamper);
+        new PermitProviderImpl<>(TENANT, POOL, 0, 0, 0, LABEL, store, timestamper);
     }
 
     @Test
@@ -139,7 +140,7 @@ public class PermitProviderImplTest {
     }
 
     @Test(expectedExceptions = OutOfPermitsException.class)
-    public void testAllPermitsTakenThrowsOutOfPermits() throws Exception {
+    public void testThrowsOutOfPermitsWhenAllPermitsAreTaken() throws Exception {
         for (int i = 0; i < 512; i++) {
             addCurrentPermit(i);
         }
@@ -147,21 +148,52 @@ public class PermitProviderImplTest {
         permitProviderImpl.requestPermit();
     }
 
+    @Test
+    public void testCountsLabelsInPool() throws Exception {
+        addExpiredPermit(0);
+        addCurrentPermit(1);
+
+        // Add another permit with a different label
+        addCurrentPermit(POOL, 2, "other permits");
+
+        // Add a couple permits to another pool
+        addCurrentPermit(POOL + 1, 0, "I don't matter to anyone");
+        addCurrentPermit(POOL + 1, 1, "I shouldn't be counted");
+
+        int actual = permitProviderImpl.countUniqueLabels();
+
+        int expected = 2;
+        assertEquals(actual, expected, "Counted labels that shouldn't have been considered valid.");
+    }
+
     private void addCurrentPermit(int id) {
-        store.add(TENANT, new PermitRowKey(POOL, id), NULL_KEY, now, null, null);
+        addCurrentPermit(POOL, id, LABEL);
+    }
+
+    private void addCurrentPermit(int pool, int id, String label) {
+        PermitRowKey permitRowKey = new PermitRowKey(pool, id);
+        store.add(TENANT, permitRowKey, COLUMN_ISSUED, String.valueOf(now), null, null);
+        store.add(TENANT, permitRowKey, COLUMN_LABEL, label, null, null);
     }
 
     private void addExpiredPermit(int id) {
-        store.add(TENANT, new PermitRowKey(POOL, id), NULL_KEY, expired, null, null);
+        PermitRowKey permitRowKey = new PermitRowKey(POOL, id);
+        store.add(TENANT, permitRowKey, COLUMN_ISSUED, String.valueOf(expired), null, null);
+        store.add(TENANT, permitRowKey, COLUMN_LABEL, LABEL, null, null);
     }
 
     private void yoinkPermitRightBeforeIssue(int id, Long issued, Long expectedIssued) {
         final PermitRowKey permitRowKey = new PermitRowKey(POOL, id);
+        String expectedIssuedString = expectedIssued != null ? String.valueOf(expectedIssued) : null;
         doAnswer(new Answer<Boolean>() {
             public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
-                store.add(TENANT, permitRowKey, NULL_KEY, now + 1, null, null);
+                store.add(TENANT, permitRowKey, COLUMN_ISSUED, String.valueOf(now + 1), null, null);
+                store.add(TENANT, permitRowKey, COLUMN_LABEL, LABEL, null, null);
                 return (Boolean) invocationOnMock.callRealMethod();
             }
-        }).when(store).replaceIfEqualToExpected(TENANT, permitRowKey, NULL_KEY, issued, expectedIssued, null, null);
+        }).when(store).replaceIfEqualToExpected(
+                TENANT, permitRowKey, COLUMN_ISSUED, String.valueOf(issued), expectedIssuedString, null,
+                null
+        );
     }
 }

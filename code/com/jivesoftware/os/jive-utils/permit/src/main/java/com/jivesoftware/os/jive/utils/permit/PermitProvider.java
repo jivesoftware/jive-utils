@@ -17,4 +17,9 @@ public interface PermitProvider {
      * @return a renewed Permit, or nothing in the case that the Permit was already expired
      */
     Optional<Permit> renewPermit(Permit old);
+
+    /**
+     * @return the number of unique labels attached to current permits in the pool
+     */
+    int countUniqueLabels();
 }

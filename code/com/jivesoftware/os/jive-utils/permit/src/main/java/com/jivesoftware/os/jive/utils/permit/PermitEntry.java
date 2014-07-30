@@ -1,11 +1,13 @@
 package com.jivesoftware.os.jive.utils.permit;
 
-public class IssuedPermit {
+public class PermitEntry {
     public final PermitRowKey rowKey;
     public final long issued;
+    public final String label;
 
-    public IssuedPermit(PermitRowKey rowKey, long issued) {
+    public PermitEntry(PermitRowKey rowKey, long issued, String label) {
         this.rowKey = rowKey;
         this.issued = issued;
+        this.label = label;
     }
 }

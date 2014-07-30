@@ -25,7 +25,7 @@ public class PermitProviderImplConcurrencyTest {
     private static final long EXPIRES = 10;
     private static final long DURATION = 5 * 1000;
 
-    private final RowColumnValueStore<String, PermitRowKey, String, Long, RuntimeException> store
+    private final RowColumnValueStore<String, PermitRowKey, String, String, RuntimeException> store
             = new RowColumnValueStoreImpl<>();
     private final Random random = new Random(System.currentTimeMillis());
 
@@ -108,7 +108,7 @@ public class PermitProviderImplConcurrencyTest {
 
             try {
                 permitProvider = new PermitProviderImpl<>(
-                        "permit-test", 0, 0, NUM_THREADS, EXPIRES, store, new CurrentTimestamper()
+                        "permit-test", 0, 0, NUM_THREADS, EXPIRES, "permits", store, new CurrentTimestamper()
                 );
             } catch (Exception e) {
                 throw new RuntimeException(e);
