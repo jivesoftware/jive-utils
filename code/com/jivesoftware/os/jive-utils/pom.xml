@@ -28,6 +28,7 @@
         <module>keyed-store</module>
         <module>io</module>
         <module>id</module>
+        <module>hwal</module>
     </modules>
 
 </project>
