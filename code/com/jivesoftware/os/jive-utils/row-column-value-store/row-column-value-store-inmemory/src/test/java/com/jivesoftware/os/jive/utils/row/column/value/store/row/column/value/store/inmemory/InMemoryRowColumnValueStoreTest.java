@@ -33,8 +33,13 @@ public class InMemoryRowColumnValueStoreTest extends BaseRowColumnValueStore<Run
 
     @Test
     @Override
-    public void testCheckAndAdd() {
-        super.testCheckAndAdd();
+    public void testCheckNotExistsAndAdd() {
+        super.testCheckNotExistsAndAdd();
+    }
+
+    @Override
+    public void testCheckEqualAndAdd() {
+        super.testCheckEqualAndAdd();
     }
 
     @Test
@@ -107,6 +112,11 @@ public class InMemoryRowColumnValueStoreTest extends BaseRowColumnValueStore<Run
     @Override
     public void testRemove() {
         super.testRemove();
+    }
+
+    @Override
+    public void testCheckEqualAndRemove() {
+        super.testCheckEqualAndRemove();
     }
 
     @Test

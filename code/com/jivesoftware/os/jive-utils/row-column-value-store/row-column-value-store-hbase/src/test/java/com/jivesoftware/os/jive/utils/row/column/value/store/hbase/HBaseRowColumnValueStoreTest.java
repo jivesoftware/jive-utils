@@ -21,11 +21,12 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMaps
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.StringTypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.tests.BaseRowColumnValueStore;
-import java.util.UUID;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import java.util.UUID;
 
 /**
  *
@@ -140,6 +141,12 @@ public class HBaseRowColumnValueStoreTest extends BaseRowColumnValueStore {
 
     @Test(groups = "slow")
     @Override
+    public void testCheckEqualAndRemove() throws Exception {
+        super.testCheckEqualAndRemove();
+    }
+
+    @Test(groups = "slow")
+    @Override
     public void testRemoveRow() throws Exception {
         super.testRemoveRow();
     }
@@ -152,7 +159,13 @@ public class HBaseRowColumnValueStoreTest extends BaseRowColumnValueStore {
 
     @Test(groups = "slow")
     @Override
-    public void testCheckAndAdd() throws Exception {
-        super.testCheckAndAdd();
+    public void testCheckNotExistsAndAdd() throws Exception {
+        super.testCheckNotExistsAndAdd();
+    }
+
+    @Test(groups = "slow")
+    @Override
+    public void testCheckEqualAndAdd() throws Exception {
+        super.testCheckEqualAndAdd();
     }
 }

@@ -180,6 +180,20 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
     }
 
     @Override
+    public boolean removeIfEqualToExpected(T tenantId, R rowKey, C columnKey, V expectedValue, Timestamper overrideTimestamper) throws RuntimeException {
+        while (true) {
+            try {
+                thunderingHerd.herd();
+                return store.removeIfEqualToExpected(tenantId, rowKey, columnKey, expectedValue, overrideTimestamper);
+            } catch (Exception x) {
+                thunderingHerd.pushback();
+            } finally {
+                thunderingHerd.progress();
+            }
+        }
+    }
+
+    @Override
     public void multiRemove(T tenantId, R rowKey, C[] key, Timestamper overrideTimestamper) {
         while (true) {
             try {

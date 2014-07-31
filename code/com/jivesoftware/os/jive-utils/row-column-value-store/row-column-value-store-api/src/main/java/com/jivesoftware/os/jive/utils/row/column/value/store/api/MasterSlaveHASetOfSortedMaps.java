@@ -121,6 +121,11 @@ public class MasterSlaveHASetOfSortedMaps<T, R, C, V, E extends Exception> imple
     }
 
     @Override
+    public boolean removeIfEqualToExpected(T tenantId, R rowKey, C columnKey, V expectedValue, Timestamper overrideTimestamper) throws E {
+        return master.removeIfEqualToExpected(tenantId, rowKey, columnKey, expectedValue, overrideTimestamper);
+    }
+
+    @Override
     public void multiRemove(T tenantId, R rowKey, C[] key, Timestamper overrideTimestamper) throws E {
         master.multiRemove(tenantId, rowKey, key, overrideTimestamper);
     }

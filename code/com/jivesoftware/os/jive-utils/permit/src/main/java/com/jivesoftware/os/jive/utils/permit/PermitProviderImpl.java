@@ -103,6 +103,15 @@ public final class PermitProviderImpl<T> implements PermitProvider {
         return Optional.absent();
     }
 
+    @Override
+    public void releasePermit(Permit permit) {
+        long now = timestamper.get();
+        if (!isExpired(permit.issued, now)) {
+            PermitRowKey rowKey = new PermitRowKey(permit.pool, permit.id);
+            permitStore.removeIfEqualToExpected(tenantId, rowKey, COLUMN_ISSUED, String.valueOf(permit.issued), null);
+        }
+    }
+
     private boolean isExpired(long issuedTimestamp, long now) {
         return issuedTimestamp <= now - expires;
     }

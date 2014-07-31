@@ -53,6 +53,18 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
     boolean addIfNotExists(T tenantId, R rowKey, C columnKey, V columnValue, Integer timeToLiveInSeconds,
             Timestamper overrideTimestamper) throws E;
 
+    /**
+     *
+     * @param tenantId
+     * @param rowKey
+     * @param columnKey
+     * @param columnValue
+     * @param expectedValue
+     * @param timeToLiveInSeconds
+     * @param overrideTimestamper
+     * @return
+     * @throws E
+     */
     boolean replaceIfEqualToExpected(T tenantId, R rowKey, C columnKey, V columnValue, V expectedValue,
             Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws E;
 
@@ -120,6 +132,9 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      * @throws Exception
      */
     void remove(T tenantId, R rowKey, C key, Timestamper overrideTimestamper) throws E;
+
+    boolean removeIfEqualToExpected(T tenantId, R rowKey, C columnKey, V expectedValue,
+            Timestamper overrideTimestamper) throws E;
 
     /**
      *

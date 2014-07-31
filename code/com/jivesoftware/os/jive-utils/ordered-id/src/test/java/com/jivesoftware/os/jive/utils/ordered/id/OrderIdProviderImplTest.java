@@ -15,14 +15,18 @@
  */
 package com.jivesoftware.os.jive.utils.ordered.id;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  *
@@ -82,6 +86,29 @@ public class OrderIdProviderImplTest {
         Assert.assertEquals(unpacked[1], (int) Math.pow(2, 14) - 1);
         Assert.assertEquals(unpacked[2], 3);
 
+    }
+
+    @Test
+    public void testDoesNotUseExpiredWriterId() throws Exception {
+        WriterIdProvider writerIdProvider = mock(WriterIdProvider.class);
+
+        WriterId expiredWriterId = mock(WriterId.class);
+        when(expiredWriterId.getId()).thenReturn(0);
+        when(expiredWriterId.isValid()).thenReturn(false);
+
+        WriterId currentWriterId = mock(WriterId.class);
+        when(currentWriterId.getId()).thenReturn(1);
+        when(currentWriterId.isValid()).thenReturn(true);
+
+        when(writerIdProvider.getWriterId())
+                .thenReturn(expiredWriterId)
+                .thenReturn(currentWriterId);
+
+        OrderIdProvider orderIdProvider = new OrderIdProviderImpl(writerIdProvider);
+
+        long actual = orderIdProvider.nextId();
+        long[] fields = new SnowflakeIdPacker().unpack(actual);
+        Assert.assertEquals(fields[1], 1);
     }
 
     @SuppressWarnings ("unused")

@@ -149,6 +149,27 @@ public class PermitProviderImplTest {
     }
 
     @Test
+    public void testReleasesCurrentPermits() throws Exception {
+        addCurrentPermit(10);
+
+        permitProviderImpl.releasePermit(new Permit(POOL, 10, now));
+        String actual = store.get(TENANT, new PermitRowKey(POOL, 10), COLUMN_ISSUED, null, null);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testDoesNotReleaseCurrentPermitsConcurrentlyIssued() throws Exception {
+        addCurrentPermit(10);
+        yoinkPermitRightBeforeRelease(10, now + 1, now);
+
+        permitProviderImpl.releasePermit(new Permit(POOL, 10, now));
+        String actual = store.get(TENANT, new PermitRowKey(POOL, 10), COLUMN_ISSUED, null, null);
+
+        assertNotNull(actual);
+    }
+
+    @Test
     public void testCountsLabelsInPool() throws Exception {
         addExpiredPermit(0);
         addCurrentPermit(1);
@@ -194,6 +215,20 @@ public class PermitProviderImplTest {
         }).when(store).replaceIfEqualToExpected(
                 TENANT, permitRowKey, COLUMN_ISSUED, String.valueOf(issued), expectedIssuedString, null,
                 null
+        );
+    }
+
+    private void yoinkPermitRightBeforeRelease(int id, Long issued, Long expectedIssued) {
+        final PermitRowKey permitRowKey = new PermitRowKey(POOL, id);
+        String expectedIssuedString = expectedIssued != null ? String.valueOf(expectedIssued) : null;
+        doAnswer(new Answer<Boolean>() {
+            public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
+                store.add(TENANT, permitRowKey, COLUMN_ISSUED, String.valueOf(now + 1), null, null);
+                store.add(TENANT, permitRowKey, COLUMN_LABEL, LABEL, null, null);
+                return (Boolean) invocationOnMock.callRealMethod();
+            }
+        }).when(store).removeIfEqualToExpected(
+                TENANT, permitRowKey, COLUMN_ISSUED, expectedIssuedString, null
         );
     }
 }

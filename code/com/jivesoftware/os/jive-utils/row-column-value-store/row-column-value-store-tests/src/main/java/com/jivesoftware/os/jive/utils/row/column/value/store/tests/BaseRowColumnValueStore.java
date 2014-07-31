@@ -13,10 +13,11 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumValueTi
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnTimestampRemove;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.ConstantTimestamper;
+import org.testng.Assert;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.testng.Assert;
 
 abstract public class BaseRowColumnValueStore<E extends Exception> {
 
@@ -56,7 +57,7 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         Assert.assertEquals(got, "bar");
     }
 
-    public void testCheckAndAdd() throws E {
+    public void testCheckNotExistsAndAdd() throws E {
         String got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
         Assert.assertNull(got);
         Assert.assertTrue(store.addIfNotExists(tenantId, "rowKey1", "columnKey1", "foo", null, new ConstantTimestamper(10)));
@@ -65,6 +66,17 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
 
         // try again now there is a pre-existing value
         Assert.assertFalse(store.addIfNotExists(tenantId, "rowKey1", "columnKey1", "foo", null, new ConstantTimestamper(10)));
+    }
+
+    public void testCheckEqualAndAdd() throws E {
+        String got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
+        Assert.assertNull(got);
+        store.add(tenantId, "rowKey1", "columnKey1", "foo", null, new ConstantTimestamper(10));
+        got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
+        Assert.assertEquals(got, "foo");
+        Assert.assertTrue(store.replaceIfEqualToExpected(tenantId, "rowKey1", "columnKey1", "bar", "foo", null, new ConstantTimestamper(10)));
+        got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
+        Assert.assertEquals(got, "bar");
     }
 
     public void testMultiAdd() throws E {
@@ -179,6 +191,17 @@ abstract public class BaseRowColumnValueStore<E extends Exception> {
         store.remove(tenantId, "rowKey2", "columnKey2", new ConstantTimestamper(11));
         got = store.get(tenantId, "rowKey2", "columnKey2", null, null);
         Assert.assertNull(got);
+    }
+
+    public void testCheckEqualAndRemove() throws E {
+        String got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
+        Assert.assertNull(got);
+        store.add(tenantId, "rowKey1", "columnKey1", "foo", null, new ConstantTimestamper(10));
+        got = store.get(tenantId, "rowKey1", "columnKey1", null, null);
+        Assert.assertEquals(got, "foo");
+
+        Assert.assertFalse(store.removeIfEqualToExpected(tenantId, "rowKey1", "columnKey1", "bar", null));
+        Assert.assertTrue(store.removeIfEqualToExpected(tenantId, "rowKey1", "columnKey1", "foo", null));
     }
 
     public void testMultiRemove() throws E {

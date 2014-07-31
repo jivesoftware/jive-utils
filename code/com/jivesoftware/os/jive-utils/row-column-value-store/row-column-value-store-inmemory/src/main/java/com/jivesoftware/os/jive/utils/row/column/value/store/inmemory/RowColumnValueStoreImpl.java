@@ -153,6 +153,22 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
         }
     }
 
+    @Override
+    public boolean removeIfEqualToExpected(T tenantId, S rowKey, K columnKey, V expectedValue, Timestamper overrideTimestamper) throws RuntimeException {
+        synchronized (rowLocks.lock(rowKey)) {
+            V currentVal = get(tenantId, rowKey, columnKey, null, null);
+            if (expectedValue != null && !expectedValue.equals(currentVal)) {
+                return false;
+            }
+            else if (expectedValue == null && currentVal != null) {
+                return false;
+            }
+
+            remove(tenantId, rowKey, columnKey, overrideTimestamper);
+            return true;
+        }
+    }
+
     private <R> void get(T tenantId, S rowKey, K startColumnKey, Long maxCount, int batchSize, boolean reversed, CallbackStream<R> callback,
             ValueStoreMarshaller<Map.Entry<K, Timestamped<V>>, R> marshall) {
         try {

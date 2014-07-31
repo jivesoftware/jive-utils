@@ -19,6 +19,13 @@ public interface PermitProvider {
     Optional<Permit> renewPermit(Permit old);
 
     /**
+     * Releases a permit, allowing it to be reissued.
+     *
+     * @param permit the permit to release
+     */
+    void releasePermit(Permit permit);
+
+    /**
      * @return the number of unique labels attached to current permits in the pool
      */
     int countUniqueLabels();

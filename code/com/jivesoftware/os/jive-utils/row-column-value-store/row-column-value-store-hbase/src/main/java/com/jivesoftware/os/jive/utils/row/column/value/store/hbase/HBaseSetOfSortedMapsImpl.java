@@ -555,6 +555,43 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
     /**
      * @param tenantId
      * @param rowKey
+     * @param columnKey
+     * @param expectedValue
+     * @param overrideTimestamper
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public boolean removeIfEqualToExpected(T tenantId, R rowKey, C columnKey, V expectedValue, Timestamper overrideTimestamper) throws Exception {
+        HTableInterface t = tablePool.getTable(table);
+        try {
+            final long timestamp = (overrideTimestamper == null) ? timestamper.get() : overrideTimestamper.get();
+            final byte[] rawRowKey = marshaller.toRowKeyBytes(tenantId, rowKey);
+            final byte[] rawColumnKey = marshaller.toColumnKeyBytes(columnKey);
+            final byte[] rawExpectedValue = marshaller.toValueBytes(expectedValue);
+
+            Delete delete = new Delete(rawRowKey, timestamp);
+            boolean removed = t.checkAndDelete(rawRowKey, family, rawColumnKey, rawExpectedValue, delete);
+            t.flushCommits();
+            if (removed) {
+                counters.removed(1);
+            }
+            return removed;
+        } catch (RowColumnValueStoreMarshallerException | IOException ex) {
+            LOG.error("Failed to remove. customer=" + tenantId + " key=" + rowKey + " columnName=" + columnKey, ex);
+            throw ex;
+        } finally {
+            try {
+                t.close();
+            } catch (IOException e) {
+                LOG.error("Failed to close hbase table!", e);
+            }
+        }
+    }
+
+    /**
+     * @param tenantId
+     * @param rowKey
      * @param startColumnKey
      * @param maxCount if null read entire column
      * @param batchSize
