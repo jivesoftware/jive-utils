@@ -11,6 +11,7 @@ public class Permit {
         this.issued = issued;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -34,6 +35,7 @@ public class Permit {
         return true;
     }
 
+    @Override
     public int hashCode() {
         int result = pool;
         result = 31 * result + id;

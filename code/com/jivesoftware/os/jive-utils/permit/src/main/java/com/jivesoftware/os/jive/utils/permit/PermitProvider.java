@@ -5,6 +5,7 @@ import com.google.common.base.Optional;
 public interface PermitProvider {
     /**
      * @return a new permit from the pool of expired or not-yet-issued permits.
+     * @throws com.jivesoftware.os.jive.utils.permit.OutOfPermitsException
      */
     Permit requestPermit() throws OutOfPermitsException;
 

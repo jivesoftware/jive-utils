@@ -2,13 +2,12 @@ package com.jivesoftware.os.jive.utils.permit;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.jivesoftware.os.jive.utils.permit.PermitProviderImpl.PermitIdGenerator;
+import java.util.List;
+import java.util.Set;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.List;
-import java.util.Set;
-
-import static com.jivesoftware.os.jive.utils.permit.PermitProviderImpl.PermitIdGenerator;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;

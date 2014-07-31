@@ -5,28 +5,27 @@ import com.google.common.collect.Maps;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.inmemory.RowColumnValueStoreImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertTrue;
 
 public class PermitProviderImplConcurrencyTest {
+
     private static final Logger logger = LoggerFactory.getLogger(PermitProviderImplConcurrencyTest.class);
 
     private static final int NUM_THREADS = 10;
     private static final long EXPIRES = 10;
     private static final long DURATION = 5 * 1000;
 
-    private final RowColumnValueStore<String, PermitRowKey, String, Long, RuntimeException> store
-            = new RowColumnValueStoreImpl<>();
+    private final RowColumnValueStore<String, PermitRowKey, String, Long, RuntimeException> store = new RowColumnValueStoreImpl<>();
     private final Random random = new Random(System.currentTimeMillis());
 
     private final AtomicReference<CountDownLatch> signal = new AtomicReference<>(new CountDownLatch(NUM_THREADS));
@@ -84,20 +83,20 @@ public class PermitProviderImplConcurrencyTest {
     }
 
     private void assertOneOrBothPermitsExpired(PermitClient client1,
-                                               PermitClient client2, long now)
-    {
+            PermitClient client2, long now) {
         long expires1 = client1.permit.get().issued + EXPIRES;
         long expires2 = client2.permit.get().issued + EXPIRES;
         assertTrue(
                 expires1 <= now || expires2 <= now,
                 "Neither permit is expired! "
-                        + "Now: " + now + "; "
-                        + "Client " + client1.id + " expires at " + expires1 + "; "
-                        + "Client " + client2.id + " expires at " + expires2
+                + "Now: " + now + "; "
+                + "Client " + client1.id + " expires at " + expires1 + "; "
+                + "Client " + client2.id + " expires at " + expires2
         );
     }
 
     private class PermitClient implements Runnable {
+
         private final PermitProvider permitProvider;
 
         final int id;
@@ -123,8 +122,7 @@ public class PermitProviderImplConcurrencyTest {
                 if (permit.get() == null || isPermitExpired(now)) {
                     try {
                         permit.set(permitProvider.requestPermit());
-                    }
-                    catch (OutOfPermitsException e) {
+                    } catch (OutOfPermitsException e) {
                         throw new RuntimeException(e);
                     }
                     nextRenewChance = now + EXPIRES / 2;
@@ -140,8 +138,7 @@ public class PermitProviderImplConcurrencyTest {
                     if (maybeRenew()) {
                         nextRenewChance = now + EXPIRES / 2;
                         log("renewed permit " + permit.get().id);
-                    }
-                    else {
+                    } else {
                         // Try to renew right before the permit expires. It's unlikely this will happen, but in the
                         // case that it does, it's possible that we could try to renew while another client tries to
                         // claim the expired permit.

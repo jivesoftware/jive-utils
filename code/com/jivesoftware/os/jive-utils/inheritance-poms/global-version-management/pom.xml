@@ -64,7 +64,7 @@
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>permit</artifactId>
-                <version>0.21-SNAPSHOT</version>
+                <version>0.26-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
@@ -110,7 +110,7 @@
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
                 <artifactId>row-column-value-store-inmemory</artifactId>
-                <version>0.21-SNAPSHOT</version>
+                <version>0.26-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

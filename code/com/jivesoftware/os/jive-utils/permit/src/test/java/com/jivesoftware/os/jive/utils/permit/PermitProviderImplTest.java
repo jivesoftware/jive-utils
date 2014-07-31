@@ -13,7 +13,9 @@ import org.testng.annotations.Test;
 
 import static com.jivesoftware.os.jive.utils.permit.PermitProviderImpl.NULL_KEY;
 import static org.mockito.Mockito.doAnswer;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotEquals;
 
 public class PermitProviderImplTest {
     private PermitProviderImpl<String> permitProviderImpl;

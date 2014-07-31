@@ -3,14 +3,22 @@ package com.jivesoftware.os.jive.utils.permit;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
-import com.jivesoftware.os.jive.utils.row.column.value.store.api.*;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.ColumnValueAndTimestamp;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.NeverAcceptsFailureSetOfSortedMaps;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantIdAndRow;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantKeyedColumnValueCallbackStream;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
-
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Permit provider that stores the state of issued permits in HBase.
+ * @param <T>
  */
 public final class PermitProviderImpl<T> implements PermitProvider {
     private final T tenantId;

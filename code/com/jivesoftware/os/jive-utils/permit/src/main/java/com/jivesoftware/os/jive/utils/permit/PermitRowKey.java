@@ -22,6 +22,7 @@ public class PermitRowKey implements Comparable<PermitRowKey> {
         return 0;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -42,6 +43,7 @@ public class PermitRowKey implements Comparable<PermitRowKey> {
         return true;
     }
 
+    @Override
     public int hashCode() {
         int result = pool;
         result = 31 * result + id;
