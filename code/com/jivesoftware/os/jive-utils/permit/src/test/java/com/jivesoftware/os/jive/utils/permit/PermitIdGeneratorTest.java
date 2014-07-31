@@ -2,7 +2,6 @@ package com.jivesoftware.os.jive.utils.permit;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.jivesoftware.os.jive.utils.permit.PermitProviderImpl.PermitIdGenerator;
 import java.util.List;
 import java.util.Set;
 import org.testng.annotations.BeforeMethod;

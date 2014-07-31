@@ -20,7 +20,7 @@ import static org.testng.Assert.assertNotEquals;
 public class PermitProviderImplTest {
     private PermitProviderImpl<String> permitProviderImpl;
 
-    private RowColumnValueStore<String, PermitRowKey, String, Long, RuntimeException> store;
+    private RowColumnValueStore<String, PermitRowKey, String, Permit, RuntimeException> store;
     private Timestamper timestamper = new AtomicIncrementingTimestamper(10000);
     private long now, expired;
 
@@ -30,8 +30,8 @@ public class PermitProviderImplTest {
 
     @BeforeMethod
     public void beforeMethod() throws Exception {
-        store = Mockito.spy(new RowColumnValueStoreImpl<String, PermitRowKey, String, Long>());
-        permitProviderImpl = new PermitProviderImpl<>(TENANT, POOL, 0, 512, EXPIRES, store, timestamper);
+        store = Mockito.spy(new RowColumnValueStoreImpl<String, PermitRowKey, String, Permit>());
+        permitProviderImpl = new PermitProviderImpl<>(TENANT, POOL, 0, 512, EXPIRES, "bob", store, timestamper);
 
         now = timestamper.get();
         expired = now - EXPIRES;
@@ -39,12 +39,12 @@ public class PermitProviderImplTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRequiresCountIdsGreaterThan0() throws Exception {
-        new PermitProviderImpl<>(TENANT, POOL, 0, 0, EXPIRES, store, timestamper);
+        new PermitProviderImpl<>(TENANT, POOL, 0, 0, EXPIRES, "bob", store, timestamper);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testRequiresPermitsExpireInTheFuture() throws Exception {
-        new PermitProviderImpl<>(TENANT, POOL, 0, 0, 0, store, timestamper);
+        new PermitProviderImpl<>(TENANT, POOL, 0, 0, 0, "bob", store, timestamper);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class PermitProviderImplTest {
 
         Permit actual = permitProviderImpl.requestPermit();
 
-        Permit expected = new Permit(POOL, 10, now + 1);
+        Permit expected = new Permit(POOL, 10, now + 1, "bob");
         assertEquals(actual, expected, "Issued permit is not the one that was expired.");
     }
 
@@ -63,18 +63,18 @@ public class PermitProviderImplTest {
 
         Permit actual = permitProviderImpl.requestPermit();
 
-        Permit notExpected = new Permit(POOL, 10, now + 1);
+        Permit notExpected = new Permit(POOL, 10, now + 1, "bob");
         assertNotEquals(actual, notExpected, "Issued permit was still current.");
     }
 
     @Test
     public void testDoesNotReissueExpiredPermitsConcurrentlyIssued() throws Exception {
         addExpiredPermit(0);
-        yoinkPermitRightBeforeIssue(0, now + 1, expired);
+        yoinkPermitRightBeforeIssue(0, new Permit(POOL, 0, now + 1, "bob"), new Permit(POOL, 0, expired, "bob"));
 
         Permit actual = permitProviderImpl.requestPermit();
 
-        Permit notExpected = new Permit(POOL, 0, now + 1);
+        Permit notExpected = new Permit(POOL, 0, now + 1, "bob");
         assertNotEquals(actual, notExpected, "Issued expired permit that just got issued to another caller.");
     }
 
@@ -86,7 +86,7 @@ public class PermitProviderImplTest {
 
         Permit actual = permitProviderImpl.requestPermit();
 
-        Permit expected = new Permit(POOL, 511, now + 1);
+        Permit expected = new Permit(POOL, 511, now + 1, "bob");
         assertEquals(actual, expected, "Issued a permit that was still current, or one that is outside of bounds.");
     }
 
@@ -95,7 +95,8 @@ public class PermitProviderImplTest {
         for (int i = 0; i < 511; i++) {
             addCurrentPermit(i);
         }
-        yoinkPermitRightBeforeIssue(511, now + 1, null);
+
+        yoinkPermitRightBeforeIssue(511, new Permit(POOL, 511, now + 1, "bob"), null);
 
         permitProviderImpl.requestPermit();
 
@@ -106,9 +107,9 @@ public class PermitProviderImplTest {
     public void testRenewsCurrentPermits() throws Exception {
         addCurrentPermit(10);
 
-        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, now));
+        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, now, "bob"));
 
-        Optional<Permit> expected = Optional.of(new Permit(POOL, 10, now + 1));
+        Optional<Permit> expected = Optional.of(new Permit(POOL, 10, now + 1, "bob"));
         assertEquals(actual, expected, "Wasn't able to renew a current permit.");
     }
 
@@ -116,7 +117,7 @@ public class PermitProviderImplTest {
     public void testDoesNotRenewPermitsWithDifferentValue() throws Exception {
         addCurrentPermit(10);
 
-        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, expired));
+        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, expired, "bob"));
 
         assertFalse(actual.isPresent(), "Succeeded in renewing a permit that didn't match the actual timestamp.");
     }
@@ -125,7 +126,7 @@ public class PermitProviderImplTest {
     public void testDoesNotRenewExpiredPermits() throws Exception {
         addExpiredPermit(10);
 
-        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, expired));
+        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, expired, "bob"));
 
         assertFalse(actual.isPresent(), "Succeeded in renewing a permit that was expired.");
     }
@@ -133,9 +134,9 @@ public class PermitProviderImplTest {
     @Test
     public void testDoesNotRenewCurrentPermitsConcurrentlyIssued() throws Exception {
         addCurrentPermit(10);
-        yoinkPermitRightBeforeIssue(10, now + 1, now);
+        yoinkPermitRightBeforeIssue(10, new Permit(POOL, 10, now + 1, "bob"), new Permit(POOL, 10, now, "bob"));
 
-        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, now));
+        Optional<Permit> actual = permitProviderImpl.renewPermit(new Permit(POOL, 10, now, "bob"));
 
         assertFalse(actual.isPresent(), "Succeeded in renewing a permit that just got issued to another caller.");
     }
@@ -150,18 +151,18 @@ public class PermitProviderImplTest {
     }
 
     private void addCurrentPermit(int id) {
-        store.add(TENANT, new PermitRowKey(POOL, id), NULL_KEY, now, null, null);
+        store.add(TENANT, new PermitRowKey(POOL, id), NULL_KEY, new Permit(POOL, id, now, "bob"), null, null);
     }
 
     private void addExpiredPermit(int id) {
-        store.add(TENANT, new PermitRowKey(POOL, id), NULL_KEY, expired, null, null);
+        store.add(TENANT, new PermitRowKey(POOL, id), NULL_KEY, new Permit(POOL, id, expired, "bob"), null, null);
     }
 
-    private void yoinkPermitRightBeforeIssue(int id, Long issued, Long expectedIssued) {
+    private void yoinkPermitRightBeforeIssue(final int id, Permit issued, Permit expectedIssued) {
         final PermitRowKey permitRowKey = new PermitRowKey(POOL, id);
         doAnswer(new Answer<Boolean>() {
             public Boolean answer(InvocationOnMock invocationOnMock) throws Throwable {
-                store.add(TENANT, permitRowKey, NULL_KEY, now + 1, null, null);
+                store.add(TENANT, permitRowKey, NULL_KEY, new Permit(POOL, id, now + 1, "bob"), null, null);
                 return (Boolean) invocationOnMock.callRealMethod();
             }
         }).when(store).replaceIfEqualToExpected(TENANT, permitRowKey, NULL_KEY, issued, expectedIssued, null, null);

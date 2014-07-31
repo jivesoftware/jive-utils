@@ -19,9 +19,9 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMaps
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantLengthAndTenantFirstRowColumnValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
-import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.LongTypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.StringTypeMarshaller;
 import java.io.IOException;
+import java.util.UUID;
 import org.merlin.config.Config;
 import org.merlin.config.defaults.IntDefault;
 import org.merlin.config.defaults.StringDefault;
@@ -75,8 +75,11 @@ public class PermitProviderImplInitializer {
             TypeMarshaller<T> tenantIdMarshaller,
             SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer
     ) throws IOException {
+
+        String ownerId  = UUID.randomUUID().toString();
+
         return new PermitProviderImpl<>(
-                tenantId, pool, minId, countIds, expires,
+                tenantId, pool, minId, countIds, expires, ownerId,
                 setOfSortedMapsImplInitializer.initialize(
                         config.getTableNameSpace(),
                         config.getTableName(),
@@ -85,7 +88,7 @@ public class PermitProviderImplInitializer {
                                 tenantIdMarshaller,
                                 new PermitRowKeyMarshaller(),
                                 new StringTypeMarshaller(),
-                                new LongTypeMarshaller()
+                                new PermitMarshaller()
                         ),
                         new CurrentTimestamper()
                 ),
