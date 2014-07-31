@@ -53,6 +53,9 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
     boolean addIfNotExists(T tenantId, R rowKey, C columnKey, V columnValue, Integer timeToLiveInSeconds,
             Timestamper overrideTimestamper) throws E;
 
+    boolean replaceIfEqualToExpected(T tenantId, R rowKey, C columnKey, V columnValue, V expectedValue,
+            Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws E;
+
     /**
      *
      * @param rowKey cannot be null
@@ -191,6 +194,18 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      */
     void getAllRowKeys(int batchSize, Integer overrideNumberOfRetries,
             CallbackStream<TenantIdAndRow<T, R>> callback) throws E;
+
+    /**
+     *
+     * @param tenantId
+     * @param startRowKey
+     * @param stopRowKey
+     * @param batchSize
+     * @param overrideNumberOfRetries
+     * @param callback
+     * @throws Exception
+     */
+    void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws E;
 
     /**
      *

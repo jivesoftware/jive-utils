@@ -63,6 +63,20 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
     }
 
     @Override
+    public boolean replaceIfEqualToExpected(T tenantId, R rowKey, C columnKey, V columnValue, V expectedValue, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws RuntimeException {
+        while (true) {
+            try {
+                thunderingHerd.herd();
+                return store.replaceIfEqualToExpected(tenantId, rowKey, columnKey, columnValue, expectedValue, timeToLiveInSeconds, overrideTimestamper);
+            } catch (Exception x) {
+                thunderingHerd.pushback();
+            } finally {
+                thunderingHerd.progress();
+            }
+        }
+    }
+
+    @Override
     public void multiAdd(T tenantId, R rowKey, C[] columnKeys, V[] columnValues, Integer timeToLiveInSeconds, Timestamper overrideTimestamper) {
         while (true) {
             try {
@@ -270,6 +284,23 @@ public class NeverAcceptsFailureSetOfSortedMaps<T, R, C, V> implements RowColumn
             try {
                 thunderingHerd.herd();
                 store.getAllRowKeys(batchSize, overrideNumberOfRetries, callback);
+                return;
+            } catch (CallbackStreamException cex) {
+                throw cex;
+            } catch (Exception x) {
+                thunderingHerd.pushback();
+            } finally {
+                thunderingHerd.progress();
+            }
+        }
+    }
+
+    @Override
+    public void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) {
+        while (true) {
+            try {
+                thunderingHerd.herd();
+                store.getRowKeys(tenantId, startRowKey, stopRowKey, batchSize, overrideNumberOfRetries, callback);
                 return;
             } catch (CallbackStreamException cex) {
                 throw cex;
