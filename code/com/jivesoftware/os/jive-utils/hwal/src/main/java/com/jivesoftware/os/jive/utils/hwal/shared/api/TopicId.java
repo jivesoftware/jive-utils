@@ -1,4 +1,4 @@
-package com.jivesoftware.os.jive.utils.hwal.shared.hbase;
+package com.jivesoftware.os.jive.utils.hwal.shared.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

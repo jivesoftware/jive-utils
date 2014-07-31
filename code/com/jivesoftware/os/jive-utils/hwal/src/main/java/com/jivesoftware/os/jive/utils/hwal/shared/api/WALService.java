@@ -1,4 +1,4 @@
-package com.jivesoftware.os.jive.utils.hwal.shared;
+package com.jivesoftware.os.jive.utils.hwal.shared.api;
 
 import com.jivesoftware.os.jive.utils.base.service.ServiceHandle;
 
