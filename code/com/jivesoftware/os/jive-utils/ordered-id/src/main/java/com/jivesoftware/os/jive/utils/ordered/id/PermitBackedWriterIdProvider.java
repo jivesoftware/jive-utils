@@ -2,7 +2,6 @@ package com.jivesoftware.os.jive.utils.ordered.id;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.jivesoftware.os.jive.utils.permit.OutOfPermitsException;
 import com.jivesoftware.os.jive.utils.permit.Permit;
 import com.jivesoftware.os.jive.utils.permit.PermitProvider;
 
@@ -44,12 +43,12 @@ public class PermitBackedWriterIdProvider implements WriterIdProvider {
         }
 
         long now = System.currentTimeMillis();
-        try {
-            Permit permit = permitProvider.requestPermit();
-            updateState(permit, now);
+        Optional<Permit> permit = permitProvider.requestPermit();
+        if (permit.isPresent()) {
+            updateState(permit.get(), now);
             return state.get().writerId;
-        } catch (OutOfPermitsException e) {
-            throw new OutOfWriterIdsException(e);
+        } else {
+            throw new OutOfWriterIdsException("Permit provider has issued all available permits.");
         }
     }
 

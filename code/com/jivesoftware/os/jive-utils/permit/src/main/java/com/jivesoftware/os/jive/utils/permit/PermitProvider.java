@@ -5,10 +5,9 @@ import com.google.common.base.Optional;
 public interface PermitProvider {
 
     /**
-     * @return a new permit from the pool of expired or not-yet-issued permits.
-     * @throws com.jivesoftware.os.jive.utils.permit.OutOfPermitsException
+     * @return a new permit from the pool of expired or not-yet-issued permits or an Optional.absent() is all permits are taken.
      */
-    Permit requestPermit() throws OutOfPermitsException;
+    Optional<Permit> requestPermit();
 
     /**
      * Attempts to renew a permit.
@@ -32,7 +31,7 @@ public interface PermitProvider {
      *
      * @return
      */
-    int getNumberOfPermitHolders();
+    int getNumberOfActivePermitHolders();
 
     /**
      * The the total number of permits that can concurrently be handed out by this permit provider.
@@ -40,4 +39,11 @@ public interface PermitProvider {
      * @return
      */
     int getTotalNumberOfConcurrentPermits();
+
+    /**
+     *
+     * @param permit
+     * @return
+     */
+    boolean isPermitStillValid(Permit permit);
 }

@@ -52,5 +52,10 @@
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils</groupId>
+            <artifactId>permit</artifactId>
+            <type>jar</type>
+        </dependency>
     </dependencies>
 </project>

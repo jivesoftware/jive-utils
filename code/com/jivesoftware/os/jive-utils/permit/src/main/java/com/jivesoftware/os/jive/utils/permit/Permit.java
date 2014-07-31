@@ -3,6 +3,7 @@ package com.jivesoftware.os.jive.utils.permit;
 import java.util.Objects;
 
 public class Permit {
+
     public final int pool;
     public final int id;
     public final long issued;
@@ -13,6 +14,11 @@ public class Permit {
         this.id = id;
         this.issued = issued;
         this.owner = owner;
+    }
+
+    @Override
+    public String toString() {
+        return "Permit{" + "pool=" + pool + ", id=" + id + ", issued=" + issued + ", owner=" + owner + '}';
     }
 
     @Override
@@ -48,6 +54,5 @@ public class Permit {
         }
         return true;
     }
-
 
 }

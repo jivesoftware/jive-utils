@@ -8,6 +8,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.inmemory.RowColumnV
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -18,6 +19,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
 
 public class PermitProviderImplTest {
+
     private PermitProviderImpl<String> permitProviderImpl;
 
     private RowColumnValueStore<String, PermitRowKey, String, Permit, RuntimeException> store;
@@ -51,7 +53,7 @@ public class PermitProviderImplTest {
     public void testReissuesExpiredPermits() throws Exception {
         addExpiredPermit(10);
 
-        Permit actual = permitProviderImpl.requestPermit();
+        Permit actual = permitProviderImpl.requestPermit().get();
 
         Permit expected = new Permit(POOL, 10, now + 1, "bob");
         assertEquals(actual, expected, "Issued permit is not the one that was expired.");
@@ -61,7 +63,7 @@ public class PermitProviderImplTest {
     public void testDoesNotReissueCurrentPermits() throws Exception {
         addCurrentPermit(10);
 
-        Permit actual = permitProviderImpl.requestPermit();
+        Permit actual = permitProviderImpl.requestPermit().get();
 
         Permit notExpected = new Permit(POOL, 10, now + 1, "bob");
         assertNotEquals(actual, notExpected, "Issued permit was still current.");
@@ -72,7 +74,7 @@ public class PermitProviderImplTest {
         addExpiredPermit(0);
         yoinkPermitRightBeforeIssue(0, new Permit(POOL, 0, now + 1, "bob"), new Permit(POOL, 0, expired, "bob"));
 
-        Permit actual = permitProviderImpl.requestPermit();
+        Permit actual = permitProviderImpl.requestPermit().get();
 
         Permit notExpected = new Permit(POOL, 0, now + 1, "bob");
         assertNotEquals(actual, notExpected, "Issued expired permit that just got issued to another caller.");
@@ -84,13 +86,13 @@ public class PermitProviderImplTest {
             addCurrentPermit(i);
         }
 
-        Permit actual = permitProviderImpl.requestPermit();
+        Permit actual = permitProviderImpl.requestPermit().get();
 
         Permit expected = new Permit(POOL, 511, now + 1, "bob");
         assertEquals(actual, expected, "Issued a permit that was still current, or one that is outside of bounds.");
     }
 
-    @Test(expectedExceptions = OutOfPermitsException.class)
+    @Test
     public void testDoesNotIssueAvailablePermitConcurrentlyIssued() throws Exception {
         for (int i = 0; i < 511; i++) {
             addCurrentPermit(i);
@@ -98,8 +100,8 @@ public class PermitProviderImplTest {
 
         yoinkPermitRightBeforeIssue(511, new Permit(POOL, 511, now + 1, "bob"), null);
 
-        permitProviderImpl.requestPermit();
-
+        Optional<Permit> got = permitProviderImpl.requestPermit();
+        Assert.assertFalse(got.isPresent());
         // Won't issue the permit since it gets issued right before we grab it, so we get an OutOfPermitsException
     }
 
@@ -141,13 +143,14 @@ public class PermitProviderImplTest {
         assertFalse(actual.isPresent(), "Succeeded in renewing a permit that just got issued to another caller.");
     }
 
-    @Test(expectedExceptions = OutOfPermitsException.class)
+    @Test
     public void testAllPermitsTakenThrowsOutOfPermits() throws Exception {
         for (int i = 0; i < 512; i++) {
             addCurrentPermit(i);
         }
 
-        permitProviderImpl.requestPermit();
+        Optional<Permit> got = permitProviderImpl.requestPermit();
+        Assert.assertFalse(got.isPresent());
     }
 
     private void addCurrentPermit(int id) {

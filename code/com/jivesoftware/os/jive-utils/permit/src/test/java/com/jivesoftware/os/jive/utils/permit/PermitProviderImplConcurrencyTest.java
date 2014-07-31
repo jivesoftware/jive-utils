@@ -120,10 +120,11 @@ public class PermitProviderImplConcurrencyTest {
                 long now = System.currentTimeMillis();
 
                 if (permit.get() == null || isPermitExpired(now)) {
-                    try {
-                        permit.set(permitProvider.requestPermit());
-                    } catch (OutOfPermitsException e) {
-                        throw new RuntimeException(e);
+                    Optional<Permit> got = permitProvider.requestPermit();
+                    if (got.isPresent()) {
+                        permit.set(got.get());
+                    } else {
+                        throw new RuntimeException("OutOfPermits");
                     }
                     nextRenewChance = now + EXPIRES / 2;
 

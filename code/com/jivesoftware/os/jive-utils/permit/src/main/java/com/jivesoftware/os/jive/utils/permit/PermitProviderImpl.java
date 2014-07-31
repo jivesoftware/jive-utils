@@ -17,9 +17,11 @@ import java.util.Set;
 
 /**
  * Permit provider that stores the state of issued permits in HBase.
+ *
  * @param <T>
  */
 public final class PermitProviderImpl<T> implements PermitProvider {
+
     private final T tenantId;
 
     private final int pool;
@@ -55,7 +57,7 @@ public final class PermitProviderImpl<T> implements PermitProvider {
     }
 
     @Override
-    public Permit requestPermit() throws OutOfPermitsException {
+    public Optional<Permit> requestPermit() {
         long now = timestamper.get();
 
         PermitIdGenerator permitIdGenerator = new PermitIdGenerator(minId, countIds);
@@ -64,11 +66,7 @@ public final class PermitProviderImpl<T> implements PermitProvider {
             permit = claimAvailablePermit(now, permitIdGenerator);
         }
 
-        if (!permit.isPresent()) {
-            throw new OutOfPermitsException();
-        }
-
-        return permit.get();
+        return permit;
     }
 
     private Optional<Permit> claimExpiredPermit(long now, PermitIdGenerator permitIdGenerator) {
@@ -124,7 +122,7 @@ public final class PermitProviderImpl<T> implements PermitProvider {
     }
 
     @Override
-    public int getNumberOfPermitHolders() {
+    public int getNumberOfActivePermitHolders() {
         List<Permit> issuedPermits = queryIssuedPermits();
         Set<String> distinctOwners = new HashSet<>();
         for (Permit permit : issuedPermits) {
@@ -141,6 +139,11 @@ public final class PermitProviderImpl<T> implements PermitProvider {
         return countIds;
     }
 
+    @Override
+    public boolean isPermitStillValid(Permit permit) {
+        long now = timestamper.get();
+        return !isExpired(permit.issued, now);
+    }
 
     private boolean isExpired(long issuedTimestamp, long now) {
         return issuedTimestamp <= now - expires;
