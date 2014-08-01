@@ -18,7 +18,6 @@ package com.jivesoftware.os.jive.utils.permit;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMapsImplInitializer;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantLengthAndTenantFirstRowColumnValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
-import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.StringTypeMarshaller;
 import java.io.IOException;
 import java.util.UUID;
@@ -27,65 +26,42 @@ import org.merlin.config.defaults.IntDefault;
 import org.merlin.config.defaults.StringDefault;
 
 public class PermitProviderImplInitializer {
+
     static public interface PermitProviderConfig extends Config {
-        @IntDefault (-1)
+
+        @IntDefault(-1)
         public int getPool();
+
         public void setPool(int pool);
 
-        @StringDefault ("")
+        @StringDefault("")
         public String getTableNameSpace();
+
         public void setTableNameSpace(String tableNameSpace);
 
-        @StringDefault ("permit.log")
+        @StringDefault("permit.log")
         public String getTableName();
+
         public void setTableName(String tableName);
 
-        @StringDefault ("p")
+        @StringDefault("p")
         public String getColumnFamilyName();
+
         public void setColumnFamilyName(String columnFamilyName);
     }
-    private final PermitProviderConfig config;
 
-    public PermitProviderImplInitializer(PermitProviderConfig config) {
-        this.config = config;
-    }
+    public PermitProvider initPermitProvider(PermitProviderConfig config,
+            SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer) throws IOException {
 
-    public <T> PermitProvider initialize(
-            T tenantId, int minId, int countIds, long expires,
-            TypeMarshaller<T> tenantIdMarshaller,
-            SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer
-    ) throws IOException {
-        return initPermitProvider(
-                tenantId, config.getPool(), minId, countIds, expires, tenantIdMarshaller, setOfSortedMapsImplInitializer
-        );
-    }
+        String ownerId = UUID.randomUUID().toString();
 
-    public <T> PermitProvider initialize(
-            T tenantId, int pool, int minId, int countIds, long expires,
-            TypeMarshaller<T> tenantIdMarshaller,
-            SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer
-    ) throws IOException {
-        return initPermitProvider(
-                tenantId, pool, minId, countIds, expires, tenantIdMarshaller, setOfSortedMapsImplInitializer
-        );
-    }
-
-    private <T> PermitProvider initPermitProvider(
-            T tenantId, int pool, int minId, int countIds, long expires,
-            TypeMarshaller<T> tenantIdMarshaller,
-            SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer
-    ) throws IOException {
-
-        String ownerId  = UUID.randomUUID().toString();
-
-        return new PermitProviderImpl<>(
-                tenantId, pool, minId, countIds, expires, ownerId,
+        return new PermitProviderImpl(ownerId,
                 setOfSortedMapsImplInitializer.initialize(
                         config.getTableNameSpace(),
                         config.getTableName(),
                         config.getColumnFamilyName(),
                         new TenantLengthAndTenantFirstRowColumnValueStoreMarshaller<>(
-                                tenantIdMarshaller,
+                                new StringTypeMarshaller(),
                                 new PermitRowKeyMarshaller(),
                                 new StringTypeMarshaller(),
                                 new PermitMarshaller()

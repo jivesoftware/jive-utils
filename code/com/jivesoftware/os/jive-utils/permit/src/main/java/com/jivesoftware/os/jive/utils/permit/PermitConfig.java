@@ -13,15 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jivesoftware.os.jive.utils.hwal.read.partitions;
-
-import com.google.common.base.Optional;
+package com.jivesoftware.os.jive.utils.permit;
 
 /**
  *
  * @author jonathan
  */
-public interface PartitionId {
+public interface PermitConfig {
 
-    Optional<Integer> getId();
+    String getPool();
+
+    int getMinId();
+
+    int getCountIds();
+
+    long getExpires();
 }

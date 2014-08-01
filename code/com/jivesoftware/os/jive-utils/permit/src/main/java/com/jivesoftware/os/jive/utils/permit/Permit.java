@@ -4,30 +4,36 @@ import java.util.Objects;
 
 public class Permit {
 
-    public final int pool;
-    public final int id;
     public final long issued;
+    public final long expires;
+    public final int id;
     public final String owner;
+    public final String tenantId;
+    public final String pool;
 
-    public Permit(int pool, int id, long issued, String owner) {
-        this.pool = pool;
-        this.id = id;
+    public Permit(long issued, long expires, int id, String owner, String tenantId, String pool) {
         this.issued = issued;
+        this.expires = expires;
+        this.id = id;
         this.owner = owner;
+        this.tenantId = tenantId;
+        this.pool = pool;
     }
 
     @Override
     public String toString() {
-        return "Permit{" + "pool=" + pool + ", id=" + id + ", issued=" + issued + ", owner=" + owner + '}';
+        return "Permit{" + "issued=" + issued + ", expires=" + expires + ", id=" + id + ", owner=" + owner + ", tenantId=" + tenantId + ", pool=" + pool + '}';
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 59 * hash + this.pool;
-        hash = 59 * hash + this.id;
-        hash = 59 * hash + (int) (this.issued ^ (this.issued >>> 32));
-        hash = 59 * hash + Objects.hashCode(this.owner);
+        int hash = 3;
+        hash = 71 * hash + (int) (this.issued ^ (this.issued >>> 32));
+        hash = 71 * hash + (int) (this.expires ^ (this.expires >>> 32));
+        hash = 71 * hash + this.id;
+        hash = 71 * hash + Objects.hashCode(this.owner);
+        hash = 71 * hash + Objects.hashCode(this.tenantId);
+        hash = 71 * hash + Objects.hashCode(this.pool);
         return hash;
     }
 
@@ -40,19 +46,27 @@ public class Permit {
             return false;
         }
         final Permit other = (Permit) obj;
-        if (this.pool != other.pool) {
+        if (this.issued != other.issued) {
+            return false;
+        }
+        if (this.expires != other.expires) {
             return false;
         }
         if (this.id != other.id) {
             return false;
         }
-        if (this.issued != other.issued) {
+        if (!Objects.equals(this.owner, other.owner)) {
             return false;
         }
-        if (!Objects.equals(this.owner, other.owner)) {
+        if (!Objects.equals(this.tenantId, other.tenantId)) {
+            return false;
+        }
+        if (!Objects.equals(this.pool, other.pool)) {
             return false;
         }
         return true;
     }
+
+
 
 }

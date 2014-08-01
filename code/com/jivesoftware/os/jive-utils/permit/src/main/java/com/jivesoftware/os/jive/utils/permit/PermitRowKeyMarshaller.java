@@ -1,30 +1,44 @@
 package com.jivesoftware.os.jive.utils.permit;
 
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
-import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.IntArrayTypeMarshaller;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 public class PermitRowKeyMarshaller implements TypeMarshaller<PermitRowKey> {
-    IntArrayTypeMarshaller intArrayTypeMarshaller = new IntArrayTypeMarshaller();
+    private final Charset utf_8 = Charset.forName("UTF-8");
 
     @Override
     public PermitRowKey fromBytes(byte[] bytes) throws Exception {
-        int[] fields = intArrayTypeMarshaller.fromBytes(bytes);
-        return new PermitRowKey(fields[0], fields[1]);
+
+        ByteBuffer bb = ByteBuffer.wrap(bytes);
+        int id = bb.getInt();
+
+        int length = bb.getInt();
+        byte[] poolBytes = new byte[length];
+        bb.get(poolBytes);
+
+        return new PermitRowKey(new String(poolBytes, utf_8), id);
     }
 
     @Override
-    public byte[] toBytes(PermitRowKey permitRowKey) throws Exception {
-        return intArrayTypeMarshaller.toBytes(new int[] { permitRowKey.pool, permitRowKey.id });
+    public byte[] toBytes(PermitRowKey key) throws Exception {
+        byte[] poolBytes = key.pool.getBytes(utf_8);
+        ByteBuffer buffer = ByteBuffer.allocate(4 + 4 + poolBytes.length);
+
+        buffer.putInt(key.id);
+        buffer.putInt(poolBytes.length);
+        buffer.put(poolBytes);
+        return buffer.array();
     }
+
 
     @Override
     public PermitRowKey fromLexBytes(byte[] lexBytes) throws Exception {
-        int[] fields = intArrayTypeMarshaller.fromLexBytes(lexBytes);
-        return new PermitRowKey(fields[0], fields[1]);
+        return fromBytes(lexBytes);
     }
 
     @Override
     public byte[] toLexBytes(PermitRowKey permitRowKey) throws Exception {
-        return intArrayTypeMarshaller.toLexBytes(new int[] { permitRowKey.pool, permitRowKey.id });
+        return toBytes(permitRowKey);
     }
 }

@@ -2,19 +2,18 @@ package com.jivesoftware.os.jive.utils.hwal.read.rcvs;
 
 import com.google.common.base.Optional;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
-import com.jivesoftware.os.jive.utils.hwal.read.WALReader;
-import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALCursor;
-import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALCursors;
+import com.jivesoftware.os.jive.utils.hwal.read.WALTopicReader;
+import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALTopicCursor;
+import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALTopicCursors;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALEntry;
-import com.jivesoftware.os.jive.utils.hwal.shared.api.TopicPartition;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.WALEntry;
 import com.jivesoftware.os.jive.utils.hwal.shared.filter.WALKeyFilter;
-import com.jivesoftware.os.jive.utils.id.TenantId;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ColumnValueAndTimestamp;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,19 +23,19 @@ import org.apache.commons.lang.mutable.MutableLong;
 /**
  * @author jonathan
  */
-public class RCVSWALReader implements WALReader {
+public class RCVSWALTopicReader implements WALTopicReader {
 
     private final MetricLogger LOG = MetricLoggerFactory.getLogger();
 
-    private final RowColumnValueStore<TenantId, TopicPartition, Long, WALEntry, ? extends Exception> wal;
-    private final RowColumnValueStore<TenantId, TopicPartition, Long, SipWALEntry, ? extends Exception> sipWAL;
-    private final WALCursors cursors;
+    private final RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> wal;
+    private final RowColumnValueStore<String, Integer, Long, SipWALEntry, ? extends Exception> sipWAL;
+    private final WALTopicCursors cursors;
     private final long pollingIntervalMillis;
     private final long maxClockDriftInMillis;
 
-    public RCVSWALReader(RowColumnValueStore<TenantId, TopicPartition, Long, WALEntry, ? extends Exception> wal,
-            RowColumnValueStore<TenantId, TopicPartition, Long, SipWALEntry, ? extends Exception> sipWAL,
-            WALCursors cursors,
+    public RCVSWALTopicReader(RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> wal,
+            RowColumnValueStore<String, Integer, Long, SipWALEntry, ? extends Exception> sipWAL,
+            WALTopicCursors cursors,
             long pollingIntervalMillis,
             long maxClockDriftInMillis) {
         this.wal = wal;
@@ -47,25 +46,23 @@ public class RCVSWALReader implements WALReader {
     }
 
     @Override
-    public void stream(final WALKeyFilter filter, final int batchSize, final WALStream stream) throws Exception {
+    public void stream(final WALKeyFilter filter, final int batchSize, final WALTopicStream stream) throws Exception {
 
         final ConcurrentSkipListSet dedupper = new ConcurrentSkipListSet();
         while (true) { // TODO burp
             int numberOfNonEmptyPartitions = 0;
             Map<Integer, Long> lastNonEmptyTimestamps = new ConcurrentHashMap<>();
-            for (WALCursor cursor : cursors.getCursors()) {
+            for (WALTopicCursor cursor : cursors.getCursors()) {
                 Optional<Integer> partition = cursor.getPartition();
                 if (partition.isPresent()) {
                     Long lastNonEmptyTimestamp = lastNonEmptyTimestamps.get(partition.get());
                     if (lastNonEmptyTimestamp == null || lastNonEmptyTimestamp < (System.currentTimeMillis() + pollingIntervalMillis)) {
 
-                        TopicPartition rowKey = new TopicPartition(partition.get(), cursor.getTopicId().getId());
-
                         final List<Long> entryIds = new ArrayList<>();
                         final Optional<Long> currentOffset = cursor.currentOffest();
                         if (currentOffset.isPresent()) {
                             final MutableLong maxOffset = new MutableLong(currentOffset.get());
-                            sipWAL.getEntrys(cursor.getTenantId(), rowKey, currentOffset.get() - maxClockDriftInMillis, 100000L, batchSize, false, null, null,
+                            sipWAL.getEntrys(cursor.getTopicId(), partition.get(), currentOffset.get() - maxClockDriftInMillis, 100000L, batchSize, false, null, null,
                                     new CallbackStream<ColumnValueAndTimestamp<Long, SipWALEntry, Long>>() {
 
                                         @Override
@@ -94,14 +91,15 @@ public class RCVSWALReader implements WALReader {
                             } else {
                                 numberOfNonEmptyPartitions++;
                                 lastNonEmptyTimestamps.put(partition.get(), 0L);
-                                List<WALEntry> entries = wal.multiGet(cursor.getTenantId(), rowKey, entryIds.toArray(new Long[entryIds.size()]), null, null);
+                                List<WALEntry> entries = wal.multiGet(cursor.getTopicId(), partition.get(), entryIds.toArray(new Long[entryIds.size()]), null, null);
                                 try {
+                                    LOG.info("Streaming "+Arrays.toString(entryIds.toArray(new Long[entryIds.size()]))+" from topic:"+cursor.getTopicId()+" from partition:"+partition.get());
                                     stream.stream(entries);
                                 } catch (Exception x) {
                                     LOG.error("Provided walStream threw the following exception "
                                             + "while handling the following:"
-                                            + " tenantId=" + cursor.getTenantId()
                                             + " topicId=" + cursor.getTopicId()
+                                            + " partitionId=" + partition.get()
                                             + " entryIds=" + entryIds, x);
                                 }
                                 cursor.commit(maxOffset.longValue());

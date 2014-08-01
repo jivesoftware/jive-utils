@@ -1,52 +1,56 @@
 package com.jivesoftware.os.jive.utils.permit;
 
+import java.util.Objects;
+
 public class PermitRowKey implements Comparable<PermitRowKey> {
-    public final int pool;
+
+    public final String pool;
     public final int id;
 
-    public PermitRowKey(int pool, int id) {
+    public PermitRowKey(String pool, int id) {
         this.pool = pool;
         this.id = id;
     }
 
     @Override
-    public int compareTo(PermitRowKey o) {
-        if (pool != o.pool) {
-            return pool > o.pool ? 1 : -1;
-        }
-
-        if (id != o.id) {
-            return id > o.id ? 1 : -1;
-        }
-
-        return 0;
+    public String toString() {
+        return "PermitRowKey{" + "pool=" + pool + ", id=" + id + '}';
     }
 
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+    public int compareTo(PermitRowKey o) {
+        int i = pool.compareTo(o.pool);
+        if (i == 0) {
+            i = Integer.compare(id, o.id);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        PermitRowKey that = (PermitRowKey) o;
-
-        if (id != that.id) {
-            return false;
-        }
-        if (pool != that.pool) {
-            return false;
-        }
-
-        return true;
+        return i;
     }
 
     @Override
     public int hashCode() {
-        int result = pool;
-        result = 31 * result + id;
-        return result;
+        int hash = 7;
+        hash = 83 * hash + Objects.hashCode(this.pool);
+        hash = 83 * hash + this.id;
+        return hash;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PermitRowKey other = (PermitRowKey) obj;
+        if (!Objects.equals(this.pool, other.pool)) {
+            return false;
+        }
+        if (this.id != other.id) {
+            return false;
+        }
+        return true;
+    }
+
 }

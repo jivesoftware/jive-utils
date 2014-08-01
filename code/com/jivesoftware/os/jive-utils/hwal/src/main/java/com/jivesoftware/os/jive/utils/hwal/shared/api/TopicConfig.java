@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jivesoftware.os.jive.utils.hwal.read.partitions;
+package com.jivesoftware.os.jive.utils.hwal.shared.api;
 
-import com.google.common.base.Optional;
+import org.merlin.config.Config;
+import org.merlin.config.defaults.IntDefault;
+import org.merlin.config.defaults.StringDefault;
 
 /**
  *
  * @author jonathan
  */
-public interface PartitionId {
+public interface TopicConfig extends Config {
 
-    Optional<Integer> getId();
+    @StringDefault("defaultTopic")
+    public String getTopicName();
+
+    @IntDefault(20)
+    public Integer getNumberOfPartitions();
 }

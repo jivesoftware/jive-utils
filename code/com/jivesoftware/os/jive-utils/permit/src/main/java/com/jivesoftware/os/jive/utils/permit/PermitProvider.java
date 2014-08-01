@@ -1,44 +1,43 @@
 package com.jivesoftware.os.jive.utils.permit;
 
 import com.google.common.base.Optional;
+import java.util.Collection;
+import java.util.List;
 
 public interface PermitProvider {
 
     /**
-     * @return a new permit from the pool of expired or not-yet-issued permits or an Optional.absent() is all permits are taken.
+     * @param config
+     * @param count
+     * @return a new permit from the pool of expired or not-yet-issued permits or an empty collection if all permits are taken.
      */
-    Optional<Permit> requestPermit();
+    List<Permit> requestPermit(String tenant, PermitConfig config, int count);
 
     /**
      * Attempts to renew a permit.
      *
      * The original permit should not be used after calling this method.
      *
-     * @param old the existing permit that needs to be renewed
+     * @param oldPermits
      * @return a renewed Permit, or nothing in the case that the Permit was already expired
      */
-    Optional<Permit> renewPermit(Permit old);
+    List<Optional<Permit>> renewPermit(List<Permit> oldPermits);
 
     /**
      * Releases the provided permit if it is still valid
      *
-     * @param permit
+     * @param permits
      */
-    void releasePermit(Permit permit);
+    void releasePermit(Collection<Permit> permits);
 
     /**
      * Returns the number of distinct permit holders
      *
+     * @param permitConfig
      * @return
      */
-    int getNumberOfActivePermitHolders();
+    int getNumberOfActivePermitHolders(String tenant, PermitConfig permitConfig);
 
-    /**
-     * The the total number of permits that can concurrently be handed out by this permit provider.
-     *
-     * @return
-     */
-    int getTotalNumberOfConcurrentPermits();
 
     /**
      *

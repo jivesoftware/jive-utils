@@ -6,6 +6,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueS
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.inmemory.RowColumnValueStoreImpl;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -101,14 +102,13 @@ public class PermitProviderImplConcurrencyTest {
 
         final int id;
         final AtomicReference<Permit> permit = new AtomicReference<>();
+        final ConstantPermitConfig permitConfig = new ConstantPermitConfig("pool", 0, NUM_THREADS, EXPIRES);
 
         public PermitClient(int id) {
             this.id = id;
 
             try {
-                permitProvider = new PermitProviderImpl<>(
-                        "permit-test", 0, 0, NUM_THREADS, EXPIRES, "bob", store, new CurrentTimestamper()
-                );
+                permitProvider = new PermitProviderImpl("bob", store, new CurrentTimestamper());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -120,9 +120,9 @@ public class PermitProviderImplConcurrencyTest {
                 long now = System.currentTimeMillis();
 
                 if (permit.get() == null || isPermitExpired(now)) {
-                    Optional<Permit> got = permitProvider.requestPermit();
-                    if (got.isPresent()) {
-                        permit.set(got.get());
+                    List<Permit> got = permitProvider.requestPermit("t", permitConfig, 1);
+                    if (!got.isEmpty()) {
+                        permit.set(got.get(0));
                     } else {
                         throw new RuntimeException("OutOfPermits");
                     }
@@ -169,9 +169,10 @@ public class PermitProviderImplConcurrencyTest {
 
         private boolean maybeRenew() {
             if (random.nextFloat() <= 0.25f) {
-                Optional<Permit> renewed = permitProvider.renewPermit(permit.get());
-                if (renewed.isPresent()) {
-                    permit.set(renewed.get());
+                List<Optional<Permit>> renewed = permitProvider.renewPermit(Arrays.asList(permit.get()));
+                Optional<Permit> got = renewed.get(0);
+                if (got.isPresent()) {
+                    permit.set(got.get());
                     return true;
                 }
             }

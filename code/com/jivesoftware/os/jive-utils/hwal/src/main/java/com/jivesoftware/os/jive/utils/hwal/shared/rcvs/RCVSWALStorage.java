@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jivesoftware.os.jive.utils.hwal.read.partitions;
+package com.jivesoftware.os.jive.utils.hwal.shared.rcvs;
 
-import com.google.common.base.Optional;
+import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALEntry;
+import com.jivesoftware.os.jive.utils.hwal.shared.api.WALEntry;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
 
 /**
  *
  * @author jonathan
  */
-public interface PartitionId {
+public interface RCVSWALStorage {
 
-    Optional<Integer> getId();
+    RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> getWAL();
+
+    RowColumnValueStore<String, Integer, Long, SipWALEntry, ? extends Exception> getSipWAL();
+
+    RowColumnValueStore<String, Integer, Long, Long, ? extends Exception> getCursors();
 }

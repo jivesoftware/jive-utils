@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.jivesoftware.os.jive.utils.hwal.read.partitions;
+package com.jivesoftware.os.jive.utils.hwal.read;
 
 import com.google.common.base.Optional;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.permit.Permit;
+import com.jivesoftware.os.jive.utils.permit.PermitConfig;
 import com.jivesoftware.os.jive.utils.permit.PermitProvider;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -29,24 +32,27 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WALReaders {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
-
-    private final PermitProvider walReaderPermitProvider;
+    private final String readerGroupId;
+    private final PermitProvider permitProvider;
+    private final PermitConfig permitConfig;
     private final AtomicReference<Permit> currentOnlineId = new AtomicReference<>(null);
 
-    public WALReaders(PermitProvider walReaderPermitProvider) {
-        this.walReaderPermitProvider = walReaderPermitProvider;
+    public WALReaders(String readerGroupId, PermitProvider permitProvider, PermitConfig permitConfig) {
+        this.readerGroupId = readerGroupId;
+        this.permitProvider = permitProvider;
+        this.permitConfig = permitConfig;
     }
 
     public Optional<Integer> getCurrentId() {
         Permit permit = currentOnlineId.get();
-        if (permit == null || !walReaderPermitProvider.isPermitStillValid(permit)) {
+        if (permit == null || !permitProvider.isPermitStillValid(permit)) {
             return Optional.absent();
         }
         return Optional.of(permit.id);
     }
 
     public int getNumberOfOnlineWALReaders() {
-        return walReaderPermitProvider.getNumberOfActivePermitHolders();
+        return permitProvider.getNumberOfActivePermitHolders(readerGroupId, permitConfig);
     }
 
     /**
@@ -55,15 +61,15 @@ public class WALReaders {
     public void online() {
         Permit currentPermit = currentOnlineId.get();
         if (currentPermit == null) {
-            Optional<Permit> permit = walReaderPermitProvider.requestPermit();
-            if (permit.isPresent()) {
-                currentOnlineId.set(permit.get());
-                LOG.info("Cursors coming on line. id:" + permit.get());
+            List<Permit> permit = permitProvider.requestPermit(readerGroupId, permitConfig, 1);
+            if (!permit.isEmpty()) {
+                currentOnlineId.set(permit.get(0));
+                LOG.info("Cursors coming on line. id:" + permit.get(0));
             }
         } else {
-            Optional<Permit> renewedPermit = walReaderPermitProvider.renewPermit(currentPermit);
-            if (renewedPermit.isPresent()) {
-                currentOnlineId.set(renewedPermit.get());
+            List<Optional<Permit>> renewedPermit = permitProvider.renewPermit(Arrays.asList(currentPermit));
+            if (renewedPermit.get(0).isPresent()) {
+                currentOnlineId.set(renewedPermit.get(0).get());
             } else {
                 currentOnlineId.set(null);
                 LOG.warn("Was not able to renew online permit.");
@@ -74,7 +80,7 @@ public class WALReaders {
     public void offline() {
         Permit had = currentOnlineId.getAndSet(null);
         if (had != null) {
-            walReaderPermitProvider.releasePermit(had);
+            permitProvider.releasePermit(Arrays.asList(had));
         }
     }
 }

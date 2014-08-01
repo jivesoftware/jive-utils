@@ -3,7 +3,10 @@ package com.jivesoftware.os.jive.utils.ordered.id;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.jivesoftware.os.jive.utils.permit.Permit;
+import com.jivesoftware.os.jive.utils.permit.PermitConfig;
 import com.jivesoftware.os.jive.utils.permit.PermitProvider;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Writer ID provider backed by PermitProvider.
@@ -22,14 +25,18 @@ import com.jivesoftware.os.jive.utils.permit.PermitProvider;
  * not accept PermitProviders with expiration periods less than a few seconds.
  */
 public class PermitBackedWriterIdProvider implements WriterIdProvider {
+    private final String tenantId;
     private final PermitProvider permitProvider;
+    private final PermitConfig permitConfig;
 
     private Optional<WriterIdState> state = Optional.absent();
 
     private static final int WRITER_ID_LIFETIME = 1000 * 60;
 
-    public PermitBackedWriterIdProvider(PermitProvider permitProvider) {
+    public PermitBackedWriterIdProvider(String tenantId, PermitProvider permitProvider, PermitConfig permitConfig) {
+        this.tenantId = tenantId;
         this.permitProvider = permitProvider;
+        this.permitConfig = permitConfig;
     }
 
     @Override
@@ -43,9 +50,9 @@ public class PermitBackedWriterIdProvider implements WriterIdProvider {
         }
 
         long now = System.currentTimeMillis();
-        Optional<Permit> permit = permitProvider.requestPermit();
-        if (permit.isPresent()) {
-            updateState(permit.get(), now);
+        List<Permit> permits = permitProvider.requestPermit(tenantId, permitConfig, 1);
+        if (!permits.isEmpty()) {
+            updateState(permits.get(0), now);
             return state.get().writerId;
         } else {
             throw new OutOfWriterIdsException("Permit provider has issued all available permits.");
@@ -64,7 +71,8 @@ public class PermitBackedWriterIdProvider implements WriterIdProvider {
         Preconditions.checkState(state.isPresent());
 
         long now = System.currentTimeMillis();
-        Optional<Permit> permit = permitProvider.renewPermit(state.get().permit);
+        List<Optional<Permit>> permits = permitProvider.renewPermit(Arrays.asList(state.get().permit));
+        Optional<Permit> permit = permits.get(0);
         if (permit.isPresent()) {
             updateState(permit.get(), now);
         }

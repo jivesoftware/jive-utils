@@ -7,9 +7,9 @@ import java.util.List;
 /**
  * @author jonathan
  */
-public interface WALReader {
+public interface WALTopicReader {
 
-    interface WALStream {
+    interface WALTopicStream {
         /**
          *
          * @param entries
@@ -19,7 +19,7 @@ public interface WALReader {
         void stream(List<WALEntry> entries);
     }
 
-    void stream(WALKeyFilter filter, int batchSize, WALStream stream) throws Exception;
+    void stream(WALKeyFilter filter, int batchSize, WALTopicStream stream) throws Exception;
 
 
 }

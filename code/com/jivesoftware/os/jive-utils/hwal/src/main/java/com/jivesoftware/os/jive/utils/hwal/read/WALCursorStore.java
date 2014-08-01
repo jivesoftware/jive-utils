@@ -1,15 +1,12 @@
 package com.jivesoftware.os.jive.utils.hwal.read;
 
-import com.jivesoftware.os.jive.utils.hwal.shared.api.TopicPartition;
-import com.jivesoftware.os.jive.utils.id.TenantId;
-
 /**
  *
  * @author jonathan
  */
 public interface WALCursorStore {
 
-    long get(TenantId tenant, TopicPartition row);
+    long get(String topicId, int partitionId);
 
-    void set(TenantId tenant, TopicPartition row, long offset);
+    void set(String topicId, int partitionId, long offset);
 }
