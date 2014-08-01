@@ -25,7 +25,7 @@ public class WALTopicsInitializer {
 
         public void setNumberOfPartitions(int numberOfPartitions);
 
-        @IntDefault(1000)
+        @IntDefault(100)
         public int getRebalanceIntervalInMillis();
 
         public void setRebalanceIntervalInMillis(int millis);

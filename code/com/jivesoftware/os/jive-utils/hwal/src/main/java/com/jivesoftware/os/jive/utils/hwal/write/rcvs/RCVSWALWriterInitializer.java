@@ -1,9 +1,11 @@
 package com.jivesoftware.os.jive.utils.hwal.write.rcvs;
 
 import com.jivesoftware.os.jive.utils.hwal.shared.api.WALService;
-import com.jivesoftware.os.jive.utils.hwal.shared.partition.WALParitioningStrategy;
+import com.jivesoftware.os.jive.utils.hwal.shared.partition.WALPartitioningStrategy;
 import com.jivesoftware.os.jive.utils.hwal.shared.rcvs.RCVSWALStorage;
+import com.jivesoftware.os.jive.utils.hwal.write.SipWALTimeProvider;
 import com.jivesoftware.os.jive.utils.hwal.write.WALWriter;
+import com.jivesoftware.os.jive.utils.ordered.id.JiveEpochTimestampProvider;
 import org.merlin.config.Config;
 import org.merlin.config.defaults.IntDefault;
 
@@ -25,9 +27,12 @@ public class RCVSWALWriterInitializer {
 
     public WALService<WALWriter> initialize(RCVSWALWriterConfig config,
             RCVSWALStorage storage,
-            WALParitioningStrategy paritioningStrategy) {
+            WALPartitioningStrategy paritioningStrategy) {
 
-        final WALWriter cursorStore = new RCVSWALWriter(storage.getWAL(),
+        SipWALTimeProvider sipWALTimeProvider = new SipWALTimeProvider(new JiveEpochTimestampProvider());
+
+        final WALWriter cursorStore = new RCVSWALWriter(sipWALTimeProvider,
+                storage.getWAL(),
                 storage.getSipWAL(),
                 paritioningStrategy,
                 config.getNumberOfPartitions());

@@ -16,6 +16,7 @@
 package com.jivesoftware.os.jive.utils.hwal.shared.rcvs;
 
 import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALEntry;
+import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALTime;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.WALEntry;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
 
@@ -25,9 +26,9 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueS
  */
 public interface RCVSWALStorage {
 
-    RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> getWAL();
+    RowColumnValueStore<String, Integer, Long, WALEntry, ? extends RuntimeException> getWAL();
 
-    RowColumnValueStore<String, Integer, Long, SipWALEntry, ? extends Exception> getSipWAL();
+    RowColumnValueStore<String, Integer, SipWALTime, SipWALEntry, ? extends RuntimeException> getSipWAL();
 
-    RowColumnValueStore<String, Integer, Long, Long, ? extends Exception> getCursors();
+    RowColumnValueStore<String, String, Integer, Long, ? extends RuntimeException> getCursors();
 }

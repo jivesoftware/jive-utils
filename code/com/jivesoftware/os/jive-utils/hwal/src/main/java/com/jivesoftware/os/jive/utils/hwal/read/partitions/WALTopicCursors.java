@@ -64,31 +64,6 @@ public class WALTopicCursors {
         topicCursorPermitProvider.releasePermit(clear.keySet());
     }
 
-    private void ensureAllPermitsAreTaken() {
-        int numberOfOnlineWALReaders = walReaders.getNumberOfOnlineWALReaders();
-        LOG.info("Currently "+numberOfOnlineWALReaders+" readers online");
-        int totalNumberOfConcurrentPermits = topicCursorPermitConfig.getCountIds();
-
-        int desiredNumberOfPermits = (totalNumberOfConcurrentPermits / numberOfOnlineWALReaders) + 1;
-
-        int currentNumberOfPermits = cursors.size();
-
-        int askForNPermits = desiredNumberOfPermits - currentNumberOfPermits;
-        if (askForNPermits > 0) {
-            LOG.info("asking for "+askForNPermits+ " partitions for topic:"+topicId);
-
-            List<Permit> requestedPermits = topicCursorPermitProvider.requestPermit(topicId, topicCursorPermitConfig, askForNPermits);
-            for (Permit permit : requestedPermits) {
-                cursors.put(permit, new WALTopicCursor(topicId + "-" + totalNumberOfConcurrentPermits, new JITPartitionId(topicCursorPermitProvider, permit), cursorStore));
-            }
-        }
-
-        if (cursors.size() > desiredNumberOfPermits) {
-            LOG.info("TODO: release paritions for topic:"+topicId);
-        }
-
-    }
-
     private void renewExistingCursors() {
         List<Permit> currentPermits = new ArrayList<>(cursors.keySet());
         List<Optional<Permit>> renewedPermits = topicCursorPermitProvider.renewPermit(currentPermits);
@@ -98,11 +73,40 @@ public class WALTopicCursors {
                 int totalNumberOfConcurrentPermits = topicCursorPermitConfig.getCountIds();
                 Permit newPermit = renewedPermit.get();
                 cursors.remove(currentPermits.get(i));
-                cursors.put(newPermit, new WALTopicCursor(topicId + "-" + totalNumberOfConcurrentPermits, new JITPartitionId(topicCursorPermitProvider, newPermit), cursorStore));
+                WALTopicCursor cursor = new WALTopicCursor(topicId + "-" + totalNumberOfConcurrentPermits, new JITPartitionId(topicCursorPermitProvider, newPermit), cursorStore);
+                cursors.put(newPermit, cursor);
+                LOG.debug("Renewed permit:"+newPermit+" for cursor:"+cursor);
             } else {
-                cursors.remove(currentPermits.get(i));
+                WALTopicCursor removed = cursors.remove(currentPermits.get(i));
+                LOG.info("Dettached from:"+currentPermits.get(i)+" for cursor:"+removed);
             }
         }
+    }
+
+    private void ensureAllPermitsAreTaken() {
+        int numberOfOnlineWALReaders = walReaders.getNumberOfOnlineWALReaders();
+        int totalNumberOfConcurrentPermits = topicCursorPermitConfig.getCountIds();
+
+        int desiredNumberOfPermits = (int)Math.ceil((double)totalNumberOfConcurrentPermits / (double)numberOfOnlineWALReaders);
+
+        int currentNumberOfPermits = cursors.size();
+
+        int askForNPermits = desiredNumberOfPermits - currentNumberOfPermits;
+        if (askForNPermits > 0) {
+            LOG.info("asking for " + askForNPermits + " partitions for topic:" + topicId + " currently have " + currentNumberOfPermits + " paritions");
+
+            List<Permit> requestedPermits = topicCursorPermitProvider.requestPermit(topicId, topicCursorPermitConfig, askForNPermits);
+            for (Permit permit : requestedPermits) {
+                WALTopicCursor cursor = new WALTopicCursor(topicId + "-" + totalNumberOfConcurrentPermits, new JITPartitionId(topicCursorPermitProvider, permit), cursorStore);
+                cursors.put(permit, cursor);
+                LOG.info("Atteched permit:"+permit+" to cursor:"+cursor);
+            }
+        }
+
+        if (cursors.size() > desiredNumberOfPermits) {
+            LOG.info("TODO: release paritions for topic:" + topicId);
+        }
+
     }
 
     static class JITPartitionId implements PartitionId {

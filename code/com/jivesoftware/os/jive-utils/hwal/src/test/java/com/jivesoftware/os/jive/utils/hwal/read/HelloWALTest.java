@@ -16,16 +16,15 @@
 package com.jivesoftware.os.jive.utils.hwal.read;
 
 import com.jivesoftware.os.jive.utils.hwal.read.rcvs.RCVSWALCursorStoreInitializer;
-import com.jivesoftware.os.jive.utils.hwal.read.rcvs.RCVSWALReaderInitializer;
+import com.jivesoftware.os.jive.utils.hwal.read.rcvs.RCVSWALTopicReaderInitializer;
 import com.jivesoftware.os.jive.utils.hwal.read.topic.WALTopics;
 import com.jivesoftware.os.jive.utils.hwal.read.topic.WALTopicsInitializer;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALEntry;
+import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALTime;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.WALEntry;
-import com.jivesoftware.os.jive.utils.hwal.shared.api.WALKey;
-import com.jivesoftware.os.jive.utils.hwal.shared.api.WALPayload;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.WALService;
 import com.jivesoftware.os.jive.utils.hwal.shared.filter.IncludeAnyFilter;
-import com.jivesoftware.os.jive.utils.hwal.shared.partition.RandomParitioningStrategy;
+import com.jivesoftware.os.jive.utils.hwal.shared.partition.RandomPartitioningStrategy;
 import com.jivesoftware.os.jive.utils.hwal.shared.rcvs.RCVSWALStorage;
 import com.jivesoftware.os.jive.utils.hwal.write.WALWriter;
 import com.jivesoftware.os.jive.utils.hwal.write.rcvs.RCVSWALWriterInitializer;
@@ -49,9 +48,9 @@ import org.testng.annotations.Test;
  */
 public class HelloWALTest {
 
-    RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> wal;
-    RowColumnValueStore<String, Integer, Long, SipWALEntry, ? extends Exception> sipWAL;
-    RowColumnValueStore<String, Integer, Long, Long, ? extends Exception> cursors;
+    RowColumnValueStore<String, Integer, Long, WALEntry, ? extends RuntimeException> wal;
+    RowColumnValueStore<String, Integer, SipWALTime, SipWALEntry, ? extends RuntimeException> sipWAL;
+    RowColumnValueStore<String, String, Integer, Long, ? extends RuntimeException> cursors;
 
     WALService<WALWriter> walWriterService;
     WALWriter walWriter;
@@ -73,24 +72,24 @@ public class HelloWALTest {
         RCVSWALStorage storage = new RCVSWALStorage() {
 
             @Override
-            public RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> getWAL() {
+            public RowColumnValueStore<String, Integer, Long, WALEntry, ? extends RuntimeException> getWAL() {
                 return wal;
             }
 
             @Override
-            public RowColumnValueStore<String, Integer, Long, SipWALEntry, ? extends Exception> getSipWAL() {
+            public RowColumnValueStore<String, Integer, SipWALTime, SipWALEntry, ? extends RuntimeException> getSipWAL() {
                 return sipWAL;
             }
 
             @Override
-            public RowColumnValueStore<String, Integer, Long, Long, ? extends Exception> getCursors() {
+            public RowColumnValueStore<String, String, Integer, Long, ? extends RuntimeException> getCursors() {
                 return cursors;
             }
         };
 
         RCVSWALWriterInitializer.RCVSWALWriterConfig writerConfig = BindInterfaceToConfiguration.bindDefault(RCVSWALWriterInitializer.RCVSWALWriterConfig.class);
         writerConfig.setNumberOfPartitions(10);
-        walWriterService = new RCVSWALWriterInitializer().initialize(writerConfig, storage, new RandomParitioningStrategy(new Random(1234)));
+        walWriterService = new RCVSWALWriterInitializer().initialize(writerConfig, storage, new RandomPartitioningStrategy(new Random(1234)));
         walWriterService.start();
         walWriter = walWriterService.getService();
 
@@ -119,13 +118,13 @@ public class HelloWALTest {
 
             @Override
             public void stream(List<WALEntry> entries) {
-                System.out.println("consumed" + entries);
+                System.out.println("Streamed:" + entries);
             }
         };
 
-        RCVSWALReaderInitializer.RCVSWALTopicReaderConfig topicReaderConfig = BindInterfaceToConfiguration.bindDefault(RCVSWALReaderInitializer.RCVSWALTopicReaderConfig.class);
+        RCVSWALTopicReaderInitializer.RCVSWALTopicReaderConfig topicReaderConfig = BindInterfaceToConfiguration.bindDefault(RCVSWALTopicReaderInitializer.RCVSWALTopicReaderConfig.class);
         topicReaderConfig.setTopicId("booya");
-        walTopicReaderService = new RCVSWALReaderInitializer().initialize(topicReaderConfig, storage, walTopics, new IncludeAnyFilter(), walTopicStream);
+        walTopicReaderService = new RCVSWALTopicReaderInitializer().initialize(topicReaderConfig, storage, walTopics, new IncludeAnyFilter(), walTopicStream);
         walTopicReaderService.start();
         walTopicReader = walTopicReaderService.getService();
 
@@ -155,7 +154,8 @@ public class HelloWALTest {
     }
 
     private WALEntry makeEntry(int id) {
-        return new WALEntry(id, System.currentTimeMillis(), new WALKey(("key-" + id).getBytes()), new WALPayload(("payload-" + id).getBytes()));
+        SipWALEntry sipWALEntry = new SipWALEntry(id, System.currentTimeMillis(),("key-" + id).getBytes());
+        return new WALEntry(sipWALEntry, ("payload-" + id).getBytes());
     }
 
 }

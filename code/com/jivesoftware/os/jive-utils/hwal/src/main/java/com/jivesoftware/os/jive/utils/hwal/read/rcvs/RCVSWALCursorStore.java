@@ -9,19 +9,23 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueS
  */
 public class RCVSWALCursorStore implements WALCursorStore {
 
-    private final RowColumnValueStore<String, Integer, Long, Long, ? extends Exception> cursors;
+    private final RowColumnValueStore<String, String, Integer, Long, ? extends RuntimeException> cursors;
 
-    public RCVSWALCursorStore(RowColumnValueStore<String, Integer, Long, Long, ? extends Exception> cursors) {
+    public RCVSWALCursorStore(RowColumnValueStore<String, String, Integer, Long, ? extends RuntimeException> cursors) {
         this.cursors = cursors;
     }
 
     @Override
     public void set(String topic, int parition, long offset) {
-        //cursors.add(tenant, row, "", offset, Integer.MIN_VALUE, null);
+        cursors.add(topic, topic, parition, offset, null, null);
     }
 
     @Override
     public long get(String topic, int parition) {
-        return 0;
+        Long got = cursors.get(topic, topic, parition, null, null);
+        if (got == null) {
+            got = 0L;
+        }
+        return got;
     }
 }

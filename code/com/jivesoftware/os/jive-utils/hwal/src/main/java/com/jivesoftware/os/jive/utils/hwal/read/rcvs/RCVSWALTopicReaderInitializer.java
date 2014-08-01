@@ -20,7 +20,7 @@ import org.merlin.config.defaults.StringDefault;
  *
  * @author jonathan.colt
  */
-public class RCVSWALReaderInitializer {
+public class RCVSWALTopicReaderInitializer {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
 
@@ -64,7 +64,9 @@ public class RCVSWALReaderInitializer {
         final WALTopicReader walReader = new RCVSWALTopicReader(storage.getWAL(),
                 storage.getSipWAL(),
                 walTopicCursors,
-                config.getPollEmptyPartitionIntervalMillis(), config.getMaxClockDriptMillis());
+                config.getPollEmptyPartitionIntervalMillis(),
+                config.getMaxClockDriptMillis());
+        
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
         return new WALService<WALTopicReader>() {
 

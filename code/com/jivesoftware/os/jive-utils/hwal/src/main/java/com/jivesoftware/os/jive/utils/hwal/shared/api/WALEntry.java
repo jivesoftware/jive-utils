@@ -1,18 +1,29 @@
 package com.jivesoftware.os.jive.utils.hwal.shared.api;
 
-/** @author jonathan */
+/**
+ * @author jonathan
+ */
 public class WALEntry {
 
-    public final long uniqueOrderingId;
-    public final long timestamp;
-    public final WALKey key;
-    public final WALPayload payload;
+    public final SipWALEntry sipWALEntry;
+    public final byte[] payload;
 
-    public WALEntry(long uniqueOrderingId, long timestampMillis, WALKey key, WALPayload payload) {
-        this.uniqueOrderingId = uniqueOrderingId;
-        this.timestamp = timestampMillis;
-        this.key = key;
+    public WALEntry(SipWALEntry sipWALEntry, byte[] payload) {
+        this.sipWALEntry = sipWALEntry;
         this.payload = payload;
+    }
+
+    public SipWALEntry getSipWALEntry() {
+        return sipWALEntry;
+    }
+
+    public byte[] getPayload() {
+        return payload;
+    }
+
+    @Override
+    public String toString() {
+        return "WALEntry{" + "sipWALEntry=" + sipWALEntry + ", payload=" + payload + '}';
     }
 
 }

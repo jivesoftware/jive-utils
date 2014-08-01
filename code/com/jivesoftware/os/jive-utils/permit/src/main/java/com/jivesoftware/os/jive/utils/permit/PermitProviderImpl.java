@@ -94,8 +94,8 @@ public final class PermitProviderImpl implements PermitProvider {
         List<Optional<Permit>> renewed = new ArrayList<>();
         for (Permit oldPermit : oldPermits) {
             if (isExpired(oldPermit, now)) {
-                attemptToIssue(oldPermit.tenantId, new PermitRowKey(oldPermit.pool, oldPermit.id), oldPermit, null);
-                renewed.add(Optional.<Permit>absent());
+                Optional<Permit> permit = attemptToIssue(oldPermit.tenantId, new PermitRowKey(oldPermit.pool, oldPermit.id), oldPermit, null);
+                renewed.add(permit);
             } else {
                 Permit renewedPermit = new Permit(now, oldPermit.expires, oldPermit.id, oldPermit.owner, oldPermit.tenantId, oldPermit.pool);
                 Optional<Permit> permit = attemptToIssue(oldPermit.tenantId, new PermitRowKey(oldPermit.pool, oldPermit.id), oldPermit, renewedPermit);

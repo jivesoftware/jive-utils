@@ -9,13 +9,21 @@ public class SipWALEntryMarshaller implements TypeMarshaller<SipWALEntry> {
     @Override
     public SipWALEntry fromBytes(byte[] bytes) throws Exception {
         ByteBuffer bb = ByteBuffer.wrap(bytes);
-        return null;
+        long uniqueOrderingId = bb.getLong();
+        long ingressedTimestampMillis = bb.getLong();
+        int length = bb.getInt();
+        byte[] rawKey = new byte[length];
+        bb.get(rawKey);
+        return new SipWALEntry(uniqueOrderingId, ingressedTimestampMillis, bytes);
     }
 
     @Override
     public byte[] toBytes(SipWALEntry instance) throws Exception {
-        ByteBuffer buffer = ByteBuffer.allocate(8);
-
+        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 4 + instance.key.length);
+        buffer.putLong(instance.uniqueOrderingId);
+        buffer.putLong(instance.ingressedTimestampMillis);
+        buffer.putInt(instance.key.length);
+        buffer.put(instance.key);
         return buffer.array();
     }
 
