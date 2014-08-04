@@ -1,0 +1,61 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
+        <artifactId>shared-lib-build-management</artifactId>
+        <version>0.26</version>
+        <relativePath>../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
+    </parent>
+    <groupId>com.jivesoftware.os.jive.utils</groupId>
+    <artifactId>permit</artifactId>
+    <properties>
+        <module.type>shared_lib</module.type>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+            <artifactId>row-column-value-store-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+            <artifactId>row-column-value-store-marshall-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+            <artifactId>row-column-value-store-marshall-primatives</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils</groupId>
+            <artifactId>merlin-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils.row.column.value.store</groupId>
+            <artifactId>row-column-value-store-inmemory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jivesoftware.os.jive.utils</groupId>
+            <artifactId>base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

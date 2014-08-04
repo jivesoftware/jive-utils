@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jivesoftware.os.jive</groupId>
     <artifactId>jive-utils</artifactId>
-    <version>0.25</version>
+    <version>0.26</version>
     <packaging>pom</packaging>
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-repo-management</artifactId>
-        <version>0.25</version>
+        <version>0.26</version>
         <relativePath>inheritance-poms/global-repo-management/pom.xml</relativePath>
     </parent>
     <modules>
@@ -16,6 +16,7 @@
         <module>base</module>
         <module>logger</module>
         <module>ordered-id</module>
+        <module>permit</module>
         <module>http-client</module>
         <module>http-client-rest</module>
         <module>server-http-jetty-jersey</module>
@@ -28,6 +29,7 @@
         <module>keyed-store</module>
         <module>io</module>
         <module>id</module>
+        <module>hwal</module>
     </modules>
 
 </project>

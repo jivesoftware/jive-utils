@@ -9,8 +9,7 @@ public class ConstantWriterIdProvider implements WriterIdProvider {
     }
 
     @Override
-    public int getWriterId() {
-        return writerId;
+    public WriterId getWriterId() {
+        return new ConstantWriterId(writerId);
     }
-
 }

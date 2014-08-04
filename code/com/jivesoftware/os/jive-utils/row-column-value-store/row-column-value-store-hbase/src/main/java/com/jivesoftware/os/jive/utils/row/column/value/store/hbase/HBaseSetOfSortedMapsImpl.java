@@ -33,13 +33,6 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumn
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.shared.RowColumnValueStoreCounters;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
@@ -52,6 +45,14 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.ColumnRangeFilter;
 import org.apache.hadoop.hbase.filter.Filter;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * HBase implementation of RowColumnValueStore generic interface. In any method that has an Integer overrideConsistency, that argument is ignored. In any method
@@ -229,17 +230,24 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
     @Override
     public void add(final T tenantId, final R rowKey, final C columnKey, final V columnValue,
             final Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws Exception {
-        add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper, false);
+        add(tenantId, rowKey, columnKey, columnValue, null, timeToLiveInSeconds, overrideTimestamper, false);
     }
 
     @Override
     public boolean addIfNotExists(final T tenantId, final R rowKey, final C columnKey, final V columnValue,
             final Integer timeToLiveInSeconds, final Timestamper overrideTimestamper) throws Exception {
-        return add(tenantId, rowKey, columnKey, columnValue, timeToLiveInSeconds, overrideTimestamper, true);
+        return add(tenantId, rowKey, columnKey, columnValue, null, timeToLiveInSeconds, overrideTimestamper, true);
     }
 
-    private boolean add(final T tenantId, final R rowKey, final C columnKey, final V columnValue,
-            final Integer timeToLiveInSeconds, Timestamper overrideTimestamper, boolean checkIfExists) throws Exception {
+    @Override
+    public boolean replaceIfEqualToExpected(T tenantId, R rowKey, C columnKey, V columnValue, V expectedValue,
+            Integer timeToLiveInSeconds, Timestamper overrideTimestamper) throws Exception {
+        return add(tenantId, rowKey, columnKey, columnValue, expectedValue, timeToLiveInSeconds, overrideTimestamper,
+                true);
+    }
+
+    private boolean add(final T tenantId, final R rowKey, final C columnKey, final V columnValue, final V expectedValue,
+            final Integer timeToLiveInSeconds, Timestamper overrideTimestamper, boolean checkValue) throws Exception {
 
         HTableInterface t = tablePool.getTable(table);
         try {
@@ -252,8 +260,9 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
             put.add(family, rawColumnKey, timestamp, rawColumnValue);
 
             boolean added;
-            if (checkIfExists) {
-                added = t.checkAndPut(rawRowKey, family, rawColumnKey, null, put);
+            if (checkValue) {
+                final byte[] rawExpectedValue = expectedValue != null ? marshaller.toValueBytes(expectedValue) : null;
+                added = t.checkAndPut(rawRowKey, family, rawColumnKey, rawExpectedValue, put);
             } else {
                 added = true;
                 t.put(put);
@@ -709,10 +718,33 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      */
     @Override
     public void getAllRowKeys(int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws Exception {
+        getRowKeys(null, null, null, batchSize, overrideNumberOfRetries, callback);
+    }
+
+    /**
+     *
+     * @param tenantId
+     * @param startRowKey
+     * @param stopRowKey
+     * @param batchSize
+     * @param overrideNumberOfRetries
+     * @param callback
+     * @throws Exception
+     */
+    @Override
+    public void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws Exception {
         HTableInterface t = tablePool.getTable(table);
         try {
 
             Scan scan = new Scan();
+            if (tenantId != null) {
+                if (startRowKey != null) {
+                    scan.setStartRow(marshaller.toRowKeyBytes(tenantId, startRowKey));
+                }
+                if (stopRowKey != null) {
+                    scan.setStopRow(marshaller.toRowKeyBytes(tenantId, stopRowKey));
+                }
+            }
             scan.setBatch(batchSize);
             ResultScanner resultScanner = t.getScanner(scan);
             EOS:
