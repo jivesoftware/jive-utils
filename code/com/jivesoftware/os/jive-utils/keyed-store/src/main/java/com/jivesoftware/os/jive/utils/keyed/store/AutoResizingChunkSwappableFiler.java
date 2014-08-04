@@ -6,7 +6,6 @@ import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  *
@@ -14,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class AutoResizingChunkSwappableFiler implements SwappableFiler {
 
-    private final AtomicReference<AutoResizingChunkFiler> filerReference;
+    private final AutoResizingChunkFiler filer;
     private final ChunkStore chunkStore;
     private final IBA key;
     private final FileBackMapStore<IBA, IBA> mapStore;
@@ -23,7 +22,7 @@ public class AutoResizingChunkSwappableFiler implements SwappableFiler {
     public AutoResizingChunkSwappableFiler(AutoResizingChunkFiler filer, ChunkStore chunkStore, IBA key,
             FileBackMapStore<IBA, IBA> mapStore, FileBackMapStore<IBA, IBA> swapStore)
     {
-        this.filerReference = new AtomicReference<>(filer);
+        this.filer = filer;
         this.chunkStore = chunkStore;
         this.key = key;
         this.mapStore = mapStore;
@@ -39,7 +38,7 @@ public class AutoResizingChunkSwappableFiler implements SwappableFiler {
     @Override
     public void sync() throws IOException {
         try {
-            filerReference.get().reinit();
+            filer.reinit();
         } catch (Exception e) {
             throw new IOException(e);
         }
@@ -47,77 +46,77 @@ public class AutoResizingChunkSwappableFiler implements SwappableFiler {
 
     @Override
     public Object lock() {
-        return filerReference.get().lock();
+        return filer.lock();
     }
 
     @Override
     public void seek(long offset) throws IOException {
-        filerReference.get().seek(offset);
+        filer.seek(offset);
     }
 
     @Override
     public long skip(long offset) throws IOException {
-        return filerReference.get().skip(offset);
+        return filer.skip(offset);
     }
 
     @Override
     public long length() throws IOException {
-        return filerReference.get().length();
+        return filer.length();
     }
 
     @Override
     public void setLength(long length) throws IOException {
-        filerReference.get().setLength(length);
+        filer.setLength(length);
     }
 
     @Override
     public long getFilePointer() throws IOException {
-        return filerReference.get().getFilePointer();
+        return filer.getFilePointer();
     }
 
     @Override
     public void eof() throws IOException {
-        filerReference.get().eof();
+        filer.eof();
     }
 
     @Override
     public void flush() throws IOException {
-        filerReference.get().flush();
+        filer.flush();
     }
 
     @Override
     public int read() throws IOException {
-        return filerReference.get().read();
+        return filer.read();
     }
 
     @Override
     public int read(byte[] bytes) throws IOException {
-        return filerReference.get().read(bytes);
+        return filer.read(bytes);
     }
 
     @Override
     public int read(byte[] bytes, int offset, int length) throws IOException {
-        return filerReference.get().read(bytes, offset, length);
+        return filer.read(bytes, offset, length);
     }
 
     @Override
     public void write(int i) throws IOException {
-        filerReference.get().write(i);
+        filer.write(i);
     }
 
     @Override
     public void write(byte[] bytes) throws IOException {
-        filerReference.get().write(bytes);
+        filer.write(bytes);
     }
 
     @Override
     public void write(byte[] bytes, int offset, int length) throws IOException {
-        filerReference.get().write(bytes, offset, length);
+        filer.write(bytes, offset, length);
     }
 
     @Override
     public void close() throws IOException {
-        filerReference.get().close();
+        filer.close();
     }
 
     private class AutoResizingChunkSwappingFiler implements SwappingFiler {

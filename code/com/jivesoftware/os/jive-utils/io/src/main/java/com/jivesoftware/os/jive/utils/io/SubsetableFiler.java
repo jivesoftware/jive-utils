@@ -1,7 +1,6 @@
 package com.jivesoftware.os.jive.utils.io;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
 
 /*
  This class segments a single Filer into segment filers where
@@ -27,7 +26,7 @@ public class SubsetableFiler implements Filer {
 
     @Override
     public Object lock() {
-        return filer;
+        return filer.lock();
     }
 
     @Override
@@ -62,7 +61,7 @@ public class SubsetableFiler implements Filer {
     final public int read() throws IOException {
         long fp = filer.getFilePointer();
         if (fp < startOfFP || fp > endOfFP) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("FP out of bounds " + startOfFP + " <= " + fp + " <= " + endOfFP);
         } else if (fp == endOfFP) {
             return -1;
         }
@@ -75,10 +74,10 @@ public class SubsetableFiler implements Filer {
     }
 
     @Override
-    public synchronized int read(byte b[], int _offset, int _len) throws IOException {
+    public int read(byte b[], int _offset, int _len) throws IOException {
         long fp = filer.getFilePointer();
         if (fp < startOfFP || fp > endOfFP) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("FP out of bounds " + fp + " " + this);
         } else if (fp == endOfFP) {
             return -1;
         }
@@ -89,7 +88,7 @@ public class SubsetableFiler implements Filer {
     final public void write(int b) throws IOException {
         long fp = filer.getFilePointer();
         if (fp < startOfFP || fp >= endOfFP) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("FP out of bounds " + fp + " " + this);
         }
         filer.write(b);
     }
@@ -100,29 +99,27 @@ public class SubsetableFiler implements Filer {
     }
 
     @Override
-    public synchronized void write(byte b[], int _offset, int _len) throws IOException {
+    public void write(byte b[], int _offset, int _len) throws IOException {
         long fp = filer.getFilePointer();
         if (fp < startOfFP || fp > (endOfFP - _len)) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("FP out of bounds " + fp + " " + this);
         }
         filer.write(b, _offset, _len);
     }
 
     @Override
     final public void seek(long position) throws IOException {
-        synchronized (lock()) {
-            if (position > endOfFP - startOfFP) {
-                throw new IOException("seek overflow " + position + " " + this);
-            }
-            filer.seek(startOfFP + position);
+        if (position > endOfFP - startOfFP) {
+            throw new IOException("seek overflow " + position + " " + this);
         }
+        filer.seek(startOfFP + position);
     }
 
     @Override
     final public long skip(long position) throws IOException {
         long fp = filer.getFilePointer() + position;
         if (fp < startOfFP || fp > endOfFP) {
-            throw new IndexOutOfBoundsException();
+            throw new IndexOutOfBoundsException("FP out of bounds " + fp + " " + this);
         }
         return filer.skip(position);
     }
@@ -150,24 +147,18 @@ public class SubsetableFiler implements Filer {
     final public long getFilePointer() throws IOException {
 
         long fp = filer.getFilePointer();
-        if (fp < startOfFP) {
-            throw new IOException("seek misalignment " + fp + " < " + startOfFP);
-        }
-        if (fp > endOfFP) {
-            throw new IOException("seek misalignment " + fp + " > " + endOfFP);
+        if (fp < startOfFP || fp > endOfFP) {
+            throw new IndexOutOfBoundsException("FP out of bounds " + fp + " " + this);
         }
         return fp - startOfFP;
     }
 
     @Override
     final public void eof() throws IOException {
-        synchronized (lock()) {
-
-            if (isFileBacked()) {
-                filer.eof();
-            } else {
-                filer.seek(endOfFP - startOfFP);
-            }
+        if (isFileBacked()) {
+            filer.eof();
+        } else {
+            filer.seek(endOfFP - startOfFP);
         }
     }
 
