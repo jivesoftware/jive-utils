@@ -10,16 +10,16 @@ import java.util.List;
 public interface WALTopicReader {
 
     interface WALTopicStream {
+
         /**
          *
+         * @param topic
+         * @param partition
          * @param entries
-         * @return
-         * @throws Exception
          */
-        void stream(List<WALEntry> entries);
+        void stream(String topic, int partition, List<WALEntry> entries);
     }
 
     void stream(WALKeyFilter filter, int batchSize, WALTopicStream stream) throws Exception;
-
 
 }

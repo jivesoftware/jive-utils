@@ -54,7 +54,11 @@ public class WALTopicsInitializer {
 
                     @Override
                     public void run() {
-                        topics.online();
+                        try {
+                            topics.online();
+                        } catch (Exception x) {
+                            x.printStackTrace();
+                        }
                     }
                 }, 0, config.getRebalanceIntervalInMillis(), TimeUnit.MILLISECONDS);
             }
@@ -62,7 +66,11 @@ public class WALTopicsInitializer {
             @Override
             public void stop() throws Exception {
                 executorService.shutdownNow();
-                topics.offline();
+                try {
+                    topics.offline();
+                } catch (Exception x) {
+                    x.printStackTrace();
+                }
             }
         };
     }

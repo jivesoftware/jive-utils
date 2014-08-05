@@ -32,12 +32,14 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WALReaders {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
+    private final String tenantId;
     private final String readerGroupId;
     private final PermitProvider permitProvider;
     private final PermitConfig permitConfig;
     private final AtomicReference<Permit> currentOnlineId = new AtomicReference<>(null);
 
-    public WALReaders(String readerGroupId, PermitProvider permitProvider, PermitConfig permitConfig) {
+    public WALReaders(String tenantId, String readerGroupId, PermitProvider permitProvider, PermitConfig permitConfig) {
+        this.tenantId = tenantId;
         this.readerGroupId = readerGroupId;
         this.permitProvider = permitProvider;
         this.permitConfig = permitConfig;
@@ -52,7 +54,11 @@ public class WALReaders {
     }
 
     public int getNumberOfOnlineWALReaders() {
-        return permitProvider.getNumberOfActivePermitHolders(readerGroupId, permitConfig);
+        int numberOfOnlineReaders = permitProvider.getNumberOfActivePermitHolders(tenantId, readerGroupId, permitConfig);
+        if (numberOfOnlineReaders == 0) {
+            LOG.warn("Currently no readers are online for tenantId:" + tenantId + " readerGroupId:" + readerGroupId + " permitConfig:" + permitConfig);
+        }
+        return numberOfOnlineReaders;
     }
 
     /**
@@ -61,18 +67,21 @@ public class WALReaders {
     public void online() {
         Permit currentPermit = currentOnlineId.get();
         if (currentPermit == null) {
-            List<Permit> permit = permitProvider.requestPermit(readerGroupId, permitConfig, 1);
+            List<Permit> permit = permitProvider.requestPermit(tenantId, readerGroupId, permitConfig, 1);
             if (!permit.isEmpty()) {
                 currentOnlineId.set(permit.get(0));
-                LOG.info("Cursors coming on line. id:" + permit.get(0));
+                LOG.info("Reader ONLINE for tenant:" + tenantId + " group:" + readerGroupId + ". reader id:" + permit.get(0));
+            } else {
+                LOG.error("Reader OFFLINE no available permits for tenant:" + tenantId + " group:" + readerGroupId);
             }
         } else {
             List<Optional<Permit>> renewedPermit = permitProvider.renewPermit(Arrays.asList(currentPermit));
             if (renewedPermit.get(0).isPresent()) {
                 currentOnlineId.set(renewedPermit.get(0).get());
+                LOG.debug("Reader RENEWED  for tenant:" + tenantId + " group:" + readerGroupId + ". reader id:" + renewedPermit.get(0));
             } else {
                 currentOnlineId.set(null);
-                LOG.warn("Was not able to renew online permit.");
+                LOG.warn("FAILED to RENEW reader tenant:" + tenantId + " group:" + readerGroupId + ". reader id:" + currentPermit);
             }
         }
     }
@@ -81,6 +90,9 @@ public class WALReaders {
         Permit had = currentOnlineId.getAndSet(null);
         if (had != null) {
             permitProvider.releasePermit(Arrays.asList(had));
+            LOG.info("Reader RELEASED for tenant:" + tenantId + " group:" + readerGroupId + ". reader id:" + had);
+        } else {
+            LOG.info("Reader already offline for tenant:" + tenantId + " group:" + readerGroupId);
         }
     }
 }

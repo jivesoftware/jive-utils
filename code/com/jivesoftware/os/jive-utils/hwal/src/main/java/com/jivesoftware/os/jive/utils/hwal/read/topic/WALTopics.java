@@ -23,6 +23,7 @@ import com.jivesoftware.os.jive.utils.permit.PermitConfig;
 import com.jivesoftware.os.jive.utils.permit.PermitProvider;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -31,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class WALTopics {
 
-    private final ConcurrentHashMap<String, WALTopicCursors> topicCursors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<ReaderGroupAndTopic, WALTopicCursors> topicCursors = new ConcurrentHashMap<>();
     private final WALReaders walReaders;
     private final PermitProvider topicCursorPermitProvider;
     private final PermitConfig topicCursorPermitConfig;
@@ -44,13 +45,14 @@ public class WALTopics {
         this.cursorStore = cursorStore;
     }
 
-    public WALTopicCursors getWALTopicCursors(String topic, int numberOfPartitions) {
-        WALTopicCursors cursors = topicCursors.get(topic);
+    public WALTopicCursors getWALTopicCursors(String readerGroup, String topic, int numberOfPartitions) {
+        ReaderGroupAndTopic key = new ReaderGroupAndTopic(readerGroup, topic);
+        WALTopicCursors cursors = topicCursors.get(key);
         if (cursors == null) {
-            cursors = new WALTopicCursors(walReaders, topic, topicCursorPermitProvider,
-                    new ConstantPermitConfig(topicCursorPermitConfig.getPool(), 0, numberOfPartitions, topicCursorPermitConfig.getExpires()),
+            cursors = new WALTopicCursors(walReaders, readerGroup, topic, topicCursorPermitProvider,
+                    new ConstantPermitConfig(0, numberOfPartitions, topicCursorPermitConfig.getExpires()),
                     cursorStore);
-            WALTopicCursors had = topicCursors.putIfAbsent(topic, cursors);
+            WALTopicCursors had = topicCursors.putIfAbsent(key, cursors);
             if (had != null) {
                 cursors = had;
             }
@@ -58,8 +60,9 @@ public class WALTopics {
         return cursors;
     }
 
-    public void removeWALTopicCursors(String topicId) {
-        WALTopicCursors removed = topicCursors.remove(topicId);
+    public void removeWALTopicCursors(String readerGroup, String topicId) {
+        ReaderGroupAndTopic key = new ReaderGroupAndTopic(readerGroup, topicId);
+        WALTopicCursors removed = topicCursors.remove(key);
         if (removed != null) {
             removed.offline();
         }
@@ -77,6 +80,49 @@ public class WALTopics {
         for (WALTopicCursors cursors : offline) {
             cursors.offline();
         }
+    }
+
+    static class ReaderGroupAndTopic {
+
+        private final String readerGroup;
+        private final String topic;
+
+        public ReaderGroupAndTopic(String readerGroup, String topic) {
+            this.readerGroup = readerGroup;
+            this.topic = topic;
+        }
+
+        @Override
+        public String toString() {
+            return "ReaderGroupAndTopic{" + "readerGroup=" + readerGroup + ", topic=" + topic + '}';
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 41 * hash + Objects.hashCode(this.readerGroup);
+            hash = 41 * hash + Objects.hashCode(this.topic);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final ReaderGroupAndTopic other = (ReaderGroupAndTopic) obj;
+            if (!Objects.equals(this.readerGroup, other.readerGroup)) {
+                return false;
+            }
+            if (!Objects.equals(this.topic, other.topic)) {
+                return false;
+            }
+            return true;
+        }
+
     }
 
 }

@@ -9,11 +9,13 @@ import com.jivesoftware.os.jive.utils.hwal.read.WALCursorStore;
  */
 public class WALTopicCursor {
 
+    private final String readerGroup;
     private final String topicId;
     private final PartitionId partitionId;
     private final WALCursorStore cursorStore;
 
-    public WALTopicCursor(String topicId, PartitionId partitionId, WALCursorStore cursorStore) {
+    public WALTopicCursor(String readerGroup, String topicId, PartitionId partitionId, WALCursorStore cursorStore) {
+        this.readerGroup = readerGroup;
         this.topicId = topicId;
         this.partitionId = partitionId;
         this.cursorStore = cursorStore;
@@ -36,7 +38,7 @@ public class WALTopicCursor {
     public Optional<Long> currentOffest() {
         Optional<Integer> id = partitionId.getId();
         if (id.isPresent()) {
-            long offset = cursorStore.get(topicId, id.get());
+            long offset = cursorStore.get(readerGroup, topicId, id.get());
             return Optional.of(offset);
         } else {
             return Optional.absent();
@@ -46,7 +48,7 @@ public class WALTopicCursor {
     public boolean commit(long offest) {
         Optional<Integer> id = partitionId.getId();
         if (id.isPresent()) {
-            cursorStore.set(topicId, id.get(), offest);
+            cursorStore.set(readerGroup, topicId, id.get(), offest);
             return true;
         } else {
             return false;

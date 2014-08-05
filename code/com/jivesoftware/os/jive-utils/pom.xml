@@ -30,6 +30,7 @@
         <module>io</module>
         <module>id</module>
         <module>hwal</module>
+        <module>hello-hwal</module>
     </modules>
 
 </project>

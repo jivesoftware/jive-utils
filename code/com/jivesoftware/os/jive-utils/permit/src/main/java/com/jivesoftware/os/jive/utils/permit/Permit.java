@@ -2,7 +2,7 @@ package com.jivesoftware.os.jive.utils.permit;
 
 import java.util.Objects;
 
-public class Permit {
+public class Permit implements Comparable<Permit> {
 
     public final long issued;
     public final long expires;
@@ -23,6 +23,27 @@ public class Permit {
     @Override
     public String toString() {
         return "Permit{" + "issued=" + issued + ", expires=" + expires + ", id=" + id + ", owner=" + owner + ", tenantId=" + tenantId + ", pool=" + pool + '}';
+    }
+
+    @Override
+    public int compareTo(Permit o) {
+        int c = Integer.compare(id, o.id);
+        if (c == 0) {
+            c = Long.compare(issued, o.issued);
+        }
+        if (c == 0) {
+            c = Long.compare(expires, o.expires);
+        }
+        if (c == 0) {
+            c = owner.compareTo(o.owner);
+        }
+        if (c == 0) {
+            c = tenantId.compareTo(o.tenantId);
+        }
+        if (c == 0) {
+            c = pool.compareTo(o.pool);
+        }
+        return c;
     }
 
     @Override
@@ -66,7 +87,5 @@ public class Permit {
         }
         return true;
     }
-
-
 
 }

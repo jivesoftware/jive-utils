@@ -26,6 +26,7 @@ import java.util.List;
  */
 public class PermitBackedWriterIdProvider implements WriterIdProvider {
     private final String tenantId;
+    private final String permitGroup;
     private final PermitProvider permitProvider;
     private final PermitConfig permitConfig;
 
@@ -33,8 +34,9 @@ public class PermitBackedWriterIdProvider implements WriterIdProvider {
 
     private static final int WRITER_ID_LIFETIME = 1000 * 60;
 
-    public PermitBackedWriterIdProvider(String tenantId, PermitProvider permitProvider, PermitConfig permitConfig) {
+    public PermitBackedWriterIdProvider(String tenantId, String permitGroup, PermitProvider permitProvider, PermitConfig permitConfig) {
         this.tenantId = tenantId;
+        this.permitGroup = permitGroup;
         this.permitProvider = permitProvider;
         this.permitConfig = permitConfig;
     }
@@ -50,7 +52,7 @@ public class PermitBackedWriterIdProvider implements WriterIdProvider {
         }
 
         long now = System.currentTimeMillis();
-        List<Permit> permits = permitProvider.requestPermit(tenantId, permitConfig, 1);
+        List<Permit> permits = permitProvider.requestPermit(tenantId, permitGroup, permitConfig, 1);
         if (!permits.isEmpty()) {
             updateState(permits.get(0), now);
             return state.get().writerId;

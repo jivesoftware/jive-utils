@@ -26,7 +26,7 @@ public class PermitProviderImplConcurrencyTest {
     private static final long EXPIRES = 10;
     private static final long DURATION = 5 * 1000;
 
-    private final RowColumnValueStore<String, PermitRowKey, String, Permit, RuntimeException> store = new RowColumnValueStoreImpl<>();
+    private final RowColumnValueStore<String, String, Integer, Permit, RuntimeException> store = new RowColumnValueStoreImpl<>();
     private final Random random = new Random(System.currentTimeMillis());
 
     private final AtomicReference<CountDownLatch> signal = new AtomicReference<>(new CountDownLatch(NUM_THREADS));
@@ -102,7 +102,7 @@ public class PermitProviderImplConcurrencyTest {
 
         final int id;
         final AtomicReference<Permit> permit = new AtomicReference<>();
-        final ConstantPermitConfig permitConfig = new ConstantPermitConfig("pool", 0, NUM_THREADS, EXPIRES);
+        final ConstantPermitConfig permitConfig = new ConstantPermitConfig(0, NUM_THREADS, EXPIRES);
 
         public PermitClient(int id) {
             this.id = id;
@@ -120,7 +120,7 @@ public class PermitProviderImplConcurrencyTest {
                 long now = System.currentTimeMillis();
 
                 if (permit.get() == null || isPermitExpired(now)) {
-                    List<Permit> got = permitProvider.requestPermit("t", permitConfig, 1);
+                    List<Permit> got = permitProvider.requestPermit("t", "permitGroup", permitConfig, 1);
                     if (!got.isEmpty()) {
                         permit.set(got.get(0));
                     } else {

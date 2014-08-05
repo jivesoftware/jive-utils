@@ -26,6 +26,11 @@ public class RCVSWALTopicReaderInitializer {
 
     static public interface RCVSWALTopicReaderConfig extends Config {
 
+        @StringDefault("unspecifiedReaderGroup")
+        public String getReaderGroup();
+
+        public void setReaderGroup(String readerGroup);
+
         @StringDefault("unspecifiedTopicId")
         public String getTopicId();
 
@@ -59,14 +64,14 @@ public class RCVSWALTopicReaderInitializer {
             final WALKeyFilter filter,
             final WALTopicStream stream) {
 
-        final WALTopicCursors walTopicCursors = topics.getWALTopicCursors(config.getTopicId(), config.getNumberOfPartitions());
+        final WALTopicCursors walTopicCursors = topics.getWALTopicCursors(config.getReaderGroup(), config.getTopicId(), config.getNumberOfPartitions());
 
         final WALTopicReader walReader = new RCVSWALTopicReader(storage.getWAL(),
                 storage.getSipWAL(),
                 walTopicCursors,
                 config.getPollEmptyPartitionIntervalMillis(),
                 config.getMaxClockDriptMillis());
-        
+
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
         return new WALService<WALTopicReader>() {
 
@@ -84,7 +89,7 @@ public class RCVSWALTopicReaderInitializer {
                         try {
                             walReader.stream(filter, config.getBatchSize(), stream);
                         } catch (Exception x) {
-                            LOG.error("WAL Reader for "+config+" shutdown by a failure to handle.", x);
+                            LOG.error("WAL Reader for " + config + " shutdown by a failure to handle.", x);
                         }
                     }
                 });
@@ -93,7 +98,7 @@ public class RCVSWALTopicReaderInitializer {
             @Override
             public void stop() throws Exception {
                 executorService.shutdownNow();
-                topics.removeWALTopicCursors(config.getTopicId());
+                topics.removeWALTopicCursors(config.getReaderGroup(), config.getTopicId());
             }
         };
     }

@@ -10,6 +10,9 @@ public class PermitMarshaller implements TypeMarshaller<Permit> {
 
     @Override
     public Permit fromBytes(byte[] bytes) throws Exception {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
         ByteBuffer bb = ByteBuffer.wrap(bytes);
         long issued = bb.getLong();
         long expires = bb.getLong();
@@ -33,10 +36,13 @@ public class PermitMarshaller implements TypeMarshaller<Permit> {
 
     @Override
     public byte[] toBytes(Permit permit) throws Exception {
+        if (permit == null) {
+            return null;
+        }
         byte[] ownerBytes = permit.owner.getBytes(utf_8);
         byte[] tenantBytes = permit.tenantId.getBytes(utf_8);
         byte[] poolBytes = permit.pool.getBytes(utf_8);
-        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 4 + 4 + tenantBytes.length + 4 + ownerBytes.length + 4 + ownerBytes.length);
+        ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 4 + 4 + ownerBytes.length + 4 + tenantBytes.length + 4 + poolBytes.length);
 
         buffer.putLong(permit.issued);
         buffer.putLong(permit.expires);
