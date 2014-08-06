@@ -26,6 +26,11 @@ public class RCVSWALTopicReaderInitializer {
 
     static public interface RCVSWALTopicReaderConfig extends Config {
 
+        @StringDefault("unspecifiedCursorGroup")
+        public String getCursorGroup();
+
+        public void setCursorGroup(String cursorGroup);
+
         @StringDefault("unspecifiedTopicId")
         public String getTopicId();
 
@@ -59,16 +64,17 @@ public class RCVSWALTopicReaderInitializer {
             final WALKeyFilter filter,
             final WALTopicStream stream) {
 
-        final WALTopicCursors walTopicCursors = topics.getWALTopicCursors(config.getTopicId(), config.getNumberOfPartitions());
+        final WALTopicCursors walTopicCursors = topics.getWALTopicCursors(config.getCursorGroup(), config.getTopicId(), config.getNumberOfPartitions());
 
         final WALTopicReader walReader = new RCVSWALTopicReader(storage.getWAL(),
                 storage.getSipWAL(),
                 walTopicCursors,
                 config.getPollEmptyPartitionIntervalMillis(),
                 config.getMaxClockDriptMillis());
-        
-        final ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+
         return new WALService<WALTopicReader>() {
+            ExecutorService executorService;
 
             @Override
             public WALTopicReader getService() {
@@ -76,7 +82,10 @@ public class RCVSWALTopicReaderInitializer {
             }
 
             @Override
-            public void start() throws Exception {
+            synchronized public void start() throws Exception {
+                if (executorService == null) {
+                    executorService = Executors.newSingleThreadExecutor();
+                }
                 executorService.submit(new Runnable() {
 
                     @Override
@@ -84,16 +93,19 @@ public class RCVSWALTopicReaderInitializer {
                         try {
                             walReader.stream(filter, config.getBatchSize(), stream);
                         } catch (Exception x) {
-                            LOG.error("WAL Reader for "+config+" shutdown by a failure to handle.", x);
+                            LOG.error("WAL Reader for " + config + " shutdown by a failure to handle.", x);
                         }
                     }
                 });
             }
 
             @Override
-            public void stop() throws Exception {
-                executorService.shutdownNow();
-                topics.removeWALTopicCursors(config.getTopicId());
+            synchronized public void stop() throws Exception {
+                if (executorService != null) {
+                    executorService.shutdownNow();
+                }
+                topics.removeWALTopicCursors(config.getCursorGroup(), config.getTopicId());
+                executorService = null;
             }
         };
     }

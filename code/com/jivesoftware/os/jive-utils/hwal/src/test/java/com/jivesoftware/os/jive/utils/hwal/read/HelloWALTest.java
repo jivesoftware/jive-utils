@@ -26,18 +26,24 @@ import com.jivesoftware.os.jive.utils.hwal.shared.api.WALService;
 import com.jivesoftware.os.jive.utils.hwal.shared.filter.IncludeAnyFilter;
 import com.jivesoftware.os.jive.utils.hwal.shared.partition.RandomPartitioningStrategy;
 import com.jivesoftware.os.jive.utils.hwal.shared.rcvs.RCVSWALStorage;
+import com.jivesoftware.os.jive.utils.hwal.shared.rcvs.RCVSWALStorageInitializer;
 import com.jivesoftware.os.jive.utils.hwal.write.WALWriter;
 import com.jivesoftware.os.jive.utils.hwal.write.rcvs.RCVSWALWriterInitializer;
 import com.jivesoftware.os.jive.utils.permit.ConstantPermitConfig;
 import com.jivesoftware.os.jive.utils.permit.PermitProvider;
 import com.jivesoftware.os.jive.utils.permit.PermitProviderImplInitializer;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMapsImplInitializer;
+import com.jivesoftware.os.jive.utils.row.column.value.store.hbase.HBaseSetOfSortedMapsImplInitializer;
 import com.jivesoftware.os.jive.utils.row.column.value.store.inmemory.InMemorySetOfSortedMapsImplInitializer;
 import com.jivesoftware.os.jive.utils.row.column.value.store.inmemory.RowColumnValueStoreImpl;
+import com.jivesoftware.os.jive.utils.row.column.value.store.tests.EmbeddedHBase;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import org.merlin.config.BindInterfaceToConfiguration;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -62,67 +68,92 @@ public class HelloWALTest {
     WALTopicReader walTopicReader;
     WALTopicReader.WALTopicStream walTopicStream;
 
+    List<WALEntry> streamed = new ArrayList<>();
+
+    EmbeddedHBase embeddedHBase;
+
     @BeforeMethod
     public void setUpMethod() throws Exception {
 
-        wal = new RowColumnValueStoreImpl();
-        sipWAL = new RowColumnValueStoreImpl();
-        cursors = new RowColumnValueStoreImpl();
+        RCVSWALStorage storage;
+        if (2 + 2 == 5) {
+            embeddedHBase = new EmbeddedHBase();
+            embeddedHBase.start(false);
+            SetOfSortedMapsImplInitializer sos = new HBaseSetOfSortedMapsImplInitializer(embeddedHBase.getConfiguration());
+            RCVSWALStorageInitializer.RCVSWALStorageConfig storageConfig = BindInterfaceToConfiguration
+                    .bindDefault(RCVSWALStorageInitializer.RCVSWALStorageConfig.class);
+            WALService<RCVSWALStorage> storageService = new RCVSWALStorageInitializer().initialize(storageConfig, sos);
+            storageService.start();
+            storage = storageService.getService();
+        } else {
+            wal = new RowColumnValueStoreImpl();
+            sipWAL = new RowColumnValueStoreImpl();
+            cursors = new RowColumnValueStoreImpl();
+            storage = new RCVSWALStorage() {
 
-        RCVSWALStorage storage = new RCVSWALStorage() {
+                @Override
+                public RowColumnValueStore<String, Integer, Long, WALEntry, ? extends RuntimeException> getWAL() {
+                    return wal;
+                }
 
-            @Override
-            public RowColumnValueStore<String, Integer, Long, WALEntry, ? extends RuntimeException> getWAL() {
-                return wal;
-            }
+                @Override
+                public RowColumnValueStore<String, Integer, SipWALTime, SipWALEntry, ? extends RuntimeException> getSipWAL() {
+                    return sipWAL;
+                }
 
-            @Override
-            public RowColumnValueStore<String, Integer, SipWALTime, SipWALEntry, ? extends RuntimeException> getSipWAL() {
-                return sipWAL;
-            }
+                @Override
+                public RowColumnValueStore<String, String, Integer, Long, ? extends RuntimeException> getCursors() {
+                    return cursors;
+                }
+            };
+        }
 
-            @Override
-            public RowColumnValueStore<String, String, Integer, Long, ? extends RuntimeException> getCursors() {
-                return cursors;
-            }
-        };
-
-        RCVSWALWriterInitializer.RCVSWALWriterConfig writerConfig = BindInterfaceToConfiguration.bindDefault(RCVSWALWriterInitializer.RCVSWALWriterConfig.class);
+        RCVSWALWriterInitializer.RCVSWALWriterConfig writerConfig = BindInterfaceToConfiguration
+                .bindDefault(RCVSWALWriterInitializer.RCVSWALWriterConfig.class);
         writerConfig.setNumberOfPartitions(10);
         walWriterService = new RCVSWALWriterInitializer().initialize(writerConfig, storage, new RandomPartitioningStrategy(new Random(1234)));
         walWriterService.start();
         walWriter = walWriterService.getService();
 
-        PermitProviderImplInitializer.PermitProviderConfig readerPermitsConfig = BindInterfaceToConfiguration.bindDefault(PermitProviderImplInitializer.PermitProviderConfig.class);
-        PermitProvider readersPermitProvider = new PermitProviderImplInitializer().initPermitProvider(readerPermitsConfig, new InMemorySetOfSortedMapsImplInitializer());
+        PermitProviderImplInitializer.PermitProviderConfig readerPermitsConfig = BindInterfaceToConfiguration
+                .bindDefault(PermitProviderImplInitializer.PermitProviderConfig.class);
+        PermitProvider readersPermitProvider = new PermitProviderImplInitializer()
+                .initPermitProvider(readerPermitsConfig, new InMemorySetOfSortedMapsImplInitializer());
 
         WALReadersInitializer.WALReadersConfig readerConfig = BindInterfaceToConfiguration.bindDefault(WALReadersInitializer.WALReadersConfig.class);
         readersService = new WALReadersInitializer().initialize(readerConfig, readersPermitProvider);
         readersService.start();
         readers = readersService.getService();
 
-        RCVSWALCursorStoreInitializer.RCVSWALCursorStoreConfig walCursorStorageConfig = BindInterfaceToConfiguration.bindDefault(RCVSWALCursorStoreInitializer.RCVSWALCursorStoreConfig.class);
+        RCVSWALCursorStoreInitializer.RCVSWALCursorStoreConfig walCursorStorageConfig = BindInterfaceToConfiguration
+                .bindDefault(RCVSWALCursorStoreInitializer.RCVSWALCursorStoreConfig.class);
         WALService<WALCursorStore> walCursorStorageService = new RCVSWALCursorStoreInitializer().initialize(walCursorStorageConfig, storage);
         walCursorStorageService.start();
         WALCursorStore walCursorStore = walCursorStorageService.getService();
 
-        PermitProviderImplInitializer.PermitProviderConfig cursorPermitsConfig = BindInterfaceToConfiguration.bindDefault(PermitProviderImplInitializer.PermitProviderConfig.class);
-        PermitProvider cursroPermitProvider = new PermitProviderImplInitializer().initPermitProvider(cursorPermitsConfig, new InMemorySetOfSortedMapsImplInitializer());
+        PermitProviderImplInitializer.PermitProviderConfig cursorPermitsConfig = BindInterfaceToConfiguration
+                .bindDefault(PermitProviderImplInitializer.PermitProviderConfig.class);
+        PermitProvider cursroPermitProvider = new PermitProviderImplInitializer()
+                .initPermitProvider(cursorPermitsConfig, new InMemorySetOfSortedMapsImplInitializer());
 
-        WALTopicsInitializer.WALTopicsConfig walTopicsConfig = BindInterfaceToConfiguration.bindDefault(WALTopicsInitializer.WALTopicsConfig.class);
-        WALService<WALTopics> walTopcisService = new WALTopicsInitializer().initialize(walTopicsConfig, readers, cursroPermitProvider, new ConstantPermitConfig("booya", 0, 10, 1000), walCursorStore);
+        WALTopicsInitializer.WALTopicsConfig walTopicsConfig = BindInterfaceToConfiguration
+                .bindDefault(WALTopicsInitializer.WALTopicsConfig.class);
+        WALService<WALTopics> walTopcisService = new WALTopicsInitializer()
+                .initialize(walTopicsConfig, readers, cursroPermitProvider, new ConstantPermitConfig(0, 10, 1000), walCursorStore);
         walTopcisService.start();
         WALTopics walTopics = walTopcisService.getService();
 
         walTopicStream = new WALTopicReader.WALTopicStream() {
 
             @Override
-            public void stream(List<WALEntry> entries) {
-                System.out.println("Streamed:" + entries);
+            public void stream(String topic, int partition, List<WALEntry> entries) {
+                System.out.println(topic + "." + partition + "Streamed:" + entries);
+                streamed.addAll(entries);
             }
         };
 
-        RCVSWALTopicReaderInitializer.RCVSWALTopicReaderConfig topicReaderConfig = BindInterfaceToConfiguration.bindDefault(RCVSWALTopicReaderInitializer.RCVSWALTopicReaderConfig.class);
+        RCVSWALTopicReaderInitializer.RCVSWALTopicReaderConfig topicReaderConfig = BindInterfaceToConfiguration
+                .bindDefault(RCVSWALTopicReaderInitializer.RCVSWALTopicReaderConfig.class);
         topicReaderConfig.setTopicId("booya");
         walTopicReaderService = new RCVSWALTopicReaderInitializer().initialize(topicReaderConfig, storage, walTopics, new IncludeAnyFilter(), walTopicStream);
         walTopicReaderService.start();
@@ -135,6 +166,9 @@ public class HelloWALTest {
         walWriterService.stop();
         readersService.stop();
         walTopicReaderService.stop();
+        if (embeddedHBase != null) {
+            embeddedHBase.stop();
+        }
     }
 
     @Test
@@ -143,18 +177,20 @@ public class HelloWALTest {
             walWriter.write("booya", Arrays.asList(makeEntry(i)));
         }
 
-        Thread.sleep(10000);
+        Thread.sleep(2000);
 
         for (int i = 50; i < 150; i++) {
             walWriter.write("booya", Arrays.asList(makeEntry(i)));
         }
 
-        Thread.sleep(10000);
+        Thread.sleep(2000);
+
+        Assert.assertEquals(150, streamed.size());
 
     }
 
     private WALEntry makeEntry(int id) {
-        SipWALEntry sipWALEntry = new SipWALEntry(id, System.currentTimeMillis(),("key-" + id).getBytes());
+        SipWALEntry sipWALEntry = new SipWALEntry(id, System.currentTimeMillis(), ("key-" + id).getBytes());
         return new WALEntry(sipWALEntry, ("payload-" + id).getBytes());
     }
 

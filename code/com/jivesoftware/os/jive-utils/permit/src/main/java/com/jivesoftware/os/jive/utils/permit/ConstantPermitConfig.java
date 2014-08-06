@@ -21,21 +21,14 @@ package com.jivesoftware.os.jive.utils.permit;
  */
 public class ConstantPermitConfig implements PermitConfig {
 
-    private final String pool;
     private final int minId;
     private final int countIds;
     private final long expires;
 
-    public ConstantPermitConfig(String pool, int minId, int countIds, long expires) {
-        this.pool = pool;
+    public ConstantPermitConfig(int minId, int countIds, long expires) {
         this.minId = minId;
         this.countIds = countIds;
         this.expires = expires;
-    }
-
-    @Override
-    public String getPool() {
-        return pool;
     }
 
     @Override
@@ -51,6 +44,11 @@ public class ConstantPermitConfig implements PermitConfig {
     @Override
     public long getExpires() {
         return expires;
+    }
+
+    @Override
+    public String toString() {
+        return "ConstantPermitConfig{" + "minId=" + minId + ", countIds=" + countIds + ", expires=" + expires + '}';
     }
 
 }

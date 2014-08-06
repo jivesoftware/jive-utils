@@ -7,11 +7,13 @@ import java.util.List;
 public interface PermitProvider {
 
     /**
+     * @param tenant
+     * @param permitGroup
      * @param config
      * @param count
      * @return a new permit from the pool of expired or not-yet-issued permits or an empty collection if all permits are taken.
      */
-    List<Permit> requestPermit(String tenant, PermitConfig config, int count);
+    List<Permit> requestPermit(String tenant, String permitGroup, PermitConfig config, int count);
 
     /**
      * Attempts to renew a permit.
@@ -33,16 +35,18 @@ public interface PermitProvider {
     /**
      * Returns the number of distinct permit holders
      *
+     * @param tenant
+     * @param permitGroup
      * @param permitConfig
      * @return
      */
-    int getNumberOfActivePermitHolders(String tenant, PermitConfig permitConfig);
-
+    List<Permit> getAllIssuedPermits(String tenant, String permitGroup, PermitConfig permitConfig);
 
     /**
      *
-     * @param permit
-     * @return
+     * @param permit if permit is null you will get an Optional.absent();
+     * @return Optional absent if expired else return provided or a renewed permit.
      */
-    boolean isPermitStillValid(Permit permit);
+    Optional<Permit> isExpired(Permit permit);
+
 }

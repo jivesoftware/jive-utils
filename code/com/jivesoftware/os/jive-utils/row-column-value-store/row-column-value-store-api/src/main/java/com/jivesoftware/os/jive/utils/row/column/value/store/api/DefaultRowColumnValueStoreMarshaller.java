@@ -148,7 +148,8 @@ public class DefaultRowColumnValueStoreMarshaller<T, R, C, V> implements RowColu
         try {
             return valueMarshaller.fromBytes(valueBytes);
         } catch (Exception e) {
-            throw new RowColumnValueStoreMarshallerException("Error extracting value from bytes", e);
+            throw new RowColumnValueStoreMarshallerException("Error extracting value "
+                    + "from bytes using " + valueMarshaller.getClass() + " bytes.length=" + valueBytes.length, e);
         }
     }
 }

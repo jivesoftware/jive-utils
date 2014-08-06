@@ -3,6 +3,8 @@ package com.jivesoftware.os.jive.utils.hwal.read.rcvs;
 import com.google.common.base.Optional;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
 import com.jivesoftware.os.jive.utils.hwal.read.WALTopicReader;
+import com.jivesoftware.os.jive.utils.hwal.read.partitions.Cursor;
+import com.jivesoftware.os.jive.utils.hwal.read.partitions.TopicLag;
 import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALTopicCursor;
 import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALTopicCursors;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALEntry;
@@ -14,11 +16,11 @@ import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ColumnValueAndTimestamp;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueStore;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang.mutable.MutableLong;
 
 /**
@@ -47,6 +49,38 @@ public class RCVSWALTopicReader implements WALTopicReader {
     }
 
     @Override
+    public List<TopicLag> getTopicLags() throws Exception {
+        List<Cursor> allCursors = cursors.getAllCursors();
+        List<TopicLag> topicLags = new ArrayList();
+        for (final Cursor cursor : allCursors) {
+            SipWALTime sipWALTime = new SipWALTime(cursor.cursor, 0);
+            final MutableLong latestTimestamp = new MutableLong(cursor.cursor);
+            final MutableInt pending = new MutableInt();
+            sipWAL.getEntrys(cursor.topic, cursor.partition, sipWALTime, 100000L, 10000, false, null, null,
+                    new CallbackStream<ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long>>() {
+
+                        @Override
+                        public ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> callback(ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> v)
+                                throws Exception {
+                            if (v != null) {
+                                long timestamp = v.getColumn().getTimestamp();
+                                if (timestamp > cursor.cursor) {
+                                    pending.increment();
+                                }
+                                if (timestamp > latestTimestamp.longValue()) {
+                                    latestTimestamp.setValue(timestamp);
+                                }
+                            }
+                            return v;
+                        }
+                    });
+            topicLags.add(new TopicLag(cursor, latestTimestamp.longValue(), pending.intValue()));
+        }
+        return topicLags;
+    }
+
+
+    @Override
     public void stream(final WALKeyFilter filter, final int batchSize, final WALTopicStream stream) throws Exception {
         try {
             final ConcurrentSkipListSet dedupper = new ConcurrentSkipListSet();
@@ -63,7 +97,7 @@ public class RCVSWALTopicReader implements WALTopicReader {
                     Long lastNonEmptyTimestamp = lastNonEmptyTimestamps.get(partition.get());
                     if (lastNonEmptyTimestamp != null
                             && System.currentTimeMillis() - lastNonEmptyTimestamp < pollEmptyPartitionIntervalMillis) {
-                        LOG.info("Skipped idle parition:" + cursor);
+                        LOG.debug("Skipped idle parition:" + cursor);
                         continue;
                     }
 
@@ -80,30 +114,31 @@ public class RCVSWALTopicReader implements WALTopicReader {
                             new CallbackStream<ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long>>() {
 
                                 @Override
-                                public ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> callback(ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> value) throws Exception {
-                                    if (value != null) {
-                                        SipWALEntry sipEntry = value.getValue();
-                                        if (!filter.include(sipEntry.key)) {
+                                public ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> callback(
+                                        ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> value) throws Exception {
+                                            if (value != null) {
+                                                SipWALEntry sipEntry = value.getValue();
+                                                if (!filter.include(sipEntry.key)) {
+                                                    return value;
+                                                }
+                                                long uniqueOrderingId = sipEntry.uniqueOrderingId;
+                                                if (dedupper.contains(uniqueOrderingId)) {
+                                                    return value;
+                                                }
+
+                                                SipWALTime sipWALTime = value.getColumn();
+
+                                                entryIds.add(uniqueOrderingId);
+                                                if (maxOffset.longValue() < sipWALTime.getTimestamp()) {
+                                                    maxOffset.setValue(sipWALTime.getTimestamp());
+                                                }
+                                                if (entryIds.size() > batchSize && sipWALTime.getTimestamp() > currentOffset.get()) {
+                                                    LOG.info("Batch full. " + batchSize);
+                                                    return null; // stop consuming
+                                                }
+                                            }
                                             return value;
                                         }
-                                        long uniqueOrderingId = sipEntry.uniqueOrderingId;
-                                        if (dedupper.contains(uniqueOrderingId)) {
-                                            return value;
-                                        }
-
-                                        SipWALTime sipWALTime = value.getColumn();
-
-                                        entryIds.add(uniqueOrderingId);
-                                        if (maxOffset.longValue() < sipWALTime.getTimestamp()) {
-                                            maxOffset.setValue(sipWALTime.getTimestamp());
-                                        }
-                                        if (entryIds.size() > batchSize && sipWALTime.getTimestamp() > currentOffset.get()) {
-                                            LOG.info("Batch full. " + batchSize);
-                                            return null; // stop consuming
-                                        }
-                                    }
-                                    return value;
-                                }
                             });
 
                     if (entryIds.isEmpty()) {
@@ -111,11 +146,11 @@ public class RCVSWALTopicReader implements WALTopicReader {
                     } else {
                         numberOfNonEmptyPartitions++;
                         lastNonEmptyTimestamps.put(partition.get(), 0L);
-                        LOG.info("Get " + cursor.getTopicId() + " " + partition.get() + " " + Arrays.toString(entryIds.toArray(new Long[entryIds.size()])));
+                        //LOG.debug("Get " + cursor.getTopicId() + " " + partition.get() + " " + Arrays.toString(entryIds.toArray(new Long[entryIds.size()])));
                         List<WALEntry> entries = wal.multiGet(cursor.getTopicId(), partition.get(), entryIds.toArray(new Long[entryIds.size()]), null, null);
                         try {
-                            LOG.info("Streaming " + entryIds.size() + " from topic:" + cursor.getTopicId() + " from partition:" + partition.get());
-                            stream.stream(entries);
+                            LOG.debug("Streaming " + entryIds.size() + " from topic:" + cursor.getTopicId() + " from partition:" + partition.get());
+                            stream.stream(cursor.getTopicId(), partition.get(), entries);
                         } catch (Exception x) {
                             LOG.error("Provided walStream threw the following exception "
                                     + "while handling the following:"

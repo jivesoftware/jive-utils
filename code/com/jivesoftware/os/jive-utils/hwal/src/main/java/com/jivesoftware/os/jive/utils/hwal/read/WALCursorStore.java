@@ -6,7 +6,7 @@ package com.jivesoftware.os.jive.utils.hwal.read;
  */
 public interface WALCursorStore {
 
-    long get(String topicId, int partitionId);
+    long get(String cursorGroup, String topicId, int partitionId);
 
-    void set(String topicId, int partitionId, long offset);
+    void set(String cursorGroup, String topicId, int partitionId, long offset);
 }

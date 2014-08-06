@@ -21,8 +21,6 @@ package com.jivesoftware.os.jive.utils.permit;
  */
 public interface PermitConfig {
 
-    String getPool();
-
     int getMinId();
 
     int getCountIds();

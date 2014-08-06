@@ -15,11 +15,13 @@
  */
 package com.jivesoftware.os.jive.utils.permit;
 
+import com.jivesoftware.os.jive.utils.row.column.value.store.api.DefaultRowColumnValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMapsImplInitializer;
-import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantLengthAndTenantFirstRowColumnValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.CurrentTimestamper;
+import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.IntegerTypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.StringTypeMarshaller;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.UUID;
 import org.merlin.config.Config;
 import org.merlin.config.defaults.IntDefault;
@@ -34,7 +36,7 @@ public class PermitProviderImplInitializer {
 
         public void setPool(int pool);
 
-        @StringDefault("")
+        @StringDefault("dev")
         public String getTableNameSpace();
 
         public void setTableNameSpace(String tableNameSpace);
@@ -44,7 +46,7 @@ public class PermitProviderImplInitializer {
 
         public void setTableName(String tableName);
 
-        @StringDefault("p")
+        @StringDefault("pid")
         public String getColumnFamilyName();
 
         public void setColumnFamilyName(String columnFamilyName);
@@ -53,17 +55,18 @@ public class PermitProviderImplInitializer {
     public PermitProvider initPermitProvider(PermitProviderConfig config,
             SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer) throws IOException {
 
-        String ownerId = UUID.randomUUID().toString();
+        String hostName = InetAddress.getLocalHost().getHostName();
+        String ownerId = hostName + " " + UUID.randomUUID().toString();
 
         return new PermitProviderImpl(ownerId,
                 setOfSortedMapsImplInitializer.initialize(
                         config.getTableNameSpace(),
                         config.getTableName(),
                         config.getColumnFamilyName(),
-                        new TenantLengthAndTenantFirstRowColumnValueStoreMarshaller<>(
+                        new DefaultRowColumnValueStoreMarshaller<>(
                                 new StringTypeMarshaller(),
-                                new PermitRowKeyMarshaller(),
                                 new StringTypeMarshaller(),
+                                new IntegerTypeMarshaller(),
                                 new PermitMarshaller()
                         ),
                         new CurrentTimestamper()

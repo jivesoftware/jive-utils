@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.jivesoftware.os.jive.utils.hwal.write;
 
 import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALTime;
@@ -25,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author jonathan
  */
 public class SipWALTimeProvider {
+
     final private TimestampProvider timestampProvider;
     final private AtomicReference<TimeAndOrder> state;
 
@@ -32,7 +32,6 @@ public class SipWALTimeProvider {
         this.timestampProvider = timestampProvider;
         this.state = new AtomicReference<>(new TimeAndOrder(timestampProvider.getTimestamp(), 0));
     }
-
 
     public SipWALTime currentSipTime() {
         while (true) { // exits on successful compare-and-set
@@ -54,7 +53,7 @@ public class SipWALTimeProvider {
                 if (current.time == timestamp) {
                     int nextOrder = current.order + 1;
 
-                    if (nextOrder > Integer.MAX_VALUE-1) {
+                    if (nextOrder > Integer.MAX_VALUE - 1) {
                         continue;
                     }
 
