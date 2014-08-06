@@ -1,7 +1,6 @@
 package com.jivesoftware.os.jive.utils.id;
 
 import com.google.common.base.Preconditions;
-import com.jivesoftware.os.jive.utils.id.TenantId;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.api.TypeMarshaller;
 
 /**

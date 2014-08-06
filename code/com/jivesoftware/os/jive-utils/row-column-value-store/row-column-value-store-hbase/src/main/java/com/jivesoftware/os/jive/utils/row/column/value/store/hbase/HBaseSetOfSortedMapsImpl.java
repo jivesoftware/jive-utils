@@ -33,6 +33,13 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumn
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
 import com.jivesoftware.os.jive.utils.row.column.value.store.shared.RowColumnValueStoreCounters;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
@@ -45,14 +52,6 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.ColumnRangeFilter;
 import org.apache.hadoop.hbase.filter.Filter;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * HBase implementation of RowColumnValueStore generic interface. In any method that has an Integer overrideConsistency, that argument is ignored. In any method
@@ -732,7 +731,8 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @throws Exception
      */
     @Override
-    public void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries, CallbackStream<TenantIdAndRow<T, R>> callback) throws Exception {
+    public void getRowKeys(T tenantId, R startRowKey, R stopRowKey, int batchSize, Integer overrideNumberOfRetries,
+            CallbackStream<TenantIdAndRow<T, R>> callback) throws Exception {
         HTableInterface t = tablePool.getTable(table);
         try {
 
