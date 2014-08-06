@@ -22,7 +22,9 @@ import com.jivesoftware.os.jive.utils.permit.Permit;
 import com.jivesoftware.os.jive.utils.permit.PermitConfig;
 import com.jivesoftware.os.jive.utils.permit.PermitProvider;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -45,20 +47,42 @@ public class WALReaders {
         this.permitConfig = permitConfig;
     }
 
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public String getReaderGroupId() {
+        return readerGroupId;
+    }
+
     public Optional<Integer> getCurrentId() {
         Permit permit = currentOnlineId.get();
-        if (permit == null || !permitProvider.isPermitStillValid(permit)) {
-            return Optional.absent();
+        Optional<Permit> optionalPermit = permitProvider.isExpired(permit);
+        if (optionalPermit.isPresent()) {
+            return Optional.of(optionalPermit.get().id);
+        } else {
+           return Optional.absent();
         }
-        return Optional.of(permit.id);
     }
 
     public int getNumberOfOnlineWALReaders() {
-        int numberOfOnlineReaders = permitProvider.getNumberOfActivePermitHolders(tenantId, readerGroupId, permitConfig);
+        int numberOfOnlineReaders = getNumberOfActivePermitHolders();
         if (numberOfOnlineReaders == 0) {
             LOG.warn("Currently no readers are online for tenantId:" + tenantId + " readerGroupId:" + readerGroupId + " permitConfig:" + permitConfig);
         }
         return numberOfOnlineReaders;
+    }
+
+    private int getNumberOfActivePermitHolders() {
+        List<Permit> allIssuedPermits = permitProvider.getAllIssuedPermits(tenantId, readerGroupId, permitConfig);
+        Set<String> distinctOwners = new HashSet<>();
+        for (Permit permit : allIssuedPermits) {
+            Optional<Permit> optionalPermit = permitProvider.isExpired(permit);
+            if (optionalPermit.isPresent()) {
+                distinctOwners.add(optionalPermit.get().owner);
+            }
+        }
+        return distinctOwners.size();
     }
 
     /**

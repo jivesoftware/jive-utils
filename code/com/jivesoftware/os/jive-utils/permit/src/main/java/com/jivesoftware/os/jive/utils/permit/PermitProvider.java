@@ -40,13 +40,13 @@ public interface PermitProvider {
      * @param permitConfig
      * @return
      */
-    int getNumberOfActivePermitHolders(String tenant, String permitGroup, PermitConfig permitConfig);
-
+    List<Permit> getAllIssuedPermits(String tenant, String permitGroup, PermitConfig permitConfig);
 
     /**
      *
-     * @param permit
-     * @return
+     * @param permit if permit is null you will get an Optional.absent();
+     * @return Optional absent if expired else return provided or a renewed permit.
      */
-    boolean isPermitStillValid(Permit permit);
+    Optional<Permit> isExpired(Permit permit);
+
 }

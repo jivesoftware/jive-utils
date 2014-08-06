@@ -21,6 +21,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Cur
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.IntegerTypeMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives.StringTypeMarshaller;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.UUID;
 import org.merlin.config.Config;
 import org.merlin.config.defaults.IntDefault;
@@ -54,8 +55,8 @@ public class PermitProviderImplInitializer {
     public PermitProvider initPermitProvider(PermitProviderConfig config,
             SetOfSortedMapsImplInitializer<? extends Exception> setOfSortedMapsImplInitializer) throws IOException {
 
-        String ownerId = UUID.randomUUID().toString();
-
+        String hostName = InetAddress.getLocalHost().getHostName();
+        String ownerId = hostName + " " + UUID.randomUUID().toString();
 
         return new PermitProviderImpl(ownerId,
                 setOfSortedMapsImplInitializer.initialize(

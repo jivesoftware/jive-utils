@@ -34,8 +34,8 @@ public class WALReadersInitializer {
         ConstantPermitConfig permitConfig = new ConstantPermitConfig(0, 1000, config.getHeartbeatIntervalInMillis() * 3);
 
         final WALReaders readers = new WALReaders("WALReaders", config.getReaderGroupId(), permitProvider, permitConfig);
-        final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         return new WALService<WALReaders>() {
+            ScheduledExecutorService scheduledExecutorService;
 
             @Override
             public WALReaders getService() {
@@ -43,7 +43,11 @@ public class WALReadersInitializer {
             }
 
             @Override
-            public void start() throws Exception {
+            synchronized public void start() throws Exception {
+                if (scheduledExecutorService == null) {
+                    scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+                }
+
                 scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
                     @Override
@@ -59,14 +63,14 @@ public class WALReadersInitializer {
             }
 
             @Override
-            public void stop() throws Exception {
+            synchronized public void stop() throws Exception {
                 scheduledExecutorService.shutdownNow();
                 try {
-
                     readers.offline();
                 } catch (Throwable x) {
                     x.printStackTrace();
                 }
+                scheduledExecutorService = null;
             }
         };
     }

@@ -9,10 +9,9 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueS
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Permit provider that stores the state of issued permits in HBase.
@@ -26,7 +25,6 @@ public final class PermitProviderImpl implements PermitProvider {
 
     RowColumnValueStore<String, String, Integer, Permit, RuntimeException> permitStore;
     Timestamper timestamper;
-
 
     // Column qualifier doesn't matter, but we need to use a non-null key for testing with RowColumnValueStoreImpl
     static final String NULL_KEY = "";
@@ -125,23 +123,25 @@ public final class PermitProviderImpl implements PermitProvider {
     }
 
     @Override
-    public int getNumberOfActivePermitHolders(String tenantId, String permitGroup, PermitConfig permitConfig) {
-        List<Permit> issuedPermits = queryIssuedPermits(tenantId, permitGroup);
-        Set<String> distinctOwners = new HashSet<>();
-        for (Permit permit : issuedPermits) {
-            long now = timestamper.get();
-            if (!isExpired(permit, now)) {
-                distinctOwners.add(permit.owner);
-            }
-        }
-        return distinctOwners.size();
+    public List<Permit> getAllIssuedPermits(String tenantId, String permitGroup, PermitConfig permitConfig) {
+        return queryIssuedPermits(tenantId, permitGroup);
     }
 
     @Override
-    public boolean isPermitStillValid(Permit permit) {
-        long now = timestamper.get();
-        //TODO this isn't good enough
-        return !isExpired(permit, now);
+    public Optional<Permit> isExpired(Permit permit) {
+        if (permit == null) {
+            return Optional.absent();
+        }
+        long age = (timestamper.get() - permit.issued);
+        if (age < permit.expires) {
+            if (age > permit.expires / 2) { // TODO expose to config?
+                return renewPermit(Arrays.asList(permit)).get(0);
+            } else {
+                return Optional.of(permit);
+            }
+        } else {
+            return Optional.absent();
+        }
     }
 
     private boolean isExpired(Permit permit, long now) {

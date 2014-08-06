@@ -3,6 +3,8 @@ package com.jivesoftware.os.jive.utils.hwal.read.rcvs;
 import com.google.common.base.Optional;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
 import com.jivesoftware.os.jive.utils.hwal.read.WALTopicReader;
+import com.jivesoftware.os.jive.utils.hwal.read.partitions.Cursor;
+import com.jivesoftware.os.jive.utils.hwal.read.partitions.TopicLag;
 import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALTopicCursor;
 import com.jivesoftware.os.jive.utils.hwal.read.partitions.WALTopicCursors;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.SipWALEntry;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.lang.mutable.MutableLong;
 
 /**
@@ -44,6 +47,38 @@ public class RCVSWALTopicReader implements WALTopicReader {
         this.pollEmptyPartitionIntervalMillis = pollEmptyPartitionIntervalMillis;
         this.maxClockDriftInMillis = maxClockDriftInMillis;
     }
+
+    @Override
+    public List<TopicLag> getTopicLags() throws Exception {
+        List<Cursor> allCursors = cursors.getAllCursors();
+        List<TopicLag> topicLags = new ArrayList();
+        for (final Cursor cursor : allCursors) {
+            SipWALTime sipWALTime = new SipWALTime(cursor.cursor, 0);
+            final MutableLong latestTimestamp = new MutableLong(cursor.cursor);
+            final MutableInt pending = new MutableInt();
+            sipWAL.getEntrys(cursor.topic, cursor.partition, sipWALTime, 100000L, 10000, false, null, null,
+                    new CallbackStream<ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long>>() {
+
+                        @Override
+                        public ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> callback(ColumnValueAndTimestamp<SipWALTime, SipWALEntry, Long> v)
+                                throws Exception {
+                            if (v != null) {
+                                long timestamp = v.getColumn().getTimestamp();
+                                if (timestamp > cursor.cursor) {
+                                    pending.increment();
+                                }
+                                if (timestamp > latestTimestamp.longValue()) {
+                                    latestTimestamp.setValue(timestamp);
+                                }
+                            }
+                            return v;
+                        }
+                    });
+            topicLags.add(new TopicLag(cursor, latestTimestamp.longValue(), pending.intValue()));
+        }
+        return topicLags;
+    }
+
 
     @Override
     public void stream(final WALKeyFilter filter, final int batchSize, final WALTopicStream stream) throws Exception {

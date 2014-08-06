@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class WALTopics {
 
-    private final ConcurrentHashMap<ReaderGroupAndTopic, WALTopicCursors> topicCursors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<CursorGroupAndTopic, WALTopicCursors> topicCursors = new ConcurrentHashMap<>();
     private final WALReaders walReaders;
     private final PermitProvider topicCursorPermitProvider;
     private final PermitConfig topicCursorPermitConfig;
@@ -45,11 +45,11 @@ public class WALTopics {
         this.cursorStore = cursorStore;
     }
 
-    public WALTopicCursors getWALTopicCursors(String readerGroup, String topic, int numberOfPartitions) {
-        ReaderGroupAndTopic key = new ReaderGroupAndTopic(readerGroup, topic);
+    public WALTopicCursors getWALTopicCursors(String cursorGroup, String topic, int numberOfPartitions) {
+        CursorGroupAndTopic key = new CursorGroupAndTopic(cursorGroup, topic);
         WALTopicCursors cursors = topicCursors.get(key);
         if (cursors == null) {
-            cursors = new WALTopicCursors(walReaders, readerGroup, topic, topicCursorPermitProvider,
+            cursors = new WALTopicCursors(walReaders, cursorGroup, topic, topicCursorPermitProvider,
                     new ConstantPermitConfig(0, numberOfPartitions, topicCursorPermitConfig.getExpires()),
                     cursorStore);
             WALTopicCursors had = topicCursors.putIfAbsent(key, cursors);
@@ -61,7 +61,7 @@ public class WALTopics {
     }
 
     public void removeWALTopicCursors(String readerGroup, String topicId) {
-        ReaderGroupAndTopic key = new ReaderGroupAndTopic(readerGroup, topicId);
+        CursorGroupAndTopic key = new CursorGroupAndTopic(readerGroup, topicId);
         WALTopicCursors removed = topicCursors.remove(key);
         if (removed != null) {
             removed.offline();
@@ -82,25 +82,25 @@ public class WALTopics {
         }
     }
 
-    static class ReaderGroupAndTopic {
+    static class CursorGroupAndTopic {
 
-        private final String readerGroup;
+        private final String cursorGroup;
         private final String topic;
 
-        public ReaderGroupAndTopic(String readerGroup, String topic) {
-            this.readerGroup = readerGroup;
+        public CursorGroupAndTopic(String cursorGroup, String topic) {
+            this.cursorGroup = cursorGroup;
             this.topic = topic;
         }
 
         @Override
         public String toString() {
-            return "ReaderGroupAndTopic{" + "readerGroup=" + readerGroup + ", topic=" + topic + '}';
+            return "CursorGroupAndTopic{" + "cursorGroup=" + cursorGroup + ", topic=" + topic + '}';
         }
 
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 41 * hash + Objects.hashCode(this.readerGroup);
+            hash = 41 * hash + Objects.hashCode(this.cursorGroup);
             hash = 41 * hash + Objects.hashCode(this.topic);
             return hash;
         }
@@ -113,8 +113,8 @@ public class WALTopics {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final ReaderGroupAndTopic other = (ReaderGroupAndTopic) obj;
-            if (!Objects.equals(this.readerGroup, other.readerGroup)) {
+            final CursorGroupAndTopic other = (CursorGroupAndTopic) obj;
+            if (!Objects.equals(this.cursorGroup, other.cursorGroup)) {
                 return false;
             }
             if (!Objects.equals(this.topic, other.topic)) {

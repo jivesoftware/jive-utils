@@ -24,7 +24,7 @@ public class WALTopicCursors {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
 
-    private final String readerGroup;
+    private final String cursorGroup;
     private final String topicId;
     private final WALReaders walReaders;
     private final PermitProvider topicCursorPermitProvider;
@@ -33,12 +33,12 @@ public class WALTopicCursors {
     private final ConcurrentSkipListMap<Permit, WALTopicCursor> cursors = new ConcurrentSkipListMap<>();
 
     public WALTopicCursors(WALReaders walReaders,
-            String readerGroup,
+            String cursorGroup,
             String topicId,
             PermitProvider topicCursorPermitProvider,
             PermitConfig topicCursorPermitConfig,
             WALCursorStore cursorStore) {
-        this.readerGroup = readerGroup;
+        this.cursorGroup = cursorGroup;
         this.topicId = topicId;
         this.cursorStore = cursorStore;
         this.walReaders = walReaders;
@@ -48,6 +48,18 @@ public class WALTopicCursors {
 
     public Collection<WALTopicCursor> getCursors() {
         return cursors.values();
+    }
+
+    public List<Cursor> getAllCursors() {
+        List<Permit> allIssuedPermits = topicCursorPermitProvider.getAllIssuedPermits(topicId, cursorGroup, topicCursorPermitConfig);
+        List<Cursor> lags = new ArrayList<>();
+        int totalNumberOfConcurrentPermits = topicCursorPermitConfig.getCountIds();
+        String fullTopicName = topicId + "-" + totalNumberOfConcurrentPermits;
+        for (Permit permit : allIssuedPermits) {
+            long cursor = cursorStore.get(cursorGroup, fullTopicName, permit.id);
+            lags.add(new Cursor(walReaders.getTenantId(), walReaders.getReaderGroupId(), cursorGroup, fullTopicName, permit.owner, permit.id, cursor));
+        }
+        return lags;
     }
 
     /**
@@ -73,7 +85,7 @@ public class WALTopicCursors {
                 int totalNumberOfConcurrentPermits = topicCursorPermitConfig.getCountIds();
                 Permit newPermit = renewedPermit.get();
                 cursors.remove(currentPermits.get(i));
-                WALTopicCursor cursor = new WALTopicCursor(readerGroup, topicId + "-" + totalNumberOfConcurrentPermits,
+                WALTopicCursor cursor = new WALTopicCursor(cursorGroup, topicId + "-" + totalNumberOfConcurrentPermits,
                         new JITPartitionId(topicCursorPermitProvider, newPermit), cursorStore);
                 cursors.put(newPermit, cursor);
                 LOG.debug("Renewed permit:" + newPermit + " for cursor:" + cursor);
@@ -101,9 +113,9 @@ public class WALTopicCursors {
                             numberOfOnlineWALReaders, totalNumberOfConcurrentPermits, desiredNumberOfPermits, topicId, currentNumberOfPermits
                         });
 
-                List<Permit> requestedPermits = topicCursorPermitProvider.requestPermit(topicId, readerGroup, topicCursorPermitConfig, askForNPermits);
+                List<Permit> requestedPermits = topicCursorPermitProvider.requestPermit(topicId, cursorGroup, topicCursorPermitConfig, askForNPermits);
                 for (Permit permit : requestedPermits) {
-                    WALTopicCursor cursor = new WALTopicCursor(readerGroup, topicId + "-" + totalNumberOfConcurrentPermits,
+                    WALTopicCursor cursor = new WALTopicCursor(cursorGroup, topicId + "-" + totalNumberOfConcurrentPermits,
                             new JITPartitionId(topicCursorPermitProvider, permit), cursorStore);
                     cursors.put(permit, cursor);
                     LOG.info("Attached permit:" + permit + " to cursor:" + cursor);
@@ -112,7 +124,7 @@ public class WALTopicCursors {
 
             if (cursors.size() > desiredNumberOfPermits) {
                 int release = cursors.size() - desiredNumberOfPermits;
-                LOG.info("readerGroup:{} for topic:{} releasing {} paritions.", new Object[]{readerGroup, topicId, release});
+                LOG.info("readerGroup:{} for topic:{} releasing {} paritions.", new Object[]{cursorGroup, topicId, release});
                 for (int i = 0; i < release; i++) {
                     Map.Entry<Permit, WALTopicCursor> entry = cursors.pollFirstEntry();
                     cursors.remove(entry.getKey());
@@ -136,13 +148,14 @@ public class WALTopicCursors {
 
         @Override
         public Optional<Integer> getId() {
-            if (permitProvider.isPermitStillValid(permit)) {
-                return Optional.of(permit.id);
+
+            Optional<Permit> optionalPermit = permitProvider.isExpired(permit);
+            if (optionalPermit.isPresent()) {
+                return Optional.of(optionalPermit.get().id);
             } else {
                 return Optional.absent();
             }
         }
-
     }
 
 }

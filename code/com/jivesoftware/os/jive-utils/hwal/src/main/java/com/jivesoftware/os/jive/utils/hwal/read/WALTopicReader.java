@@ -1,5 +1,6 @@
 package com.jivesoftware.os.jive.utils.hwal.read;
 
+import com.jivesoftware.os.jive.utils.hwal.read.partitions.TopicLag;
 import com.jivesoftware.os.jive.utils.hwal.shared.api.WALEntry;
 import com.jivesoftware.os.jive.utils.hwal.shared.filter.WALKeyFilter;
 import java.util.List;
@@ -21,5 +22,7 @@ public interface WALTopicReader {
     }
 
     void stream(WALKeyFilter filter, int batchSize, WALTopicStream stream) throws Exception;
+
+    List<TopicLag> getTopicLags() throws Exception;
 
 }
