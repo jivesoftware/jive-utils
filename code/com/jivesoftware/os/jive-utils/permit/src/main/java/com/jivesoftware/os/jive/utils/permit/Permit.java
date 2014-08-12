@@ -4,16 +4,16 @@ import java.util.Objects;
 
 public class Permit implements Comparable<Permit> {
 
-    public final long issued;
-    public final long expires;
+    public final long issuedAtTimeInMillis;
+    public final long expiresInNMillis;
     public final int id;
     public final String owner;
     public final String tenantId;
     public final String pool;
 
-    public Permit(long issued, long expires, int id, String owner, String tenantId, String pool) {
-        this.issued = issued;
-        this.expires = expires;
+    public Permit(long issuedAtTimeInMillis, long expiresInNMillis, int id, String owner, String tenantId, String pool) {
+        this.issuedAtTimeInMillis = issuedAtTimeInMillis;
+        this.expiresInNMillis = expiresInNMillis;
         this.id = id;
         this.owner = owner;
         this.tenantId = tenantId;
@@ -22,17 +22,24 @@ public class Permit implements Comparable<Permit> {
 
     @Override
     public String toString() {
-        return "Permit{" + "issued=" + issued + ", expires=" + expires + ", id=" + id + ", owner=" + owner + ", tenantId=" + tenantId + ", pool=" + pool + '}';
+        return "Permit{"
+                + "issuedAtTimeInMillis=" + issuedAtTimeInMillis
+                + ", expiresInNMillis=" + expiresInNMillis
+                + ", id=" + id
+                + ", owner=" + owner
+                + ", tenantId=" + tenantId
+                + ", pool=" + pool
+                + '}';
     }
 
     @Override
     public int compareTo(Permit o) {
         int c = Integer.compare(id, o.id);
         if (c == 0) {
-            c = Long.compare(issued, o.issued);
+            c = Long.compare(issuedAtTimeInMillis, o.issuedAtTimeInMillis);
         }
         if (c == 0) {
-            c = Long.compare(expires, o.expires);
+            c = Long.compare(expiresInNMillis, o.expiresInNMillis);
         }
         if (c == 0) {
             c = owner.compareTo(o.owner);
@@ -49,8 +56,8 @@ public class Permit implements Comparable<Permit> {
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 71 * hash + (int) (this.issued ^ (this.issued >>> 32));
-        hash = 71 * hash + (int) (this.expires ^ (this.expires >>> 32));
+        hash = 71 * hash + (int) (this.issuedAtTimeInMillis ^ (this.issuedAtTimeInMillis >>> 32));
+        hash = 71 * hash + (int) (this.expiresInNMillis ^ (this.expiresInNMillis >>> 32));
         hash = 71 * hash + this.id;
         hash = 71 * hash + Objects.hashCode(this.owner);
         hash = 71 * hash + Objects.hashCode(this.tenantId);
@@ -67,10 +74,10 @@ public class Permit implements Comparable<Permit> {
             return false;
         }
         final Permit other = (Permit) obj;
-        if (this.issued != other.issued) {
+        if (this.issuedAtTimeInMillis != other.issuedAtTimeInMillis) {
             return false;
         }
-        if (this.expires != other.expires) {
+        if (this.expiresInNMillis != other.expiresInNMillis) {
             return false;
         }
         if (this.id != other.id) {

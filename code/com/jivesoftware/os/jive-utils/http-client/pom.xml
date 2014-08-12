@@ -31,10 +31,6 @@
         </dependency>
         <dependency>
             <groupId>oauth.signpost</groupId>
-            <artifactId>signpost-commonshttp4</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>oauth.signpost</groupId>
             <artifactId>signpost-core</artifactId>
         </dependency>
         <dependency>
@@ -50,6 +46,18 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>oauth.signpost</groupId>
+            <artifactId>signpost-commonshttp3</artifactId>
+            <version>1.2.1.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>2.9</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
 </project>

@@ -44,8 +44,8 @@ public class PermitMarshaller implements TypeMarshaller<Permit> {
         byte[] poolBytes = permit.pool.getBytes(utf_8);
         ByteBuffer buffer = ByteBuffer.allocate(8 + 8 + 4 + 4 + ownerBytes.length + 4 + tenantBytes.length + 4 + poolBytes.length);
 
-        buffer.putLong(permit.issued);
-        buffer.putLong(permit.expires);
+        buffer.putLong(permit.issuedAtTimeInMillis);
+        buffer.putLong(permit.expiresInNMillis);
 
         buffer.putInt(permit.id);
 

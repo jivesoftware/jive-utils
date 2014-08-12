@@ -21,20 +21,31 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import oauth.signpost.OAuthConsumer;
-import oauth.signpost.commonshttp.CommonsHttpOAuthConsumer;
+import oauth.signpost.commonshttp3.CommonsHttp3OAuthConsumer;
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URI;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
 
 class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
@@ -49,107 +60,157 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
     private static final int JSON_POST_LOG_LENGTH_LIMIT = 2048;
 
     public ApacheHttpClient31BackedHttpClient(org.apache.commons.httpclient.HttpClient client,
-        Map<String, String> headersForEveryRequest) {
+            Map<String, String> headersForEveryRequest) {
         this.client = client;
         this.headersForEveryRequest = headersForEveryRequest;
     }
 
     @Override
     public HttpResponse get(String path) throws HttpClientException {
-        return get(HttpRequestParams.newBuilder().setPath(path).build());
+        return get(path, null, -1);
     }
 
     @Override
-    public HttpResponse get(String path, int socketTimeoutMillis) throws HttpClientException {
-        return get(HttpRequestParams.newBuilder().setPath(path).setTimeout(socketTimeoutMillis).build());
+    public HttpResponse get(String path, Map<String, String> headers) throws HttpClientException {
+        return get(path, headers, -1);
     }
 
     @Override
-    public HttpResponse get(HttpRequestParams params) throws HttpClientException {
-        GetMethod get = new GetMethod(params.getPath());
+    public HttpResponse get(String path, int timeoutMillis) throws HttpClientException {
+        return get(path, null, timeoutMillis);
+    }
 
-        applyHeadersForRequest(get, params.getAdditionalHeaders());
+    @Override
+    public HttpResponse get(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        GetMethod get = new GetMethod(path);
 
-        if (params.getTimeout() > 0) {
-            get.getParams().setSoTimeout(params.getTimeout());
+        setRequestHeaders(headers, get);
+
+        if (timeoutMillis > 0) {
+            return executeWithTimeout(get, timeoutMillis);
         }
         try {
             return execute(get);
         } catch (Exception e) {
             throw new HttpClientException("Error executing GET request to: " + client.getHostConfiguration().getHostURL()
-                + " path: " + params.getPath(), e);
+                    + " path: " + path, e);
+        }
+    }
+
+    private HttpResponse executeWithTimeout(final HttpMethodBase HttpMethod, int timeoutMillis) {
+        client.getParams().setParameter("http.method.retry-handler", new DefaultHttpMethodRetryHandler(0, false));
+        ExecutorService service = Executors.newSingleThreadExecutor();
+
+        Future<HttpResponse> future = service.submit(new Callable<HttpResponse>() {
+            @Override
+            public HttpResponse call() throws IOException {
+                return execute(HttpMethod);
+            }
+        });
+
+        try {
+            return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            String uriInfo = "";
+            try {
+                uriInfo = " for " + HttpMethod.getURI();
+            } catch (Exception ie) {
+            }
+            LOG.warn("Http connection thread was interrupted or has timed out" + uriInfo, e);
+            return new HttpResponse(HttpStatus.SC_REQUEST_TIMEOUT, "Request Timeout", null);
+        } finally {
+            service.shutdownNow();
+        }
+    }
+
+    @Override
+    public HttpStreamResponse getStream(String path) throws HttpClientException {
+        return getStream(path, -1);
+    }
+
+    @Override
+    public HttpStreamResponse getStream(String path, int timeoutMillis) throws HttpClientException {
+        GetMethod get = new GetMethod(path);
+
+        try {
+            return executeStreamWithTimeout(get, timeoutMillis);
+        } catch (Exception e) {
+            throw new HttpClientException("Error executing GET request to: " + client.getHostConfiguration().getHostURL()
+                    + " path: " + path, e);
         }
     }
 
     @Override
     public HttpResponse postJson(String path, String postJsonBody) throws HttpClientException {
-        return postJson(HttpRequestParams.newBuilder().setPath(path).build(), postJsonBody);
+        return postJson(path, postJsonBody, null, -1);
     }
 
     @Override
-    public HttpResponse postJson(String path, String postJsonBody, int socketTimeoutMillis) throws HttpClientException {
-        return postJson(HttpRequestParams.newBuilder().setPath(path).setTimeout(socketTimeoutMillis).build(), postJsonBody);
+    public HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers) throws HttpClientException {
+        return postJson(path, postJsonBody, headers, -1);
     }
 
     @Override
-    public HttpResponse postJson(HttpRequestParams params, String postJsonBody) throws HttpClientException {
+    public HttpResponse postJson(String path, String postJsonBody, int timeoutMillis) throws HttpClientException {
+        return postJson(path, postJsonBody, null, timeoutMillis);
+    }
 
+    @Override
+    public HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
         try {
-            PostMethod post = new PostMethod(params.getPath());
-            applyHeadersForRequest(post, params.getAdditionalHeaders());
+            PostMethod post = new PostMethod(path);
+
+            setRequestHeaders(headers, post);
+
             post.setRequestEntity(new StringRequestEntity(postJsonBody, Constants.APPLICATION_JSON_CONTENT_TYPE, "UTF-8"));
             post.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_JSON_CONTENT_TYPE);
-            if (params.getTimeout() > 0) {
-                post.getParams().setSoTimeout(params.getTimeout());
+            if (timeoutMillis > 0) {
+                return executeWithTimeout(post, timeoutMillis);
+            } else {
+                return execute(post);
             }
-            return execute(post);
         } catch (Exception e) {
-            String trimmedPostBody =
-                (postJsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ? postJsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : postJsonBody;
+            String trimmedPostBody = (postJsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ?
+                    postJsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : postJsonBody;
             throw new HttpClientException("Error executing POST request to: "
-                + client.getHostConfiguration().getHostURL() + " path: " + params.getPath() + " JSON body: " + trimmedPostBody, e);
+                    + client.getHostConfiguration().getHostURL() + " path: " + path + " JSON body: " + trimmedPostBody, e);
         }
     }
 
     @Override
     public HttpResponse postBytes(String path, byte[] postBytes) throws HttpClientException {
-        return postBytes(HttpRequestParams.newBuilder().setPath(path).build(), postBytes);
+        return postBytes(path, postBytes, -1);
     }
 
     @Override
-    public HttpResponse postBytes(String path, byte[] postBytes, int socketTimeoutMillis) throws HttpClientException {
-        return postBytes(HttpRequestParams.newBuilder().setPath(path).setTimeout(socketTimeoutMillis).build(), postBytes);
-    }
-
-    @Override
-    public HttpResponse postBytes(HttpRequestParams params, byte[] postBytes) throws HttpClientException {
+    public HttpResponse postBytes(String path, byte[] postBytes, int timeoutMillis) throws HttpClientException {
         try {
-            PostMethod post = new PostMethod(params.getPath());
-            applyHeadersForRequest(post, params.getAdditionalHeaders());
+            PostMethod post = new PostMethod(path);
             post.setRequestEntity(new ByteArrayRequestEntity(postBytes, Constants.APPLICATION_JSON_CONTENT_TYPE));
             post.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_OCTET_STREAM_TYPE);
-            if (params.getTimeout() > 0) {
-                post.getParams().setSoTimeout(params.getTimeout());
+            if (timeoutMillis > 0) {
+                return executeWithTimeout(post, timeoutMillis);
+            } else {
+                return execute(post);
             }
-            return execute(post);
         } catch (Exception e) {
-            String trimmedPostBody =
-                (postBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ? new String(postBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(postBytes);
+            String trimmedPostBody = (postBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ?
+                    new String(postBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(postBytes);
             throw new HttpClientException("Error executing POST request to:"
-                + client.getHostConfiguration().getHostURL() + " path: " + params.getPath() + " byte body: " + trimmedPostBody, e);
+                    + client.getHostConfiguration().getHostURL() + " path: " + path + " byte body: " + trimmedPostBody, e);
         }
     }
 
     @Override
     public String toString() {
         return "ApacheHttpClient31BackedHttpClient{"
-            + "client=" + client
-            + ", headersForEveryRequest=" + headersForEveryRequest
-            + ", consumerKey=" + consumerKey
-            + ", consumerSecret=" + consumerSecret
-            + ", isOauthEnabled=" + isOauthEnabled
-            + ", isSSLEnabled=" + isSSLEnabled
-            + '}';
+                + "client=" + client
+                + ", headersForEveryRequest=" + headersForEveryRequest
+                + ", consumerKey=" + consumerKey
+                + ", consumerSecret=" + consumerSecret
+                + ", isOauthEnabled=" + isOauthEnabled
+                + ", isSSLEnabled=" + isSSLEnabled
+                + '}';
     }
 
     private HttpResponse execute(HttpMethod method) throws IOException {
@@ -165,6 +226,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
             LOG.startTimer(TIMER_NAME);
         }
         try {
+
             client.executeMethod(method);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -191,12 +253,98 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
                     httpInfo.append("Exception sending request");
                 }
                 httpInfo.append(" in ").append(elapsedTime).append(" ms ").append(method.getName()).append(" ")
-                    .append(safeHostString(client.getHostConfiguration())).append(method.getURI());
+                        .append(safeHostString(client.getHostConfiguration())).append(method.getURI());
                 if (logInfo) {
-                    LOG.debug(httpInfo.toString());
+                    LOG.info(httpInfo.toString());
                 } else {
                     LOG.error(httpInfo.toString());
                 }
+            }
+        }
+    }
+
+    private HttpStreamResponse executeStreamWithTimeout(final HttpMethodBase HttpMethod, int timeoutMillis) {
+        client.getParams().setParameter("http.method.retry-handler", new DefaultHttpMethodRetryHandler(0, false));
+        ExecutorService service = Executors.newSingleThreadExecutor();
+
+        Future<HttpStreamResponse> future = service.submit(new Callable<HttpStreamResponse>() {
+            @Override
+            public HttpStreamResponse call() throws IOException {
+                return executeStream(HttpMethod);
+            }
+        });
+
+        try {
+            return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            String uriInfo = "";
+            try {
+                uriInfo = " for " + HttpMethod.getURI();
+            } catch (Exception ie) {
+            }
+            LOG.warn("Http connection thread was interrupted or has timed out" + uriInfo, e);
+            return null;
+        } finally {
+            service.shutdownNow();
+        }
+    }
+
+    private HttpStreamResponse executeStream(HttpMethod method) throws IOException {
+        if (isOauthEnabled) {
+            signWithOAuth(method);
+        }
+
+        applyHeadersCommonToAllRequests(method);
+
+        StatusLine statusLine = null;
+        if (LOG.isInfoEnabled()) {
+            LOG.startTimer(TIMER_NAME);
+        }
+        try {
+            int status = client.executeMethod(method);
+
+            checkStreamStatus(status, method);
+
+            return createStreamResponse(method);
+        } catch (Exception e) {
+            throw new IOException("Failed to get stream", e);
+        } finally {
+
+            if (LOG.isInfoEnabled()) {
+                long elapsedTime = LOG.stopTimer(TIMER_NAME);
+                StringBuilder httpInfo = new StringBuilder();
+                boolean logInfo = false;
+                if (statusLine != null) {
+                    logInfo = (statusLine.getStatusCode() < HttpStatus.SC_MULTIPLE_CHOICES);
+                    httpInfo.append("Outbound ").append(statusLine.getHttpVersion()).append(" Status ").append(statusLine.getStatusCode());
+                } else {
+                    httpInfo.append("Exception sending request");
+                }
+                httpInfo.append(" in ").append(elapsedTime).append(" ms ").append(method.getName()).append(" ")
+                        .append(safeHostString(client.getHostConfiguration())).append(method.getURI());
+                if (logInfo) {
+                    LOG.info(httpInfo.toString());
+                } else {
+                    LOG.error(httpInfo.toString());
+                }
+            }
+        }
+    }
+
+    private void checkStreamStatus(int status, HttpMethod httpMethod) throws HttpClientException {
+        LOG.debug(String.format("Got status: %s %s", status, httpMethod.getStatusText()));
+        if (status != 200 && status != 201) {
+            try {
+                String responseBodyAsString = httpMethod.getResponseBodyAsString();
+                if (!StringUtils.isEmpty(responseBodyAsString)) {
+                    responseBodyAsString = new String(responseBodyAsString.getBytes(), "UTF-8");
+                    throw new HttpClientException(
+                            "Bad status : " + httpMethod.getStatusText() + ":\n" + responseBodyAsString);
+                } else {
+                    throw new HttpClientException("Bad status : " + httpMethod.getStatusLine());
+                }
+            } catch (Exception e) {
+                throw new HttpClientException("Bad status : " + status + ". Could not read response body.");
             }
         }
     }
@@ -207,20 +355,19 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
             URI uri = method.getURI();
             URI newUri = new URI(
-                (isSSLEnabled) ? "https" : "http",
-                uri.getUserinfo(),
-                hostConfiguration.getHost(),
-                hostConfiguration.getPort(),
-                uri.getPath(),
-                uri.getQuery(),
-                uri.getFragment());
+                    (isSSLEnabled) ? "https" : "http",
+                    uri.getUserinfo(),
+                    hostConfiguration.getHost(),
+                    hostConfiguration.getPort(),
+                    uri.getPath(),
+                    uri.getQuery(),
+                    uri.getFragment());
 
             method.setURI(newUri);
 
             //URI checkUri = method.getURI();
             //String checkUriString = checkUri.toString();
-
-            CommonsHttpOAuthConsumer oAuthConsumer = new CommonsHttpOAuthConsumer(consumerKey, consumerSecret);
+            CommonsHttp3OAuthConsumer oAuthConsumer = new CommonsHttp3OAuthConsumer(consumerKey, consumerSecret);
             oAuthConsumer.setTokenWithSecret(consumerKey, consumerSecret);
             oAuthConsumer.sign(method);
         } catch (Exception e) {
@@ -228,14 +375,16 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
         }
     }
 
-    private void applyHeadersCommonToAllRequests(HttpMethod method) {
-        for (Map.Entry<String, String> headerEntry : headersForEveryRequest.entrySet()) {
-            method.addRequestHeader(headerEntry.getKey(), headerEntry.getValue());
+    private void setRequestHeaders(Map<String, String> headers, HttpMethodBase method) {
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entrySet()) {
+                method.setRequestHeader(header.getKey(), header.getValue());
+            }
         }
     }
 
-    private void applyHeadersForRequest(HttpMethod method, Map<String, String> additionalHeaders) {
-        for (Map.Entry<String, String> headerEntry : additionalHeaders.entrySet()) {
+    private void applyHeadersCommonToAllRequests(HttpMethod method) {
+        for (Map.Entry<String, String> headerEntry : headersForEveryRequest.entrySet()) {
             method.addRequestHeader(headerEntry.getKey(), headerEntry.getValue());
         }
     }
@@ -265,7 +414,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
     // package scope for testing ...
     OAuthConsumer getConsumer() {
         if (isOauthEnabled) {
-            return new CommonsHttpOAuthConsumer(consumerKey, consumerSecret);
+            return new CommonsHttp3OAuthConsumer(consumerKey, consumerSecret);
         }
         return null;
     }
@@ -283,5 +432,89 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
             return hostConfiguration.getHostURL();
         }
         return "";
+    }
+
+    private HttpStreamResponse createStreamResponse(HttpMethod method) throws IOException {
+
+        StatusLine statusLine = method.getStatusLine();
+        String filename = getFileName(method);
+        long length = getContentLength(method);
+        String contentType = getContentType(method);
+
+        HttpStreamResponse streamResponse = new HttpStreamResponse(statusLine.getStatusCode(), statusLine.getReasonPhrase(), method.getResponseBodyAsStream(),
+                filename, contentType, length);
+        return streamResponse;
+    }
+
+
+    /*
+     helper methods to get data from headers
+     */
+    private String getFileName(HttpMethod method) {
+        String filename;
+        filename = GetFileNameFromContentDisposition(method);
+        if (StringUtils.isNotEmpty(filename)) {
+            return filename;
+        } else {
+            filename = getFileNameFromURL(method);
+        }
+        return filename;
+
+    }
+
+    private String GetFileNameFromContentDisposition(HttpMethod method) {
+        String filename = "";
+        ContentDisposition contentDisposition;
+        Header[] contentDispositionHeader = method.getResponseHeaders("Content-Disposition");
+        if (contentDispositionHeader != null && contentDispositionHeader.length == 1 && contentDispositionHeader[0] != null
+                && contentDispositionHeader[0].getValue() != null) {
+            try {
+                contentDisposition = new ContentDisposition(contentDispositionHeader[0].getValue());
+                filename = contentDisposition.getFileName();
+            } catch (java.text.ParseException e) {
+                LOG.info("cant parse content disposition", e);
+            }
+        }
+        return filename;
+    }
+
+    private String getFileNameFromURL(HttpMethod method) {
+        String filename = "";
+        try {
+            String baseName = FilenameUtils.getBaseName(method.getURI().getURI());
+            String extension = FilenameUtils.getExtension(method.getURI().getURI());
+            extension = extension.substring(0, extension.indexOf("&") < 0 ? extension.length() : extension.indexOf("&"));
+            extension = extension.substring(0, extension.indexOf("?") < 0 ? extension.length() : extension.indexOf("?"));
+            if (StringUtils.isNotEmpty(baseName) && StringUtils.isNotEmpty(extension)) {
+                filename = baseName + "." + extension;
+            }
+        } catch (URIException e) {
+            LOG.info("cant parse url for getting filename", e);
+        }
+        return filename;
+    }
+
+    private long getContentLength(HttpMethod method) {
+        long size = -1;
+        Header[] contentLengthHeader = method.getResponseHeaders("Content-Length");
+        if (contentLengthHeader != null && contentLengthHeader.length == 1 && contentLengthHeader[0] != null
+                && contentLengthHeader[0].getValue() != null) {
+            try {
+                String contentLength = contentLengthHeader[0].getValue();
+                size = Long.parseLong(contentLength);
+            } catch (NumberFormatException e) {
+                LOG.info("cant parse content Content-Length", e);
+            }
+        }
+        return size;
+    }
+
+    private String getContentType(HttpMethod method) {
+        String contentType = "application/octet-stream";
+        Header[] contentTypeHeaders = method.getResponseHeaders("Content-Type");
+        if (contentTypeHeaders != null && contentTypeHeaders.length == 1 && contentTypeHeaders[0] != null && contentTypeHeaders[0].getValue() != null) {
+            contentType = contentTypeHeaders[0].getValue();
+        }
+        return contentType;
     }
 }

@@ -15,6 +15,8 @@
  */
 package com.jivesoftware.os.jive.utils.http.client;
 
+import java.util.Map;
+
 public class NoClientAvailableHttpClient implements HttpClient {
 
     @Override
@@ -37,7 +39,6 @@ public class NoClientAvailableHttpClient implements HttpClient {
         return new HttpResponse(503, "There is no available client to support the get call.", new byte[0]);
     }
 
-    @Override
     public HttpResponse get(HttpRequestParams requestParams) throws HttpClientException {
         return new HttpResponse(503, "There is no available client to support the get call.", new byte[0]);
     }
@@ -47,7 +48,6 @@ public class NoClientAvailableHttpClient implements HttpClient {
         return new HttpResponse(503, "There is no available client to support the postJson call.", new byte[0]);
     }
 
-    @Override
     public HttpResponse postJson(HttpRequestParams requestParams, String postJsonBody) throws HttpClientException {
         return new HttpResponse(503, "There is no available client to support the postJson call.", new byte[0]);
     }
@@ -57,8 +57,37 @@ public class NoClientAvailableHttpClient implements HttpClient {
         return new HttpResponse(503, "There is no available client to support the postBytes call.", new byte[0]);
     }
 
-    @Override
     public HttpResponse postBytes(HttpRequestParams requestParams, byte[] postBytes) throws HttpClientException {
         return new HttpResponse(503, "There is no available client to support the postBytes call.", new byte[0]);
+    }
+
+    @Override
+    public HttpResponse get(String path, Map<String, String> headers) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public HttpStreamResponse getStream(String path) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public HttpResponse get(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public HttpStreamResponse getStream(String path, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

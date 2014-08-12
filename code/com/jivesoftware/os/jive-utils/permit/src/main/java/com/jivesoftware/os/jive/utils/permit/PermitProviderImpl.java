@@ -63,7 +63,8 @@ public final class PermitProviderImpl implements PermitProvider {
 
         for (Permit issuedPermit : issuedPermits) {
             if (isExpired(issuedPermit, now)) {
-                Permit newPermit = new Permit(now, issuedPermit.expires, issuedPermit.id, issuedPermit.owner, issuedPermit.tenantId, issuedPermit.pool);
+                Permit newPermit = new Permit(now,
+                        issuedPermit.expiresInNMillis, issuedPermit.id, issuedPermit.owner, issuedPermit.tenantId, issuedPermit.pool);
                 Optional<Permit> permit = attemptToIssue(tenantId, issuedPermit.pool, issuedPermit.id, issuedPermit, newPermit);
                 if (permit.isPresent()) {
                     return permit;
@@ -103,7 +104,7 @@ public final class PermitProviderImpl implements PermitProvider {
                 expired.add(oldPermit);
                 renewed.add(Optional.<Permit>absent());
             } else {
-                Permit renewedPermit = new Permit(now, oldPermit.expires, oldPermit.id, oldPermit.owner, oldPermit.tenantId, oldPermit.pool);
+                Permit renewedPermit = new Permit(now, oldPermit.expiresInNMillis, oldPermit.id, oldPermit.owner, oldPermit.tenantId, oldPermit.pool);
                 Optional<Permit> permit = attemptToIssue(oldPermit.tenantId, oldPermit.pool, oldPermit.id, oldPermit, renewedPermit);
                 renewed.add(permit);
             }
@@ -132,9 +133,9 @@ public final class PermitProviderImpl implements PermitProvider {
         if (permit == null) {
             return Optional.absent();
         }
-        long age = (timestamper.get() - permit.issued);
-        if (age < permit.expires) {
-            if (age > permit.expires / 2) { // TODO expose to config?
+        long age = (timestamper.get() - permit.issuedAtTimeInMillis);
+        if (age < permit.expiresInNMillis) {
+            if (age > permit.expiresInNMillis / 2) { // TODO expose to config?
                 return renewPermit(Arrays.asList(permit)).get(0);
             } else {
                 return Optional.of(permit);
@@ -148,7 +149,7 @@ public final class PermitProviderImpl implements PermitProvider {
         if (permit == null) {
             return true;
         }
-        return permit.issued <= now - permit.expires;
+        return permit.issuedAtTimeInMillis <= now - permit.expiresInNMillis;
     }
 
     private Optional<Permit> attemptToIssue(String tenantId, String pool, int it, Permit expectedIssued, Permit now) {
