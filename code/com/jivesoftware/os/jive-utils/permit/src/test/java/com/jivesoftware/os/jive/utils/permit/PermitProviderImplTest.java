@@ -108,7 +108,8 @@ public class PermitProviderImplTest {
 
         List<Optional<Permit>> actual = permitProviderImpl.renewPermit(Arrays.asList(permit));
 
-        Optional<Permit> expected = Optional.of(new Permit(timestamper.get() - 3, permit.expires, permit.id, permit.owner, permit.tenantId, permit.pool));
+        Optional<Permit> expected = Optional.of(new Permit(timestamper.get() - 3,
+                permit.expiresInNMillis, permit.id, permit.owner, permit.tenantId, permit.pool));
         assertEquals(actual.get(0), expected, "Wasn't able to renew a current permit.");
     }
 

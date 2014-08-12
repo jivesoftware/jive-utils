@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jivesoftware.os.jive.utils.http.client.HttpClient;
 import com.jivesoftware.os.jive.utils.http.client.HttpClientException;
 import com.jivesoftware.os.jive.utils.http.client.HttpResponse;
+import com.jivesoftware.os.jive.utils.http.client.HttpStreamResponse;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.nio.charset.Charset;
 public class RequestHelper {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger(RequestHelper.class);
+    public static final int DEFAULT_STREAM_TIMEOUT_MILLIS = 5000;
 
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
@@ -44,10 +46,54 @@ public class RequestHelper {
      * <p/>
      * If the response body is empty, and the status code is successful, the client returns an empty (but valid) result.
      *
+     * @param endpointUrl path to the REST service
+     * @param resultClass type of the result class
+     * @param emptyResult an instance an empty result.
+     * @return the result
+     * @throws RuntimeException on marshalling, request, or deserialization failure
+     */
+    public <T> T executeGetRequest(String endpointUrl, Class<T> resultClass, T emptyResult) {
+
+        byte[] responseBody = executeGetJson(httpClient, endpointUrl);
+
+        if (responseBody.length == 0) {
+            LOG.warn("Received empty response from http call. The endpoint posted to was " + endpointUrl + "\".");
+            return emptyResult;
+        }
+
+        return extractResultFromResponse(responseBody, resultClass);
+    }
+
+    /**
+     * Sends the request to the server and returns the streames results.
+     * <p/>
+     * If the response body is empty, and the status code is successful, the client returns an empty (but valid) result.
+     *
+     * @param endpointUrl path to the REST service
+     * @return the result
+     * @throws RuntimeException on marshalling, request, or deserialization failure
+     */
+    public HttpStreamResponse executeGetStream(String endpointUrl) {
+
+        HttpStreamResponse ret = executeGetStream(httpClient, endpointUrl);
+
+        if (ret == null) {
+            LOG.warn("Received empty response from http call. The endpoint posted to was " + endpointUrl + "\".");
+            return null;
+        }
+
+        return ret;
+    }
+
+    /**
+     * Sends the request to the server and returns the deserialized results.
+     * <p/>
+     * If the response body is empty, and the status code is successful, the client returns an empty (but valid) result.
+     *
      * @param requestParamsObject request object
-     * @param endpointUrl         path to the REST service
-     * @param resultClass         type of the result class
-     * @param emptyResult         an instance an empty result.
+     * @param endpointUrl path to the REST service
+     * @param resultClass type of the result class
+     * @param emptyResult an instance an empty result.
      * @return the result
      * @throws RuntimeException on marshalling, request, or deserialization failure
      */
@@ -69,6 +115,40 @@ public class RequestHelper {
         }
 
         return extractResultFromResponse(responseBody, resultClass);
+    }
+
+    private byte[] executeGetJson(HttpClient httpClient, String endpointUrl) {
+        HttpResponse response;
+        try {
+            response = httpClient.get(endpointUrl);
+        } catch (HttpClientException e) {
+            throw new RuntimeException("Error posting query request to server.  The endpoint posted to was \"" + endpointUrl + "\".", e);
+        }
+
+        byte[] responseBody = response.getResponseBody();
+
+        if (responseBody == null) {
+            responseBody = EMPTY_RESPONSE;
+        }
+
+        if (!isSuccessStatusCode(response.getStatusCode())) {
+            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") " +
+                "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" " +
+                "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
+        }
+
+        return responseBody;
+    }
+
+    private HttpStreamResponse executeGetStream(HttpClient httpClient, String endpointUrl) {
+        HttpStreamResponse responseStream = null;
+        try {
+            responseStream = httpClient.getStream(endpointUrl, DEFAULT_STREAM_TIMEOUT_MILLIS);
+        } catch (HttpClientException e) {
+            throw new RuntimeException("Error getting query request to server.  The endpoint posted to was \"" + endpointUrl + "\".", e);
+        }
+
+        return responseStream;
     }
 
     private byte[] executePostJson(HttpClient httpClient, String endpointUrl, String postEntity) {

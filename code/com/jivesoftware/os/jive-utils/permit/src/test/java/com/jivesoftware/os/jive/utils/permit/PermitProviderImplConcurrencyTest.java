@@ -85,8 +85,8 @@ public class PermitProviderImplConcurrencyTest {
 
     private void assertOneOrBothPermitsExpired(PermitClient client1,
             PermitClient client2, long now) {
-        long expires1 = client1.permit.get().issued + EXPIRES;
-        long expires2 = client2.permit.get().issued + EXPIRES;
+        long expires1 = client1.permit.get().issuedAtTimeInMillis + EXPIRES;
+        long expires2 = client2.permit.get().issuedAtTimeInMillis + EXPIRES;
         assertTrue(
                 expires1 <= now || expires2 <= now,
                 "Neither permit is expired! "
@@ -160,7 +160,7 @@ public class PermitProviderImplConcurrencyTest {
         }
 
         public boolean isPermitExpired(long now) {
-            return permit.get() == null || now - permit.get().issued > EXPIRES;
+            return permit.get() == null || now - permit.get().issuedAtTimeInMillis > EXPIRES;
         }
 
         private boolean shouldTryRenew(long now, long nextRenewChance) {

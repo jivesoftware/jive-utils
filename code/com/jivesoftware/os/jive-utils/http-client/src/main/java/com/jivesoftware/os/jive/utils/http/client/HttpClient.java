@@ -15,85 +15,69 @@
  */
 package com.jivesoftware.os.jive.utils.http.client;
 
+import java.util.Map;
+
 public interface HttpClient {
+    //TODO need to create request object to pass as param to these methods.
 
     /**
-     *
      * @param path everything but the leading "http/s://host:port"
-     * @return
-     * @throws HttpClientException
      */
     HttpResponse get(String path) throws HttpClientException;
 
     /**
-     *
      * @param path everything but the leading "http/s://host:port"
-     * @param socketTimeoutMillis
-     * @return
-     * @throws HttpClientException
      */
-    HttpResponse get(String path, int socketTimeoutMillis) throws HttpClientException;
+    HttpResponse get(String path, Map<String, String> headers) throws HttpClientException;
 
     /**
-     *
-     * @param requestParams
-     * @return
-     * @throws HttpClientException
+     * @param path everything but the leading "http/s://host:port"
      */
-    HttpResponse get(HttpRequestParams requestParams) throws HttpClientException;
+    HttpStreamResponse getStream(String path) throws HttpClientException;
 
     /**
-     *
      * @param path everything but the leading "http/s://host:port"
-     * @param postJsonBody
-     * @return
-     * @throws HttpClientException
+     */
+    HttpResponse get(String path, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse get(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpStreamResponse getStream(String path, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
      */
     HttpResponse postJson(String path, String postJsonBody) throws HttpClientException;
 
     /**
-     *
      * @param path everything but the leading "http/s://host:port"
-     * @param postJsonBody
-     * @param socketTimeoutMillis
-     * @return
-     * @throws HttpClientException
      */
-    HttpResponse postJson(String path, String postJsonBody, int socketTimeoutMillis) throws HttpClientException;
+    HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers) throws HttpClientException;
 
     /**
-     *
-     * @param requestParams
-     * @return
-     * @throws HttpClientException
+     * @param path everything but the leading "http/s://host:port"
      */
-    HttpResponse postJson(HttpRequestParams requestParams, String postJsonBody) throws HttpClientException;
+    HttpResponse postJson(String path, String postJsonBody, int timeoutMillis) throws HttpClientException;
 
     /**
-     *
      * @param path everything but the leading "http/s://host:port"
-     * @param postBytes
-     * @return
-     * @throws HttpClientException
+     */
+    HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
      */
     HttpResponse postBytes(String path, byte[] postBytes) throws HttpClientException;
 
     /**
-     *
      * @param path everything but the leading "http/s://host:port"
-     * @param postBytes
-     * @param socketTimeoutMillis
-     * @return
-     * @throws HttpClientException
      */
-    HttpResponse postBytes(String path, byte[] postBytes, int socketTimeoutMillis) throws HttpClientException;
+    HttpResponse postBytes(String path, byte[] postBytes, int timeoutMillis) throws HttpClientException;
 
-    /**
-     *
-     * @param requestParams
-     * @param postBytes
-     * @return
-     * @throws HttpClientException
-     */
-    HttpResponse postBytes(HttpRequestParams requestParams, byte[] postBytes) throws HttpClientException;
 }
