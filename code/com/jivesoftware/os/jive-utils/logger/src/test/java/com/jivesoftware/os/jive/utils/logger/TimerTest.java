@@ -32,7 +32,6 @@ public class TimerTest {
         timer.sample(200);
         timer.sample(300);
 
-
         Assert.assertEquals(timer.getMin(), 100d, 0.01d);
         Assert.assertEquals(timer.getMax(), 300d, 0.01d);
         Assert.assertEquals(timer.getMean(), 200d, 0.01d);
@@ -61,7 +60,7 @@ public class TimerTest {
 
         Timer timer1 = log.countersAndTimers.getTimerIfAvailable("timer1");
         Assert.assertTrue(timer1.getMean() > 0.48 * (sleep1 + sleep2));
-        Assert.assertTrue(timer1.getMean() < 0.52 * (sleep1 + sleep2));
+        Assert.assertTrue(timer1.getMean() < 0.6 * (sleep1 + sleep2), timer1.getMean() + " < " + 0.6 * (sleep1 + sleep2));
         Assert.assertEquals(2, timer1.stats.getN());
 
     }
