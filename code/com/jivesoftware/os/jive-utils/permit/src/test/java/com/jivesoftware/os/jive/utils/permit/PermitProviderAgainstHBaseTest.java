@@ -19,7 +19,6 @@ import com.google.common.base.Optional;
 import com.jivesoftware.os.jive.utils.permit.PermitProviderImplInitializer.PermitProviderConfig;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMapsImplInitializer;
 import com.jivesoftware.os.jive.utils.row.column.value.store.inmemory.InMemorySetOfSortedMapsImplInitializer;
-import com.jivesoftware.os.jive.utils.row.column.value.store.tests.EmbeddedHBase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,15 +42,12 @@ import org.testng.annotations.Test;
  */
 public class PermitProviderAgainstHBaseTest {
 
-    EmbeddedHBase embeddedHBase;
     PermitProvider permitProvider;
 
     @BeforeMethod
     public void setup() throws Exception {
 
         if (permitProvider == null) {
-            embeddedHBase = new EmbeddedHBase();
-            //embeddedHBase.start(false);
 
             SetOfSortedMapsImplInitializer sos = new InMemorySetOfSortedMapsImplInitializer();
             //SetOfSortedMapsImplInitializer sos = new HBaseSetOfSortedMapsImplInitializer(embeddedHBase.getConfiguration());
@@ -63,7 +59,6 @@ public class PermitProviderAgainstHBaseTest {
 
     @AfterMethod
     public void teardown() throws Exception {
-        //embeddedHBase.stop();
     }
 
     @Test
