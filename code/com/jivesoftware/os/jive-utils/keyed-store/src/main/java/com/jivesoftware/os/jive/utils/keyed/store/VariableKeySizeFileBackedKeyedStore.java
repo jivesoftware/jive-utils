@@ -1,8 +1,7 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.google.common.base.Preconditions;
-import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
-
+import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import java.io.File;
 import java.io.IOException;
 
@@ -11,7 +10,7 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
     private final int[] keySizeThresholds;
     private final FileBackedKeyedStore[] keyedStores;
 
-    public VariableKeySizeFileBackedKeyedStore(File baseMapDirectory, File baseSwapDirectory, ChunkStore chunkStore, int[] keySizeThresholds,
+    public VariableKeySizeFileBackedKeyedStore(File baseMapDirectory, File baseSwapDirectory, MultiChunkStore chunkStore, int[] keySizeThresholds,
             long initialMapKeyCapacity, long newFilerInitialCapacity) throws Exception
     {
         this.keySizeThresholds = keySizeThresholds;

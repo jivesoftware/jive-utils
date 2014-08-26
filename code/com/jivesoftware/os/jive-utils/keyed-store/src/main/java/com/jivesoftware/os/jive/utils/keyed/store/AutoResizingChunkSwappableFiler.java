@@ -1,10 +1,9 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
-import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
+import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
-
 import java.io.IOException;
 
 /**
@@ -14,12 +13,12 @@ import java.io.IOException;
 public class AutoResizingChunkSwappableFiler implements SwappableFiler {
 
     private final AutoResizingChunkFiler filer;
-    private final ChunkStore chunkStore;
+    private final MultiChunkStore chunkStore;
     private final IBA key;
     private final FileBackMapStore<IBA, IBA> mapStore;
     private final FileBackMapStore<IBA, IBA> swapStore;
 
-    public AutoResizingChunkSwappableFiler(AutoResizingChunkFiler filer, ChunkStore chunkStore, IBA key,
+    public AutoResizingChunkSwappableFiler(AutoResizingChunkFiler filer, MultiChunkStore chunkStore, IBA key,
             FileBackMapStore<IBA, IBA> mapStore, FileBackMapStore<IBA, IBA> swapStore)
     {
         this.filer = filer;
@@ -133,7 +132,7 @@ public class AutoResizingChunkSwappableFiler implements SwappableFiler {
             IBA newChunk = swapStore.get(key);
             mapStore.add(key, newChunk);
             swapStore.remove(key);
-            chunkStore.remove(FilerIO.bytesLong(oldChunk.getBytes()));
+            chunkStore.remove(key.getBytes(), FilerIO.bytesLong(oldChunk.getBytes()));
         }
 
         @Override

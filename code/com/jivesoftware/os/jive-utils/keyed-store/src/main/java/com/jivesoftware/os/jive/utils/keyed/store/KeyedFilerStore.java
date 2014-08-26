@@ -1,6 +1,5 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
-import com.jivesoftware.os.jive.utils.io.Filer;
 
 import java.io.IOException;
 
