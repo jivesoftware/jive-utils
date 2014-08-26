@@ -1,8 +1,7 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
-import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
+import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
-
 import java.io.IOException;
 import java.util.Collections;
 
@@ -13,11 +12,11 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
 
     private final FileBackMapStore<IBA, IBA> mapStore;
     private final FileBackMapStore<IBA, IBA> swapStore;
-    private final ChunkStore chunkStore;
+    private final MultiChunkStore chunkStore;
     private final long newFilerInitialCapacity;
 
     public FileBackedKeyedStore(String mapDirectory, String swapDirectory, int mapKeySize, long initialMapKeyCapacity,
-            ChunkStore chunkStore, long newFilerInitialCapacity) throws Exception
+            MultiChunkStore chunkStore, long newFilerInitialCapacity) throws Exception
     {
         this.mapStore = initializeMapStore(mapDirectory, mapKeySize, initialMapKeyCapacity);
         this.swapStore = initializeMapStore(swapDirectory, mapKeySize, initialMapKeyCapacity);

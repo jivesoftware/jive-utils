@@ -10,9 +10,8 @@ package com.jivesoftware.os.jive.utils.chunk.store;
 
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
-import org.testng.annotations.Test;
-
 import java.io.File;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 

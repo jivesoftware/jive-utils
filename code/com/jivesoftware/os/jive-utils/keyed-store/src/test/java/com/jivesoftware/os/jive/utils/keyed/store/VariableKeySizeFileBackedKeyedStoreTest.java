@@ -3,15 +3,15 @@ package com.jivesoftware.os.jive.utils.keyed.store;
 import com.google.common.base.Charsets;
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStoreInitializer;
+import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
+import java.io.File;
+import java.nio.file.Files;
 import org.apache.commons.math.util.MathUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.io.File;
-import java.nio.file.Files;
 
 /**
  *
@@ -35,8 +35,9 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         File chunks = new File(chunkDirectory, "chunks");
         int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
         ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes, false);
+        MultiChunkStore multChunkStore = new MultiChunkStore(chunkStore);
         VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
-                mapDirectory, swapDirectory, chunkStore, keySizeThresholds, 100, 512);
+                mapDirectory, swapDirectory, multChunkStore, keySizeThresholds, 100, 512);
 
         for (int keySize : keySizeThresholds) {
             Filer filer = keyedStore.get(keyOfLength(keySize), true);
@@ -63,8 +64,9 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
         int newFilerInitialCapacity = 512;
         ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunks.getAbsolutePath(), chunkStoreCapacityInBytes, false);
+        MultiChunkStore multChunkStore = new MultiChunkStore(chunkStore);
         VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
-                mapDirectory, swapDirectory, chunkStore, keySizeThresholds, 100, newFilerInitialCapacity);
+                mapDirectory, swapDirectory, multChunkStore, keySizeThresholds, 100, newFilerInitialCapacity);
 
         int numberOfIntsInInitialCapacity = newFilerInitialCapacity / 4;
         int numberOfIntsInActualCapacity = numberOfIntsInInitialCapacity * 2; // actual capacity is doubled

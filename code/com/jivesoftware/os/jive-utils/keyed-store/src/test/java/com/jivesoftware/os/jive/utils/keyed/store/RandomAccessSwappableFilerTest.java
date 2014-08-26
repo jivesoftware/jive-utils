@@ -1,13 +1,12 @@
 package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.jivesoftware.os.jive.utils.io.FilerIO;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 public class RandomAccessSwappableFilerTest {
 
