@@ -16,7 +16,6 @@
 package com.jivesoftware.os.server.http.jetty.jersey.server.util;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,14 +24,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Resource {
+
     private static final Logger log = LoggerFactory.getLogger(Resource.class);
 
-    private List<String> welcomeFiles = new ArrayList<String>(Arrays.asList("index.html"));
-    private boolean allowDirectoryListing = false;
-    private String context = "/static";
-    private String localRootDir = "../../../..";
+    private final File rootDir;
 
-    public Resource() {
+    private List<String> welcomeFiles = new ArrayList<>(Arrays.asList("index.html"));
+    private boolean allowDirectoryListing = true;
+    private String context = "/static";
+    private List<String> resourcePaths = new ArrayList<>();
+
+    public Resource(File rootDir) {
+        this.rootDir = rootDir;
+    }
+
+    public Resource addResourcePath(String path) {
+        resourcePaths.add(path);
+        return this;
     }
 
     public Resource setWelcomeFiles(List<String> welcomeFiles) {
@@ -57,65 +65,27 @@ public class Resource {
     public ResourceHandler getResourceHandler() {
         ResourceHandler handler = new ResourceHandler();
 
-        File rootDir = getProdRootDir();
-        String fileName = this.welcomeFiles.get(0);
+        String resourceBase = null;
 
-        File knownResource = findResourcesDir(rootDir, fileName);
-        if (knownResource == null) {
-            rootDir = getLocalRootDir();
-            knownResource = findResourcesDir(rootDir, fileName);
+        for (String path : resourcePaths) {
+            File dir = new File(rootDir, path);
+            if (dir.isDirectory() && dir.list().length > 0) {
+                resourceBase = dir.getAbsolutePath();
+                break;
+            }
         }
-        if (knownResource == null) {
-            knownResource = new File(System.getProperty("user.dir"));
-            log.info("Unable to find static file " + fileName);
+
+        if (resourceBase == null) {
+            throw new IllegalStateException("Could not find resourceBase for context " + this.context);
         }
-        File knownResourceDir = knownResource.getParentFile();
-        log.info("Assiging " + knownResourceDir.toString() + " to context " + this.context);
-        handler.setResourceBase(knownResourceDir.getPath());
+
+        log.info("Assigning " + resourceBase + " to context " + this.context);
+        handler.setResourceBase(resourceBase);
         handler.setWelcomeFiles(welcomeFiles.toArray(new String[welcomeFiles.size()]));
         handler.setDirectoriesListed(allowDirectoryListing);
+        handler.setCacheControl("max-age=21600"); //6hrs
+        handler.setEtags(true);
 
         return handler;
-    }
-
-    private File getProdRootDir() {
-        String userDir = System.getProperty("user.dir");
-        File hack = new File(userDir);
-        return hack;
-    }
-
-    private File getLocalRootDir() {
-        return new File(System.getProperty("user.dir"), localRootDir).getAbsoluteFile();
-    }
-
-    public void setLocalRootDir(String localRootDir) {
-        this.localRootDir = localRootDir;
-    }
-
-    private static File findResourcesDir(File rootDir, String fileName) {
-        File[] files = rootDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                // exclude node_modules directory
-                return !name.equals("node_modules");
-            }
-        });
-        if (files != null) {
-            List<File> directories = new ArrayList<File>(files.length);
-            for (File file : files) {
-                if (file.getName().equals(fileName)) {
-                    return file;
-                } else if (file.isDirectory()) {
-                    directories.add(file);
-                }
-            }
-            for (File directory : directories) {
-                File file = findResourcesDir(directory, fileName);
-                if (file != null) {
-                    return file;
-                }
-            }
-        }
-        return null;
     }
 }
