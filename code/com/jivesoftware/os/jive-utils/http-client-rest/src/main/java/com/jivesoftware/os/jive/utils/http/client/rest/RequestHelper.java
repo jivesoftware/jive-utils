@@ -15,6 +15,7 @@
  */
 package com.jivesoftware.os.jive.utils.http.client.rest;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jivesoftware.os.jive.utils.http.client.HttpClient;
 import com.jivesoftware.os.jive.utils.http.client.HttpClientException;
@@ -103,8 +104,8 @@ public class RequestHelper {
         try {
             postEntity = mapper.writeValueAsString(requestParamsObject);
         } catch (IOException e) {
-            throw new RuntimeException("Error serializing request parameters object to a string.  Object " +
-                "was " + requestParamsObject, e);
+            throw new RuntimeException("Error serializing request parameters object to a string.  Object "
+                + "was " + requestParamsObject, e);
         }
 
         byte[] responseBody = executePostJson(httpClient, endpointUrl, postEntity);
@@ -115,6 +116,38 @@ public class RequestHelper {
         }
 
         return extractResultFromResponse(responseBody, resultClass);
+    }
+
+    /**
+     * Sends the request to the server and returns the deserialized results.
+     * <p/>
+     * If the response body is empty, and the status code is successful, the client returns an empty (but valid) result.
+     *
+     * @param requestParamsObject request object
+     * @param endpointUrl path to the REST service
+     * @param resultType type of the result class
+     * @param emptyResult an instance an empty result.
+     * @return the result
+     * @throws RuntimeException on marshalling, request, or deserialization failure
+     */
+    public <T> T executeRequest(Object requestParamsObject, String endpointUrl, JavaType resultType, T emptyResult) {
+
+        String postEntity;
+        try {
+            postEntity = mapper.writeValueAsString(requestParamsObject);
+        } catch (IOException e) {
+            throw new RuntimeException("Error serializing request parameters object to a string.  Object "
+                + "was " + requestParamsObject, e);
+        }
+
+        byte[] responseBody = executePostJson(httpClient, endpointUrl, postEntity);
+
+        if (responseBody.length == 0) {
+            LOG.warn("Received empty response from http call.  Posted request body was: " + postEntity);
+            return emptyResult;
+        }
+
+        return extractResultFromResponse(responseBody, resultType);
     }
 
     private byte[] executeGetJson(HttpClient httpClient, String endpointUrl) {
@@ -132,9 +165,9 @@ public class RequestHelper {
         }
 
         if (!isSuccessStatusCode(response.getStatusCode())) {
-            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") " +
-                "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" " +
-                "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
+            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") "
+                + "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" "
+                + "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
         }
 
         return responseBody;
@@ -156,8 +189,8 @@ public class RequestHelper {
         try {
             response = httpClient.postJson(endpointUrl, postEntity);
         } catch (HttpClientException e) {
-            throw new RuntimeException("Error posting query request to server.  The entity posted " +
-                "was \"" + postEntity + "\" and the endpoint posted to was \"" + endpointUrl + "\".", e);
+            throw new RuntimeException("Error posting query request to server.  The entity posted "
+                + "was \"" + postEntity + "\" and the endpoint posted to was \"" + endpointUrl + "\".", e);
         }
 
         byte[] responseBody = response.getResponseBody();
@@ -167,9 +200,9 @@ public class RequestHelper {
         }
 
         if (!isSuccessStatusCode(response.getStatusCode())) {
-            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") " +
-                "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" " +
-                "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
+            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") "
+                + "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" "
+                + "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
         }
 
         return responseBody;
@@ -180,8 +213,21 @@ public class RequestHelper {
         try {
             result = mapper.readValue(responseBody, 0, responseBody.length, resultClass);
         } catch (Exception e) {
-            throw new RuntimeException("Error deserializing response body into result " +
-                "object.  Response body was \"" + (responseBody != null ? new String(responseBody, UTF_8) : "null")
+            throw new RuntimeException("Error deserializing response body into result "
+                + "object.  Response body was \"" + (responseBody != null ? new String(responseBody, UTF_8) : "null")
+                + "\".", e);
+        }
+
+        return result;
+    }
+
+    private <T> T extractResultFromResponse(byte[] responseBody, JavaType type) {
+        T result;
+        try {
+            result = mapper.readValue(responseBody, 0, responseBody.length, type);
+        } catch (IOException e) {
+            throw new RuntimeException("Error deserializing response body into result "
+                + "object.  Response body was \"" + (responseBody != null ? new String(responseBody, UTF_8) : "null")
                 + "\".", e);
         }
 
@@ -192,4 +238,8 @@ public class RequestHelper {
         return statusCode >= 200 && statusCode < 300;
     }
 
+    @Override
+    public String toString() {
+        return "RequestHelper{" + "httpClient=" + httpClient + '}';
+    }
 }
