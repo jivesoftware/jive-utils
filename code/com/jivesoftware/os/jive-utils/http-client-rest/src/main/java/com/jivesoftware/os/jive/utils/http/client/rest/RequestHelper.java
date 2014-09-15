@@ -130,7 +130,7 @@ public class RequestHelper {
      * @return the result
      * @throws RuntimeException on marshalling, request, or deserialization failure
      */
-    public <T> T executeRequest(Object requestParamsObject, String endpointUrl, JavaType resultType, T emptyResult) {
+    public <T> T executeRequest(Object requestParamsObject, String endpointUrl, Class<T> parametrized, Class<?>[] parameterClasses, T emptyResult) {
 
         String postEntity;
         try {
@@ -146,7 +146,7 @@ public class RequestHelper {
             LOG.warn("Received empty response from http call.  Posted request body was: " + postEntity);
             return emptyResult;
         }
-
+        JavaType resultType = mapper.getTypeFactory().constructParametricType(parametrized, parameterClasses);
         return extractResultFromResponse(responseBody, resultType);
     }
 
