@@ -166,6 +166,29 @@ public final class MetricLogger {
     }
 
     /**
+     * Logs a message at Level.TRACE with an exception after having substituted the elements of 'argArray' into the 'messagePattern'
+     * at locations designated by '{}'s.
+     *
+     * Example: String fieldName = "foo"; String value = "bar"; LOG.trace("fieldName:{}={}", new Object[]{fieldName,value});
+     *
+     * Yields: "fieldName:foo=bar"
+     *
+     * @param messagePattern null is ok.
+     * @param argArray null is ok.
+     * @param t null is NOT ok.
+     */
+    public void trace(String messagePattern, Object[] argArray, Throwable t) {
+        if (!isTraceEnabled()) {
+            return;
+        }
+
+        loggerSummary.traces++;
+        loggerTracesCount.inc();
+        String msgStr = MessageFormatter.arrayFormat(messagePattern, argArray);
+        logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.TRACE, null, msgStr, t));
+    }
+
+    /**
      * Logs a message at Level.TRACE after having substituted the elements of 'argArray' into the 'messagePattern' at locations designated by '{}'s.
      *
      * Example: String fieldName = "foo"; String value = "bar"; LOG.trace("fieldName:{}={}", new Object[]{fieldName,value});
@@ -284,6 +307,29 @@ public final class MetricLogger {
     }
 
     /**
+     * Logs a message at Level.DEBUG with an exception after having substituted the elements of 'argArray' into the 'messagePattern'
+     * at locations designated by '{}'s.
+     *
+     * Example: String fieldName = "foo"; String value = "bar"; LOG.trace("fieldName:{}={}", new Object[]{fieldName,value});
+     *
+     * Yields: "fieldName:foo=bar"
+     *
+     * @param messagePattern null is ok.
+     * @param argArray null is ok.
+     * @param t null is NOT ok.
+     */
+    public void debug(String messagePattern, Object[] argArray, Throwable t) {
+        if (!logger.isDebugEnabled()) {
+            return;
+        }
+
+        loggerSummary.debugs++;
+        loggerDebugsCount.inc();
+        String msgStr = MessageFormatter.arrayFormat(messagePattern, argArray);
+        logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.DEBUG, null, msgStr, t));
+    }
+
+    /**
      * Logs a message at Level.DEBUG after having substituted the elements of 'argArray' into the 'messagePattern' at locations designated by '{}'s.
      *
      * Example: String fieldName = "foo"; String value = "bar"; LOG.trace("fieldName:{}={}", new Object[]{fieldName,value});
@@ -384,6 +430,30 @@ public final class MetricLogger {
         String msgStr = MessageFormatter.format(messagePattern, arg1, arg2);
         logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.WARN, null, msgStr, null));
         loggerSummary.lastNWarns.add(String.format(messagePattern, arg1, arg2));
+    }
+
+    /**
+     * Logs a message at Level.WARN with an exception after having substituted the elements of 'argArray' into the 'messagePattern'
+     * at locations designated by '{}'s.
+     *
+     * Example: String fieldName = "foo"; String value = "bar"; LOG.trace("fieldName:{}={}", new Object[]{fieldName,value});
+     *
+     * Yields: "fieldName:foo=bar"
+     *
+     * @param messagePattern null is ok.
+     * @param argArray null is ok.
+     * @param t null is NOT ok.
+     */
+    public void warn(String messagePattern, Object[] argArray, Throwable t) {
+        if (!logger.isEnabledFor(Level.WARN)) {
+            return;
+        }
+
+        loggerSummary.warns++;
+        loggerWarnsCount.inc();
+        String msgStr = MessageFormatter.arrayFormat(messagePattern, argArray);
+        logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.WARN, null, msgStr, t));
+        loggerSummary.lastNWarns.add(String.format(messagePattern, argArray));
     }
 
     /**
@@ -489,6 +559,29 @@ public final class MetricLogger {
         String msgStr = MessageFormatter.format(messagePattern, arg1, arg2);
         logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.INFO, null, msgStr, null));
         loggerSummary.lastNInfos.add(String.format(messagePattern, arg1, arg2));
+    }
+
+    /**
+     * Logs a message at Level.INFO with an exception after having substituted the elements of 'argArray' into the 'messagePattern'
+     * at locations designated by '{}'s.
+     *
+     * Example: String fieldName = "foo"; String value = "bar"; LOG.trace("fieldName:{}={}", new Object[]{fieldName,value});
+     *
+     * Yields: "fieldName:foo=bar"
+     *
+     * @param messagePattern null is ok.
+     * @param argArray null is ok.
+     */
+    public void info(String messagePattern, Object[] argArray, Throwable t) {
+        if (!logger.isInfoEnabled()) {
+            return;
+        }
+
+        loggerSummary.infos++;
+        loggerInfosCount.inc();
+        String msgStr = MessageFormatter.arrayFormat(messagePattern, argArray);
+        logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.INFO, null, msgStr, t));
+        loggerSummary.lastNInfos.add(String.format(messagePattern, argArray));
     }
 
     /**
@@ -611,6 +704,30 @@ public final class MetricLogger {
         String msgStr = MessageFormatter.format(messagePattern, arg1, arg2);
         logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.ERROR, null, msgStr, null));
         loggerSummary.lastNErrors.add(String.format(messagePattern, arg1, arg2));
+    }
+
+    /**
+     * Logs a message at Level.ERROR with an exception after having substituted the elements of 'argArray' into the 'messagePattern'
+     * at locations designated by '{}'s.
+     *
+     * Example: String fieldName = "foo"; String value = "bar"; LOG.trace("fieldName:{}={}", new Object[]{fieldName,value});
+     *
+     * Yields: "fieldName:foo=bar"
+     *
+     * @param messagePattern null is ok.
+     * @param argArray null is ok.
+     * @param t null is NOT ok.
+     */
+    public void error(String messagePattern, Object[] argArray, Throwable t) {
+        if (!logger.isEnabledFor(Level.ERROR)) {
+            return;
+        }
+
+        loggerSummary.errors++;
+        loggerErrorsCount.inc();
+        String msgStr = MessageFormatter.arrayFormat(messagePattern, argArray);
+        logger.callAppenders(new MetricLogEvent(fullQualifiedClassName, logger, Level.ERROR, null, msgStr, t));
+        loggerSummary.lastNErrors.add(String.format(messagePattern, argArray));
     }
 
     /**
