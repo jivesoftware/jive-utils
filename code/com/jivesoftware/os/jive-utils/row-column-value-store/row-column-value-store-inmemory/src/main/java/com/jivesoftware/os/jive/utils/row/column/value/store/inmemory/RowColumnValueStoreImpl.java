@@ -454,7 +454,10 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
                     }
 
                     try {
-                        callbackStream.callback(new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp()));
+                        ColumnValueAndTimestamp<K, V, TS> cvat = new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp());
+                        if (callbackStream.callback(cvat) != cvat) {
+                            break;
+                        }
                     } catch (Exception ex) {
                         throw new CallbackStreamException(ex);
                     }
@@ -495,7 +498,10 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
                     }
 
                     try {
-                        callbackStream.callback(new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp()));
+                        ColumnValueAndTimestamp<K, V, TS> cvat = new ColumnValueAndTimestamp<>(column, got.getValue(), (TS) (Object) got.getTimestamp());
+                        if (callbackStream.callback(cvat) != cvat) {
+                            break;
+                        }
                     } catch (Exception ex) {
                         throw new CallbackStreamException(ex);
                     }

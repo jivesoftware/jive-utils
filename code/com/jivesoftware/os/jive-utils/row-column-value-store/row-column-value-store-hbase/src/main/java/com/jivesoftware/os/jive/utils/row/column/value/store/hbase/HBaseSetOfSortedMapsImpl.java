@@ -971,9 +971,12 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                         V fromValueBytes = marshaller.fromValueBytes(keyValue.getValue());
 
                         try {
-                            callbackStream.callback(new ColumnValueAndTimestamp<>(
-                                    fromColumnKeyBytes, fromValueBytes,
-                                    (TS) (Object) keyValue.getTimestamp()));
+                            ColumnValueAndTimestamp<C, V, TS> cvat = new ColumnValueAndTimestamp<>(
+                                fromColumnKeyBytes, fromValueBytes,
+                                (TS) (Object) keyValue.getTimestamp());
+                            if (callbackStream.callback(cvat) != cvat) {
+                                break;
+                            }
                         } catch (Exception ex) {
                             throw new CallbackStreamException(ex);
                         }
@@ -1037,9 +1040,12 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                         V fromValueBytes = marshaller.fromValueBytes(keyValue.getValue());
 
                         try {
-                            callbackStream.callback(new ColumnValueAndTimestamp<>(
-                                    fromColumnKeyBytes, fromValueBytes,
-                                    (TS) (Object) keyValue.getTimestamp()));
+                            ColumnValueAndTimestamp<C, V, TS> cvat = new ColumnValueAndTimestamp<>(
+                                fromColumnKeyBytes, fromValueBytes,
+                                (TS) (Object) keyValue.getTimestamp());
+                            if (callbackStream.callback(cvat) != cvat) {
+                                break;
+                            }
                         } catch (Exception ex) {
                             throw new CallbackStreamException(ex);
                         }
