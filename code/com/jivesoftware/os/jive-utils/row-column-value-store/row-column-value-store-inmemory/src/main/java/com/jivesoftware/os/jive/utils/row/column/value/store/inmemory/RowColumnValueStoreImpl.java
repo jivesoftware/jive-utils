@@ -24,8 +24,9 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumV
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.TenantRowColumnTimestampRemove;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.ValueStoreMarshaller;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
-
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -295,10 +296,11 @@ public class RowColumnValueStoreImpl<T, S, K, V> implements RowColumnValueStore<
         synchronized (rowLocks.lock(rowKey)) {
             Map<K, Timestamped<V>> map = store.get(rowKey);
             if (map == null) {
-                return new ColumnValueAndTimestamp[columnKeys.length];
+                return new ColumnValueAndTimestamp[columnKeys != null ? columnKeys.length : 0];
             }
+            Collection<K> keysToIterate = (columnKeys != null) ? Arrays.asList(columnKeys) : map.keySet();
             List<ColumnValueAndTimestamp<K, V, Long>> got = new LinkedList<>();
-            for (K columnKey : columnKeys) {
+            for (K columnKey : keysToIterate) {
                 Timestamped<V> value = map.get(columnKey);
                 if (value == null) {
                     got.add(null);

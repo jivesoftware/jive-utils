@@ -338,23 +338,38 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
         try {
 
             byte[] rawRowKey = marshaller.toRowKeyBytes(tenantId, rowKey);
-            List<Get> gets = new LinkedList<>();
-            for (C columnKey : columnKeys) {
-                byte[] rawColumnKey = marshaller.toColumnKeyBytes(columnKey);
-                Get get = new Get(rawRowKey);
-                get.addColumn(family, rawColumnKey);
-                gets.add(get);
-            }
-
-            Result[] results = t.get(gets);
             ColumnValueAndTimestamp<C, V, Long>[] got = null;
-            if (results != null) {
-                got = new ColumnValueAndTimestamp[results.length];
-                for (int i = 0; i < results.length; i++) {
-                    Result result = results[i];
-                    if (!result.isEmpty()) {
-                        KeyValue[] raw = result.raw();
-                        KeyValue mostRecent = raw[0];
+
+            if (columnKeys != null) {
+                Get get = new Get(rawRowKey);
+                for (C columnKey : columnKeys) {
+                    byte[] rawColumnKey = marshaller.toColumnKeyBytes(columnKey);
+                    get.addColumn(family, rawColumnKey);
+                }
+
+                Result result = t.get(get);
+                if (result != null) {
+                    got = new ColumnValueAndTimestamp[columnKeys.length];
+                    for (int i = 0; i < columnKeys.length; i++) {
+                        C c = columnKeys[i];
+                        byte[] rawColumnKey = marshaller.toColumnKeyBytes(c);
+                        KeyValue mostRecent = result.getColumnLatest(family, rawColumnKey);
+                        if (mostRecent != null) {
+                            V v = marshaller.fromValueBytes(mostRecent.getValue());
+                            Long timestamp = mostRecent.getTimestamp();
+                            got[i] = new ColumnValueAndTimestamp<>(columnKeys[i], v, timestamp);
+                        }
+                    }
+                }
+            } else {
+                Get get = new Get(rawRowKey);
+
+                Result result = t.get(get);
+                if (result != null) {
+                    got = new ColumnValueAndTimestamp[result.size()];
+                    KeyValue[] raw = result.raw();
+                    for (int i = 0; i < raw.length; i++) {
+                        KeyValue mostRecent = raw[i];
                         C c = marshaller.fromColumnKeyBytes(mostRecent.getQualifier());
                         V v = marshaller.fromValueBytes(mostRecent.getValue());
                         Long timestamp = mostRecent.getTimestamp();

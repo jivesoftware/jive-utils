@@ -105,7 +105,7 @@ public interface RowColumnValueStore<T, R, C, V, E extends Exception> {
      *
      * @param tenantId
      * @param rowKey
-     * @param columnKeys
+     * @param columnKeys can be null
      * @param overrideNumberOfRetries
      * @param overrideConsistency
      * @return
