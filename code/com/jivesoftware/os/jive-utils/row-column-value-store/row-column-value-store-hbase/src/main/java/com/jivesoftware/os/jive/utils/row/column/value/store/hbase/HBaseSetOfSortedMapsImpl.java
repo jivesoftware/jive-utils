@@ -363,6 +363,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                 }
             } else {
                 Get get = new Get(rawRowKey);
+                get.addFamily(family);
 
                 Result result = t.get(get);
                 if (result != null) {
