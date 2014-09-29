@@ -125,6 +125,41 @@ public final class CountersAndTimers {
         return counter;
     }
 
+    void startNanoTimer(String key) {
+
+        String threadKey = key + Thread.currentThread().getId();
+        Long startTime = startTimes.get(threadKey);
+
+        if (startTime == null) {
+            startTime = System.nanoTime();
+            startTimes.put(threadKey, startTime);
+        }
+    }
+
+    long stopNanoTimer(String key, String recordedKey) {
+
+        String threadKey = key + Thread.currentThread().getId();
+        Long startTime = startTimes.remove(threadKey);
+        if (startTime == null) {
+            logger.warn("Trying to stop a timer you never called start on: TimerId:" + key);
+            return -1;
+        }
+
+        Timer timer = timers.get(recordedKey);
+        if (timer == null) {
+            timer = new Timer();
+            Timer exisitingTimer = timers.putIfAbsent(recordedKey, timer);
+            if (exisitingTimer == null) {
+                register(className + ">" + recordedKey, timer);
+            } else {
+                timer = exisitingTimer;
+            }
+        }
+        long elapseInNanos = System.nanoTime() - startTime;
+        timer.sample(elapseInNanos);
+        return elapseInNanos;
+    }
+
     void startTimer(String key) {
 
         String threadKey = key + Thread.currentThread().getId();

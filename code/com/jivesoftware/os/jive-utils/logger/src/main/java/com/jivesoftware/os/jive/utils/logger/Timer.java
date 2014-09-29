@@ -23,7 +23,7 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
  */
 public class Timer implements TimerMXBean {
 
-    DescriptiveStatistics stats = new DescriptiveStatistics(100);
+    DescriptiveStatistics stats = new DescriptiveStatistics(5000); // TODO expose to start call.
 
     public Timer() {
     }
