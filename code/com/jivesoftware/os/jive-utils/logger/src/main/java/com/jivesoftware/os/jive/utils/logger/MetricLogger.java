@@ -963,6 +963,37 @@ public final class MetricLogger {
         return countersAndTimers.stopTimer(name, name);
     }
 
+
+    /**
+     * Starts a named timer. Each time a time is started and stopped its elapse is added as a sample to
+     * org.apache.commons.math.stat.descriptive.SummaryStatistics;
+     *
+     * Each threads timings are captured discreetly. If the same thread re-enters start before stop is called it will not advance the start time.
+     *
+     * Metric names can be organized hierarchically by using the greater than separator. For example: try { LOG.startTimer("foo>bar>a");
+     * LOG.startTimer("foo>bar>b"); LOG.startTimer("foo>bazz>c");
+     *
+     * ....... } finally { LOG.stopTimer("foo>bar>a"); LOG.stopTimer("foo>bar>b"); LOG.stopTimer("foo>bazz>c"); }
+     *
+     * Yields: foo |-- bar | |-- a = 234325 (nanos) | |-- b = 234328 (nanos) |-- baz | |-- c = 234333 (nanos)
+     *
+     * @param name null NOT ok.
+     */
+    public void startNanoTimer(String name) {
+        countersAndTimers.startNanoTimer(name);
+    }
+
+    /**
+     * Stops a named timer. See: {@link #startTimer(String name)} This is a convenience method that delegates to
+     * {@link #stopTimer(java.lang.String, java.lang.String)}
+     *
+     * @param name null NOT ok.
+     * @return elapse in millis
+     */
+    public long stopNanoTimer(String name) {
+        return countersAndTimers.stopNanoTimer(name, name);
+    }
+
     /**
      * Stops a named timer. See: {@link #startTimer(String name)}
      *
