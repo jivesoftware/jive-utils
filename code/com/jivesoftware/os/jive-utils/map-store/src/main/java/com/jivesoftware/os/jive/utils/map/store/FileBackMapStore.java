@@ -12,9 +12,6 @@ import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.mutable.MutableLong;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListMap;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.mutable.MutableLong;
 
 /**
  * @author jonathan
@@ -141,6 +140,20 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
     private File createIndexFilePostfixed(String partition, String postfix) {
         String newIndexFilename = partition + (postfix == null ? "" : postfix);
         return new File(pathToPartitions, newIndexFilename);
+    }
+
+    public V getUnsafe(K key) throws KeyValueStoreException {
+        if (key == null) {
+            return returnWhenGetReturnsNull;
+        }
+        MapChunk index = index(key);
+        byte[] keyBytes = keyBytes(key);
+        byte[] payload = mapStore.get(index.duplicate(), keyBytes, extractPayload);
+
+        if (payload == null) {
+            return returnWhenGetReturnsNull;
+        }
+        return bytesValue(key, payload, 0);
     }
 
     @Override

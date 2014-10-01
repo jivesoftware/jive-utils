@@ -5,7 +5,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -28,7 +27,6 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueS
             final int keySize = keySizeThresholds[i];
             String pathToPartitions = new File(basePathToPartitions, String.valueOf(keySize)).getAbsolutePath();
             mapStores[i] = new FileBackMapStore<K, V>(pathToPartitions, keySize, payloadSize, initialPageCapacity, concurrency, returnWhenGetReturnsNull) {
-
                 @Override
                 public String keyPartition(K key) {
                     return VariableKeySizeFileBackMapStore.this.keyPartition(key);
@@ -89,6 +87,10 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueS
     @Override
     public V get(K key) throws KeyValueStoreException {
         return getMapStore(keyLength(key)).get(key);
+    }
+
+    public V getUnsafe(K key) throws KeyValueStoreException {
+        return getMapStore(keyLength(key)).getUnsafe(key);
     }
 
     @Override
