@@ -26,6 +26,15 @@ public class MapChunk {
         this.array = array;
     }
 
+    public MapChunk duplicate() {
+        MapChunk mapChunk = new MapChunk(mapStore, array.duplicate());
+        mapChunk.keySize = keySize;
+        mapChunk.payloadSize = payloadSize;
+        mapChunk.capacity = capacity;
+        mapChunk.maxCount = maxCount;
+        return mapChunk;
+    }
+
     /**
      *
      */
@@ -155,7 +164,6 @@ public class MapChunk {
         }
         return true;
     }
-
 
     /**
      *
