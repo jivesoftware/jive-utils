@@ -39,6 +39,8 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger(true);
 
+    private static final byte[] EMPTY_ID = new byte[16];
+
     private final ExtractPayload extractPayload = new ExtractPayload();
     private final MapStore mapStore = new MapStore(new ExtractIndex(), new ExtractKey(), extractPayload);
     private final String pathToPartitions;
@@ -85,7 +87,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
 
                     File temporaryNewKeyIndexParition = createIndexTempFile(key);
                     MapChunk newIndex = mmap(temporaryNewKeyIndexParition, newSize);
-                    mapStore.copyTo(index, newIndex);
+                    mapStore.copyTo(index, newIndex, null);
                     // TODO: implement to clean up
                     //index.close();
                     //newIndex.close();
@@ -161,10 +163,10 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         if (key == null) {
             return returnWhenGetReturnsNull;
         }
-        MapChunk index = index(key);
         byte[] keyBytes = keyBytes(key);
         byte[] payload;
         synchronized (keyLocksProvider.lock(keyPartition(key))) {
+            MapChunk index = index(key);
             payload = mapStore.get(index, keyBytes, extractPayload);
         }
         if (payload == null) {
@@ -223,7 +225,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
             page.init();
             return page;
         } else {
-            MapChunk set = mapStore.allocate((byte) 0, (byte) 0, new byte[16], 0, maxCapacity, keySize,
+            MapChunk set = mapStore.allocate((byte) 0, (byte) 0, EMPTY_ID, 0, maxCapacity, keySize,
                 payloadSize,
                 new ByteBufferFactory() {
 
@@ -272,15 +274,18 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 iterators.add(Iterators.transform(mapStore.iterator(got), new Function<MapStore.Entry, Entry<K, V>>() {
                     @Override
                     public Entry<K, V> apply(final MapStore.Entry input) {
+                        final K key = bytesKey(input.key, 0);
+                        final V value = bytesValue(key, input.payload, 0);
+
                         return new Entry<K, V>() {
                             @Override
                             public K getKey() {
-                                return bytesKey(input.key, 0);
+                                return key;
                             }
 
                             @Override
                             public V getValue() {
-                                return bytesValue(getKey(), input.payload, 0);
+                                return value;
                             }
                         };
                     }

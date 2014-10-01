@@ -4,7 +4,6 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.extractors.Extractor;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractorStream;
-
 import java.util.Iterator;
 
 /**
@@ -477,21 +476,21 @@ public class MapStore {
         return extractor.ifNull();
     }
 
-    final public byte[] remove(MapChunk page, byte[] key) {
+    final public int remove(MapChunk page, byte[] key) {
         return remove(page, key, 0);
     }
 
-    final public byte[] remove(MapChunk page, long keyHash, byte[] key) {
+    final public int remove(MapChunk page, long keyHash, byte[] key) {
         return remove(page, keyHash, key, 0);
     }
 
-    final public byte[] remove(MapChunk page, byte[] key, int keyOffset) {
+    final public int remove(MapChunk page, byte[] key, int keyOffset) {
         return remove(page, hash(key, 0, key.length), key, keyOffset);
     }
 
-    final public byte[] remove(MapChunk page, long keyHash, byte[] key, int keyOffset) {
+    final public int remove(MapChunk page, long keyHash, byte[] key, int keyOffset) {
         if (key == null || key.length == 0) {
-            return null;
+            return -1;
         }
         int capacity = page.capacity;
         int keySize = page.keySize;
@@ -505,7 +504,7 @@ public class MapStore {
                 continue;
             }
             if (page.read((int) ai) == cNull) {
-                return null;
+                return -1;
             }
             if (page.equals(ai, keySize, key, keyOffset)) {
                 byte[] removedPayload = extractPayload.extract((int) i, ai, keySize, payloadSize, page);
@@ -522,10 +521,10 @@ public class MapStore {
                     page.write((int) index(i, keySize, payloadSize), cSkip);
                 }
                 setCount(page, getCount(page) - 1);
-                return removedPayload;
+                return (int) i;
             }
         }
-        return null;
+        return -1;
     }
 
     /**
@@ -572,7 +571,7 @@ public class MapStore {
      * @param from
      * @param to
      */
-    final public void copyTo(MapChunk from, MapChunk to) {
+    final public void copyTo(MapChunk from, MapChunk to, CopyToStream stream) {
         int fcapacity = from.capacity;
         int fkeySize = from.keySize;
         int fpayloadSize = from.payloadSize;
@@ -593,8 +592,8 @@ public class MapStore {
             throw new RuntimeException("Insufficient room " + tmaxCount + " vs " + fcount);
         }
 
-        for (int i = 0; i < fcapacity; i++) {
-            long ai = index(i, fkeySize, fpayloadSize);
+        for (int fromIndex = 0; fromIndex < fcapacity; fromIndex++) {
+            long ai = index(fromIndex, fkeySize, fpayloadSize);
             byte mode = from.read((int) ai);
             if (mode == cNull) {
                 continue;
@@ -603,12 +602,20 @@ public class MapStore {
                 continue;
             }
             fcount--;
-            add(to, mode, extractKey.extract(i, ai, fkeySize, fpayloadSize, from), extractPayload.extract(i, ai, fkeySize, fpayloadSize, from));
+            int toIndex = add(to, mode, extractKey.extract(fromIndex, ai, fkeySize, fpayloadSize, from), extractPayload.extract(fromIndex, ai, fkeySize, fpayloadSize, from));
+
+            if (stream != null) {
+                stream.copied(fromIndex, toIndex);
+            }
 
             if (fcount < 0) {
                 break;
             }
         }
+    }
+
+    public interface CopyToStream {
+        void copied(int fromIndex, int toIndex);
     }
 
     /**
@@ -667,6 +674,7 @@ public class MapStore {
 
             private byte[] key;
             private byte[] payload;
+            private int payloadIndex;
 
             @Override
             public boolean hasNext() {
@@ -677,9 +685,10 @@ public class MapStore {
             @Override
             public Entry next() {
                 seekNext();
-                Entry entry = key != null ? new Entry(key, payload) : null;
+                Entry entry = key != null ? new Entry(key, payload, payloadIndex) : null;
                 key = null;
                 payload = null;
+                payloadIndex = -1;
                 return entry;
             }
 
@@ -688,6 +697,7 @@ public class MapStore {
                     key = getKeyAtIndex(page, index);
                     if (key != null) {
                         payload = getPayloadAtIndex(page, index);
+                        payloadIndex = index;
                     }
                     index++;
                 }
@@ -704,10 +714,12 @@ public class MapStore {
 
         public final byte[] key;
         public final byte[] payload;
+        public final int payloadIndex;
 
-        public Entry(byte[] key, byte[] payload) {
+        public Entry(byte[] key, byte[] payload, int payloadIndex) {
             this.key = key;
             this.payload = payload;
+            this.payloadIndex = payloadIndex;
         }
     }
 }
