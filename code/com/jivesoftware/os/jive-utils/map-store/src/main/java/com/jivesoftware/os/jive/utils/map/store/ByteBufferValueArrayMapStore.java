@@ -46,6 +46,15 @@ public abstract class ByteBufferValueArrayMapStore<K, V> implements KeyValueStor
     }
 
     @Override
+    public long estimateSizeInBytes() {
+        Index index = indexRef.get();
+        if (index != null) {
+            return index.chunk.size() + index.payloads.capacity();
+        }
+        return -1;
+    }
+
+    @Override
     public void add(final K key, V value) throws KeyValueStoreException {
         if (key == null || value == null) {
             return;

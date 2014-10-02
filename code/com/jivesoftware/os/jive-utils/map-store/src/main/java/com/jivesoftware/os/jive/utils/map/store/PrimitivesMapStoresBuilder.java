@@ -3,7 +3,6 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.io.HeapByteBufferFactory;
-import com.jivesoftware.os.jive.utils.map.store.BytesBytesMapStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 
 /*

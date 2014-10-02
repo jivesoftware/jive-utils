@@ -48,6 +48,15 @@ public abstract class BytesBytesMapStore<K, V> implements ParitionedKeyValueStor
     }
 
     @Override
+    public long estimateSizeInBytes() {
+        MapChunk mapChunk = indexRef.get();
+        if (mapChunk != null) {
+            return mapChunk.size();
+        }
+        return -1;
+    }
+
+    @Override
     public void add(K key, V value) throws KeyValueStoreException {
         if (key == null || value == null) {
             return;
@@ -107,7 +116,6 @@ public abstract class BytesBytesMapStore<K, V> implements ParitionedKeyValueStor
             return returnWhenGetReturnsNull;
         }
         byte[] keyBytes = keyBytes(key);
-        int payloadIndex;
         synchronized (indexRef) {
             MapChunk index = index();
             byte[] valueBytes = mapStore.get(index, keyBytes, extractPayload);

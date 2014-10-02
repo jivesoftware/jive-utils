@@ -43,6 +43,15 @@ public abstract class BytesObjectMapStore<K, V> implements KeyValueStore<K, V> {
     }
 
     @Override
+    public long estimateSizeInBytes() {
+        Index index = indexRef.get();
+        if (index != null) {
+            return index.chunk.size() + (index.payloads.length * 8);
+        }
+        return -1;
+    }
+
+    @Override
     public void add(K key, V value) throws KeyValueStoreException {
         if (key == null || value == null) {
             return;

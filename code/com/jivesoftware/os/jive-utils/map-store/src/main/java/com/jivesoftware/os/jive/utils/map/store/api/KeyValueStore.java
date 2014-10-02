@@ -28,6 +28,8 @@ public interface KeyValueStore<K, V> extends Iterable<Entry<K, V>> {
 
     long estimatedMaxNumberOfKeys();
 
+    long estimateSizeInBytes() throws Exception;
+
     interface Entry<K, V> {
 
         K getKey();

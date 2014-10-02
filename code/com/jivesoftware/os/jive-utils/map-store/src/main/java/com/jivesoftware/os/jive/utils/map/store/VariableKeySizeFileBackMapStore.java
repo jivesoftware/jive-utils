@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
 import com.jivesoftware.os.jive.utils.map.store.api.ParitionedKeyValueStore;
 import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -103,13 +102,15 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements Paritione
         return estimate;
     }
 
-    public long sizeInBytes() throws IOException {
+    @Override
+    public long estimateSizeInBytes() throws Exception {
         long sizeInBytes = 0;
         for (FileBackMapStore<K, V> mapStore : mapStores) {
-            sizeInBytes += mapStore.sizeInBytes();
+            sizeInBytes += mapStore.estimateSizeInBytes();
         }
         return sizeInBytes;
     }
+
 
     @Override
     public Iterator<Entry<K, V>> iterator() {
