@@ -18,20 +18,20 @@ import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
  *
  * @author jonathan.colt
  */
-public class PrimativesMapStoresBuilder {
+public class PrimitivesMapStoresBuilder {
 
     private ByteBufferFactory bufferFactory = new HeapByteBufferFactory();
     private int initialPageCapacity = 8;
 
-    public PrimativesMapStoresBuilder() {
+    public PrimitivesMapStoresBuilder() {
     }
 
-    public PrimativesMapStoresBuilder setByteBufferFactory(ByteBufferFactory bufferFactory) {
+    public PrimitivesMapStoresBuilder setByteBufferFactory(ByteBufferFactory bufferFactory) {
         this.bufferFactory = bufferFactory;
         return this;
     }
 
-    public PrimativesMapStoresBuilder setInitialPageCapacity(int initialPageCapacity) {
+    public PrimitivesMapStoresBuilder setInitialPageCapacity(int initialPageCapacity) {
         this.initialPageCapacity = initialPageCapacity;
         return this;
     }
