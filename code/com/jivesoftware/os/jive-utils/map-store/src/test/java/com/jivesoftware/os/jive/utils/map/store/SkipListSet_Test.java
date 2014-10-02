@@ -76,7 +76,7 @@ public class SkipListSet_Test {
             }
         }, factory);
 
-        Random random = new Random(1234);
+        Random random = new Random(1_234);
         byte[] a = new byte[]{65}; //URandom.randomLowerCaseAlphaBytes(keySize);
         byte[] b = new byte[]{66}; //URandom.randomLowerCaseAlphaBytes(keySize);
         byte[] c = new byte[]{67}; //URandom.randomLowerCaseAlphaBytes(keySize);
@@ -101,7 +101,7 @@ public class SkipListSet_Test {
         //}
         //System.exit(0);
         Object[] keys = new Object[]{a, b, c};
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 100_000; i++) {
             if (Math.random() < 0.5d) {
                 byte[] ak = (byte[]) keys[random.nextInt(keys.length)];
                 System.out.println("+" + new String(ak) + " " + sls.slgetCount(slsp));
@@ -234,7 +234,7 @@ public class SkipListSet_Test {
 
             @Override
             public int compare(Object o1, Object o2) {
-                return ((String) o1).compareTo((String) o2);
+                return ((Comparable<String>) o1).compareTo((String) o2);
             }
         });
         for (int i = 0; i < _iterations; i++) {
@@ -248,7 +248,7 @@ public class SkipListSet_Test {
 
             @Override
             public int compare(Object o1, Object o2) {
-                return ((String) o1).compareTo((String) o2);
+                return ((Comparable<String>) o1).compareTo((String) o2);
             }
         });
         for (int i = 0; i < _iterations; i++) {
@@ -346,31 +346,31 @@ public class SkipListSet_Test {
     public static void chart(ByteBufferFactory factory) {
         int ksize = 16;
         int payloadSize = 4;
-        int maxSize = 1000000;
+        int maxSize = 1_000_000;
 
-        int step = 10000;
+        int step = 10_000;
         System.out.println("mode,iterations,duration,size,mb");
         SkipListSet sls = new SkipListSet();
 
         for (int i = step; i < maxSize; i += step) {
-            SkipListSetPage set = testSet(sls, null, 112233, i, ksize, payloadSize, i, 0, true, factory);
+            SkipListSetPage set = testSet(sls, null, 112_233, i, ksize, payloadSize, i, 0, true, factory);
             stats(ksize, payloadSize, i, factory);
             System.out.println();
         }
         for (int i = step; i < maxSize; i += step) {
-            SkipListSetPage set = testSet(sls, null, 112233, i, ksize, payloadSize, i, 0, false, factory);
-            testSet(sls, set, 112233, i, ksize, payloadSize, i, 1, true, factory);
+            SkipListSetPage set = testSet(sls, null, 112_233, i, ksize, payloadSize, i, 0, false, factory);
+            testSet(sls, set, 112_233, i, ksize, payloadSize, i, 1, true, factory);
             stats(ksize, payloadSize, i, factory);
             System.out.println();
         }
         for (int i = step; i < maxSize; i += step) {
-            SkipListSetPage set = testSet(sls, null, 112233, i, ksize, payloadSize, i, 2, true, factory);
+            SkipListSetPage set = testSet(sls, null, 112_233, i, ksize, payloadSize, i, 2, true, factory);
             stats(ksize, payloadSize, i, factory);
             System.out.println();
         }
         for (int i = step; i < maxSize; i += step) {
-            SkipListSetPage set = testSet(sls, null, 112233, i, ksize, payloadSize, i, 2, false, factory);
-            testSet(sls, set, 112233, i, ksize, payloadSize, i, 3, true, factory);
+            SkipListSetPage set = testSet(sls, null, 112_233, i, ksize, payloadSize, i, 2, false, factory);
+            testSet(sls, set, 112_233, i, ksize, payloadSize, i, 3, true, factory);
             stats(ksize, payloadSize, i, factory);
             System.out.println();
         }

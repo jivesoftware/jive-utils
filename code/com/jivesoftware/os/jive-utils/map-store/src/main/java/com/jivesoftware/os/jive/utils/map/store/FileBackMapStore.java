@@ -7,8 +7,8 @@ import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
-import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
+import com.jivesoftware.os.jive.utils.map.store.api.ParitionedKeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
@@ -35,7 +35,7 @@ import org.apache.commons.lang.mutable.MutableLong;
  * @param <K>
  * @param <V>
  */
-public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
+public abstract class FileBackMapStore<K, V> implements ParitionedKeyValueStore<K, V> {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger(true);
 
@@ -144,6 +144,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         return new File(pathToPartitions, newIndexFilename);
     }
 
+    @Override
     public V getUnsafe(K key) throws KeyValueStoreException {
         if (key == null) {
             return returnWhenGetReturnsNull;
@@ -198,7 +199,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 if (!file.exists()) {
                     // initializing in a temporary file prevents accidental corruption if the thread dies during mmap
                     File temporaryNewKeyIndexParition = createIndexTempFile(key);
-                    MapChunk newIndex = mmap(temporaryNewKeyIndexParition, initialPageCapacity);
+                    mmap(temporaryNewKeyIndexParition, initialPageCapacity);
 
                     File createIndexSetFile = createIndexSetFile(key);
                     FileUtils.copyFile(temporaryNewKeyIndexParition, createIndexSetFile);

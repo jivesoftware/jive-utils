@@ -7,7 +7,7 @@ import static org.testng.Assert.assertTrue;
 
 public class ByteBufferObjectMapStoreTest {
 
-    @Test(enabled = false)
+    @Test (enabled = false)
     public void testMap() throws Exception {
         final int numIterations = 1_000;
         final int numFields = 10;
@@ -22,7 +22,7 @@ public class ByteBufferObjectMapStoreTest {
             System.out.println("---------------------- " + i + " ----------------------");
 
             // bytebuffer mapstore setup
-            ByteBufferObjectMapStore<Long, Object> byteBufferObjectMapStore = new ByteBufferObjectMapStore<Long, Object>(8, 10, null) {
+            BytesObjectMapStore<Long, Object> byteBufferObjectMapStore = new BytesObjectMapStore<Long, Object>(8, 10, null) {
                 @Override
                 public byte[] keyBytes(Long key) {
                     return FilerIO.longBytes(key);
@@ -38,22 +38,24 @@ public class ByteBufferObjectMapStoreTest {
             long start = System.currentTimeMillis();
             for (int fieldId = 0; fieldId < numFields; fieldId++) {
                 for (int termId = 0; termId < numTerms; termId++) {
-                    long key = (long) termId << 32 | fieldId & 0xFFFFFFFFL;
+                    long key = (long) termId << 32 | fieldId & 0xFFFF_FFFFL;
                     byteBufferObjectMapStore.add(key, obj[fieldId * numFields + termId]);
                 }
             }
-            System.out.println("ByteBufferObjectMapStore: Inserted " + byteBufferObjectMapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println("ByteBufferObjectMapStore: Inserted " + byteBufferObjectMapStore.estimatedMaxNumberOfKeys() + " in " + (System.
+                currentTimeMillis() - start) + "ms");
 
             // bytebuffer mapstore retrieve
             start = System.currentTimeMillis();
             for (int fieldId = 0; fieldId < numFields; fieldId++) {
                 for (int termId = 0; termId < numTerms; termId++) {
-                    long key = (long) termId << 32 | fieldId & 0xFFFFFFFFL;
+                    long key = (long) termId << 32 | fieldId & 0xFFFF_FFFFL;
                     Object retrieved = byteBufferObjectMapStore.get(key);
                     assertTrue(retrieved == obj[fieldId * numFields + termId], "Failed at " + fieldId + ", " + termId);
                 }
             }
-            System.out.println("ByteBufferObjectMapStore: Retrieved " + byteBufferObjectMapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println("ByteBufferObjectMapStore: Retrieved " + byteBufferObjectMapStore.estimatedMaxNumberOfKeys() + " in " + (System.
+                currentTimeMillis() - start) + "ms");
         }
     }
 

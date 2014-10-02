@@ -4,11 +4,11 @@ import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.io.HeapByteBufferFactory;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
 
 public class ByteBufferPayloadMapStoreTest {
 
-    @Test(enabled = false)
+    @Test (enabled = false)
     public void testPrimitiveArrays() throws Exception {
         final int numFields = 10;
         final int numTerms = 100_000;
@@ -22,8 +22,8 @@ public class ByteBufferPayloadMapStoreTest {
             System.out.println("---------------------- " + i + " ----------------------");
 
             // bytebuffer mapstore setup
-            ByteBufferPayloadMapStore<Long, Integer> mapStore =
-                new ByteBufferPayloadMapStore<Long, Integer>(8, 4, 10, null, new HeapByteBufferFactory()) {
+            BytesBytesMapStore<Long, Integer> mapStore =
+                new BytesBytesMapStore<Long, Integer>(8, 4, 10, null, new HeapByteBufferFactory()) {
 
                     @Override
                     public byte[] keyBytes(Long key) {
@@ -50,27 +50,29 @@ public class ByteBufferPayloadMapStoreTest {
             long start = System.currentTimeMillis();
             for (int fieldId = 0; fieldId < numFields; fieldId++) {
                 for (int termId = 0; termId < numTerms; termId++) {
-                    long key = (long) termId << 32 | fieldId & 0xFFFFFFFFL;
+                    long key = (long) termId << 32 | fieldId & 0xFFFF_FFFFL;
                     mapStore.add(key, values[fieldId * numFields + termId]);
                 }
             }
-            System.out.println("ByteBufferPayloadMapStore: Inserted " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(
+                "ByteBufferPayloadMapStore: Inserted " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
 
             // bytebuffer mapstore retrieve
             start = System.currentTimeMillis();
             for (int fieldId = 0; fieldId < numFields; fieldId++) {
                 for (int termId = 0; termId < numTerms; termId++) {
-                    long key = (long) termId << 32 | fieldId & 0xFFFFFFFFL;
+                    long key = (long) termId << 32 | fieldId & 0xFFFF_FFFFL;
                     Integer retrieved = mapStore.get(key);
                     assertTrue(retrieved == values[fieldId * numFields + termId], "Failed at " + fieldId + ", " + termId);
                 }
             }
 
             if (i == numIterations - 1) {
-                Thread.sleep(600000);
+                Thread.sleep(600_000);
             }
 
-            System.out.println("ByteBufferPayloadMapStore: Retrieved " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(
+                "ByteBufferPayloadMapStore: Retrieved " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 }

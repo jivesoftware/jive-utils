@@ -4,16 +4,14 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.HeapByteBufferFactory;
-import com.jivesoftware.os.jive.utils.logger.MetricLogger;
-import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
+import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore.Entry;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -21,8 +19,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * Bytes key to index, index to byte array offset.
  */
 public abstract class ByteBufferValueArrayMapStore<K, V> implements KeyValueStore<K, V> {
-
-    private static final MetricLogger LOG = MetricLoggerFactory.getLogger(true);
 
     private static final byte[] EMPTY_ID = new byte[16];
     private static final byte[] EMPTY_PAYLOAD = new byte[0];
@@ -101,16 +97,6 @@ public abstract class ByteBufferValueArrayMapStore<K, V> implements KeyValueStor
     }
 
     @Override
-    public Iterable<String> keyPartitions() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public String keyPartition(K key) {
-        return null;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public V get(K key) throws KeyValueStoreException {
         if (key == null) {
@@ -129,6 +115,7 @@ public abstract class ByteBufferValueArrayMapStore<K, V> implements KeyValueStor
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public V getUnsafe(K key) throws KeyValueStoreException {
         if (key == null) {
             return returnWhenGetReturnsNull;

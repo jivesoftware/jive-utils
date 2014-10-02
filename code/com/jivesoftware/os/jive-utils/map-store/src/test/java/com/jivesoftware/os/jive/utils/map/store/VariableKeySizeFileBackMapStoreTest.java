@@ -3,12 +3,11 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.google.common.base.Charsets;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
+import java.nio.file.Files;
+import java.util.Collections;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.nio.file.Files;
-import java.util.Collections;
 
 /**
  *
@@ -64,29 +63,29 @@ public class VariableKeySizeFileBackMapStoreTest {
 
     @Test
     public void testAddGet() throws KeyValueStoreException {
-        int[] keySizeThresholds = new int[]{4, 16, 64, 256, 1024};
+        int[] keySizeThresholds = new int[]{ 4, 16, 64, 256, 1_024};
         VariableKeySizeFileBackMapStore<String, Long> mapStore = createMapStore(pathToPartitions, keySizeThresholds);
 
         for (int i = 0; i < keySizeThresholds.length; i++) {
             String key = keyOfLength(keySizeThresholds[i]);
-            long expected = (long) i;
+            long expected = i;
             mapStore.add(key, expected);
             Assert.assertEquals(mapStore.get(key).longValue(), expected);
         }
     }
 
-    @Test(expectedExceptions = {IndexOutOfBoundsException.class})
+    @Test (expectedExceptions = { IndexOutOfBoundsException.class })
     public void testKeyTooBig() throws KeyValueStoreException {
-        int[] keySizeThresholds = new int[]{1, 2, 4};
+        int[] keySizeThresholds = new int[]{ 1, 2, 4 };
         VariableKeySizeFileBackMapStore<String, Long> mapStore = createMapStore(pathToPartitions, keySizeThresholds);
 
         int maxLength = keySizeThresholds[keySizeThresholds.length - 1];
         mapStore.add(keyOfLength(maxLength + 1), 0l);
     }
 
-    @Test(expectedExceptions = {IllegalArgumentException.class})
+    @Test (expectedExceptions = { IllegalArgumentException.class })
     public void testBadThresholds() throws KeyValueStoreException {
-        int[] keySizeThresholds = new int[]{0, 0};
+        int[] keySizeThresholds = new int[]{ 0, 0 };
         createMapStore(pathToPartitions, keySizeThresholds);
     }
 

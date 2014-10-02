@@ -45,7 +45,7 @@ public class SkipListSet {
      * @param factory
      * @return
      */
-    final public SkipListSetPage slallocate(byte[] id,
+    public SkipListSetPage slallocate(byte[] id,
             long version, int _maxCount, byte[] headKey, int _keySize, int _payloadSize, SkipListComparator _valueComparator, ByteBufferFactory factory) {
         if (headKey.length != _keySize) {
             throw new RuntimeException("Expected that headKey.length == keySize");
@@ -71,7 +71,7 @@ public class SkipListSet {
      * @param _payloadSize
      * @return
      */
-    final public int slcost(int _maxCount, int _keySize, int _payloadSize) {
+    public int slcost(int _maxCount, int _keySize, int _payloadSize) {
         byte maxHeight = SkipListSetPage.heightFit(_maxCount);
         return map.cost(_maxCount, _keySize, slpayloadSize(maxHeight) + _payloadSize);
     }
@@ -81,7 +81,7 @@ public class SkipListSet {
      * @param maxHeight
      * @return
      */
-    final int slpayloadSize(byte maxHeight) {
+    int slpayloadSize(byte maxHeight) {
         return 1 + (cColumKeySize * maxHeight);
     }
 
@@ -90,7 +90,7 @@ public class SkipListSet {
      * @param page
      * @return
      */
-    final public long slgetCount(SkipListSetPage page) {
+    public long slgetCount(SkipListSetPage page) {
         return map.getCount(page.map) - 1; // -1 because of head
     }
 
@@ -100,7 +100,7 @@ public class SkipListSet {
      * @param _key
      * @param _payload
      */
-    final public void sladd(SkipListSetPage page, byte[] _key, byte[] _payload) {
+    public void sladd(SkipListSetPage page, byte[] _key, byte[] _payload) {
 
         int index = map.get(page.map, _key, extractIndex);
         if (index != -1) { // aready exists so just update payload
@@ -154,7 +154,7 @@ public class SkipListSet {
      * @param _key
      * @return
      */
-    final public byte[] slfindWouldInsertAfter(SkipListSetPage page, byte[] _key) {
+    public byte[] slfindWouldInsertAfter(SkipListSetPage page, byte[] _key) {
 
         int index = map.get(page.map, _key, extractIndex);
         if (index != -1) { // aready exists so return self
@@ -198,7 +198,7 @@ public class SkipListSet {
      * @param page
      * @return
      */
-    final public byte[] slgetFirst(SkipListSetPage page) {
+    public byte[] slgetFirst(SkipListSetPage page) {
         int firstIndex = rcolumnLevel(page, page.headIndex, 1);
         if (firstIndex == -1) {
             return null;
@@ -212,7 +212,7 @@ public class SkipListSet {
      * @param page
      * @param _key
      */
-    final public void slremove(SkipListSetPage page, byte[] _key) {
+    public void slremove(SkipListSetPage page, byte[] _key) {
         if (_key == null || _key.length == 0) {
             throw new RuntimeException("null not supported");
         }
@@ -257,7 +257,7 @@ public class SkipListSet {
      * @param _key
      * @return
      */
-    final public byte[] slgetPrior(SkipListSetPage page, byte[] _key) {
+    public byte[] slgetPrior(SkipListSetPage page, byte[] _key) {
         if (_key == null || _key.length == 0) {
             return null;
         }
@@ -284,7 +284,7 @@ public class SkipListSet {
      * @param _key
      * @return
      */
-    final public byte[] slgetNext(SkipListSetPage page, byte[] _key) {
+    public byte[] slgetNext(SkipListSetPage page, byte[] _key) {
         if (_key == null || _key.length == 0) {
             return null;
         }
@@ -307,7 +307,7 @@ public class SkipListSet {
      * @param _key
      * @return
      */
-    final public byte[] slgetExisting(SkipListSetPage page, byte[] _key) {
+    public byte[] slgetExisting(SkipListSetPage page, byte[] _key) {
         if (_key == null || _key.length == 0) {
             throw new RuntimeException("null not supported");
         }
@@ -325,7 +325,7 @@ public class SkipListSet {
      * @param key
      * @return
      */
-    final public byte[] slgetAfterExisting(SkipListSetPage page, byte[] key) {
+    public byte[] slgetAfterExisting(SkipListSetPage page, byte[] key) {
         if (key == null || key.length == 0) {
             throw new RuntimeException("null not supported");
         }
@@ -347,7 +347,7 @@ public class SkipListSet {
      * @param _get
      * @throws Exception
      */
-    final public void slgetSlice(SkipListSetPage page, byte[] from, byte[] to, int _max, ExtractorStream<KeyPayload, Exception> _get) throws Exception {
+    public void slgetSlice(SkipListSetPage page, byte[] from, byte[] to, int _max, ExtractorStream<KeyPayload, Exception> _get) throws Exception {
         final KeyPayload sent = new KeyPayload(null, null);
         int at;
         if (from != null && from.length > 0) {
@@ -402,7 +402,7 @@ public class SkipListSet {
      * @param to
      * @throws Exception
      */
-    final public void slcopyTo(SkipListSetPage from, final SkipListSetPage to) throws Exception {
+    public void slcopyTo(SkipListSetPage from, final SkipListSetPage to) throws Exception {
         slgetSlice(from, null, null, -1, new ExtractorStream<KeyPayload, Exception>() {
 
             @Override
@@ -482,7 +482,7 @@ public class SkipListSet {
      * @param page
      * @param keyToString
      */
-    final public void sltoSysOut(SkipListSetPage page, BytesToString keyToString) {
+    public void sltoSysOut(SkipListSetPage page, BytesToString keyToString) {
         if (keyToString == null) {
             keyToString = new BytesToBytesString();
         }

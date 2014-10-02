@@ -8,7 +8,7 @@ import static org.testng.Assert.assertTrue;
 
 public class ByteBufferValueArrayMapStoreTest {
 
-    @Test(enabled = false)
+    @Test (enabled = false)
     public void testPrimitiveArrays() throws Exception {
         final int numFields = 10;
         final int numTerms = 100_000;
@@ -50,27 +50,29 @@ public class ByteBufferValueArrayMapStoreTest {
             long start = System.currentTimeMillis();
             for (int fieldId = 0; fieldId < numFields; fieldId++) {
                 for (int termId = 0; termId < numTerms; termId++) {
-                    long key = (long) termId << 32 | fieldId & 0xFFFFFFFFL;
+                    long key = (long) termId << 32 | fieldId & 0xFFFF_FFFFL;
                     mapStore.add(key, values[fieldId * numFields + termId]);
                 }
             }
-            System.out.println("ByteBufferValueArrayMapStore: Inserted " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(
+                "ByteBufferValueArrayMapStore: Inserted " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
 
             // bytebuffer mapstore retrieve
             start = System.currentTimeMillis();
             for (int fieldId = 0; fieldId < numFields; fieldId++) {
                 for (int termId = 0; termId < numTerms; termId++) {
-                    long key = (long) termId << 32 | fieldId & 0xFFFFFFFFL;
+                    long key = (long) termId << 32 | fieldId & 0xFFFF_FFFFL;
                     Integer retrieved = mapStore.get(key);
                     assertTrue(retrieved == values[fieldId * numFields + termId], "Failed at " + fieldId + ", " + termId);
                 }
             }
 
             if (i == numIterations - 1) {
-                Thread.sleep(600000);
+                Thread.sleep(600_000);
             }
 
-            System.out.println("ByteBufferValueArrayMapStore: Retrieved " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
+            System.out.println(
+                "ByteBufferValueArrayMapStore: Retrieved " + mapStore.estimatedMaxNumberOfKeys() + " in " + (System.currentTimeMillis() - start) + "ms");
         }
     }
 }

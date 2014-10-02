@@ -41,7 +41,7 @@ public class MapStoreTest {
 
     public static void test() {
 
-        int it = 10000;
+        int it = 10_000;
         int ksize = 4;
         test(it, ksize, it, new ByteBufferFactory() {
 

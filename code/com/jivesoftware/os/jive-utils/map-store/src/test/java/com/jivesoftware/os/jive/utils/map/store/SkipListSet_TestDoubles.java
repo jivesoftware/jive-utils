@@ -21,7 +21,7 @@ public class SkipListSet_TestDoubles {
      */
     public static void main(String[] _args) throws Exception {
 
-        Random random = new Random(1234);
+        Random random = new Random(1_234);
         ByteBufferFactory factory = new ByteBufferFactory() {
 
             @Override

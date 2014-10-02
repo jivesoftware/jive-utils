@@ -5,49 +5,41 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.HeapByteBufferFactory;
-import com.jivesoftware.os.jive.utils.logger.MetricLogger;
-import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
+import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore.Entry;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Bytes key to bytes value.
+ * Bytes key to index, index to object array.
  */
-public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K, V> {
-
-    private static final MetricLogger LOG = MetricLoggerFactory.getLogger(true);
+public abstract class BytesObjectMapStore<K, V> implements KeyValueStore<K, V> {
 
     private static final byte[] EMPTY_ID = new byte[16];
+    private static final byte[] EMPTY_PAYLOAD = new byte[0];
 
     private final ExtractPayload extractPayload = new ExtractPayload();
     private final ExtractIndex extractIndex = new ExtractIndex();
     private final MapStore mapStore = new MapStore(extractIndex, new ExtractKey(), extractPayload);
-    private final AtomicReference<MapChunk> indexRef = new AtomicReference<>();
+    private final AtomicReference<Index> indexRef = new AtomicReference<>();
     private final int keySize;
-    private final int payloadSize;
     private final int initialPageCapacity;
     private final V returnWhenGetReturnsNull;
-    private final HeapByteBufferFactory byteBufferFactory;
+    private final HeapByteBufferFactory factory = new HeapByteBufferFactory();
 
-    public ByteBufferPayloadMapStore(int keySize,
-        int payloadSize,
+    public BytesObjectMapStore(int keySize,
         int initialPageCapacity,
-        V returnWhenGetReturnsNull,
-        HeapByteBufferFactory byteBufferFactory) {
+        V returnWhenGetReturnsNull) {
         this.keySize = keySize;
-        this.payloadSize = payloadSize;
         this.initialPageCapacity = initialPageCapacity;
         this.returnWhenGetReturnsNull = returnWhenGetReturnsNull;
-        this.byteBufferFactory = byteBufferFactory;
     }
 
     @Override
@@ -57,27 +49,38 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
         }
 
         byte[] keyBytes = keyBytes(key);
-        byte[] valueBytes = valueBytes(value);
-        if (valueBytes == null) {
-            return;
-        }
+        byte[] payload = EMPTY_PAYLOAD;
         synchronized (indexRef) {
-            MapChunk index = index();
+            Index index = index();
 
-            // grow the set if needed;
-            if (mapStore.getCount(index) >= index.maxCount) {
-                int newSize = index.maxCount * 2;
+            index = ensureCapacity(index);
 
-                final MapChunk oldIndex = index;
-                final MapChunk newIndex = allocate(newSize);
-                mapStore.copyTo(oldIndex, newIndex, null);
-
-                index = newIndex;
-                indexRef.set(index);
-            }
-
-            mapStore.add(index, (byte) 1, keyBytes, valueBytes);
+            int payloadIndex = mapStore.add(index.chunk, (byte) 1, keyBytes, payload);
+            index.payloads[payloadIndex] = value;
         }
+    }
+
+    /*
+     Must be called while holding synchronized (indexRef) lock.
+     */
+    private Index ensureCapacity(Index index) {
+        // grow the set if needed;
+        if (mapStore.getCount(index.chunk) >= index.chunk.maxCount) {
+            int newSize = index.chunk.maxCount * 2;
+
+            final Index oldIndex = index;
+            final Index newIndex = allocate(newSize);
+            mapStore.copyTo(index.chunk, newIndex.chunk, new MapStore.CopyToStream() {
+                @Override
+                public void copied(int fromIndex, int toIndex) {
+                    newIndex.payloads[toIndex] = oldIndex.payloads[fromIndex];
+                }
+            });
+
+            index = newIndex;
+            indexRef.set(index);
+        }
+        return index;
     }
 
     @Override
@@ -88,23 +91,24 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
 
         byte[] keyBytes = keyBytes(key);
         synchronized (indexRef) {
-            MapChunk index = index();
-            mapStore.remove(index, keyBytes);
+            Index index = index();
+            int payloadIndex = mapStore.remove(index.chunk, keyBytes);
+            index.payloads[payloadIndex] = null;
         }
     }
 
     @Override
-    public Iterable<String> keyPartitions() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public String keyPartition(K key) {
+    public V bytesValue(K key, byte[] bytes, int offset) {
         return null;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    public byte[] valueBytes(V value) {
+        return EMPTY_PAYLOAD;
+    }
+
+    @Override
+    @SuppressWarnings ("unchecked")
     public V get(K key) throws KeyValueStoreException {
         if (key == null) {
             return returnWhenGetReturnsNull;
@@ -112,27 +116,28 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
         byte[] keyBytes = keyBytes(key);
         int payloadIndex;
         synchronized (indexRef) {
-            MapChunk index = index();
-            byte[] valueBytes = mapStore.get(index, keyBytes, extractPayload);
-            if (valueBytes == null) {
+            Index index = index();
+            payloadIndex = mapStore.get(index.chunk, keyBytes, extractIndex);
+            if (payloadIndex < 0) {
                 return returnWhenGetReturnsNull;
             }
-            return bytesValue(key, valueBytes, 0);
+            return (V) index.payloads[payloadIndex];
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings ("unchecked")
+    @Override
     public V getUnsafe(K key) throws KeyValueStoreException {
         if (key == null) {
             return returnWhenGetReturnsNull;
         }
         byte[] keyBytes = keyBytes(key);
-        MapChunk index = index();
-        byte[] valueBytes = mapStore.get(index.duplicate(), keyBytes, extractPayload);
-        if (valueBytes == null) {
+        Index index = index();
+        int payloadIndex = mapStore.get(index.chunk.duplicate(), keyBytes, extractIndex);
+        if (payloadIndex < 0) {
             return returnWhenGetReturnsNull;
         }
-        return bytesValue(key, valueBytes, 0);
+        return (V) index.payloads[payloadIndex];
     }
 
     @Override
@@ -140,8 +145,8 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
         return mapStore.absoluteMaxCount(8, 0);
     }
 
-    private MapChunk index() {
-        MapChunk got = indexRef.get();
+    private Index index() {
+        Index got = indexRef.get();
         if (got != null) {
             return got;
         }
@@ -158,20 +163,23 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
         return got;
     }
 
-    private MapChunk allocate(int maxCapacity) {
-        return mapStore.allocate((byte) 0, (byte) 0, EMPTY_ID, 0, maxCapacity, keySize, payloadSize,
+    private Index allocate(int maxCapacity) {
+        MapChunk chunk = mapStore.allocate((byte) 0, (byte) 0, EMPTY_ID, 0, maxCapacity, keySize, 0,
             new ByteBufferFactory() {
                 @Override
                 public ByteBuffer allocate(long _size) {
-                    return byteBufferFactory.allocate(_size);
+                    return factory.allocate(_size);
                 }
             });
+        return new Index(
+            chunk,
+            new Object[mapStore.getCapacity(chunk)]);
     }
 
     public long sizeInBytes() throws IOException {
-        MapChunk index = indexRef.get();
+        Index index = indexRef.get();
         if (index != null) {
-            return index.size();
+            return index.chunk.size();
         } else {
             return 0;
         }
@@ -180,13 +188,15 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
     @Override
     public Iterator<Entry<K, V>> iterator() {
         List<Iterator<Entry<K, V>>> iterators = Lists.newArrayList();
-        final MapChunk got = index();
-        if (got != null) {
+        final Index index = index();
+        if (index != null) {
+            MapChunk got = index.chunk;
             iterators.add(Iterators.transform(mapStore.iterator(got), new Function<MapStore.Entry, Entry<K, V>>() {
                 @Override
+                @SuppressWarnings ("unchecked")
                 public Entry<K, V> apply(final MapStore.Entry input) {
                     final K key = bytesKey(input.key, 0);
-                    final V value = bytesValue(key, input.payload, 0);
+                    final V value = (V) index.payloads[input.payloadIndex];
 
                     return new Entry<K, V>() {
                         @Override
@@ -195,7 +205,6 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
                         }
 
                         @Override
-                        @SuppressWarnings("unchecked")
                         public V getValue() {
                             return value;
                         }
@@ -204,5 +213,16 @@ public abstract class ByteBufferPayloadMapStore<K, V> implements KeyValueStore<K
             }));
         }
         return Iterators.concat(iterators.iterator());
+    }
+
+    private static class Index {
+
+        public final MapChunk chunk;
+        public final Object[] payloads;
+
+        private Index(MapChunk chunk, Object[] payloads) {
+            this.chunk = chunk;
+            this.payloads = payloads;
+        }
     }
 }

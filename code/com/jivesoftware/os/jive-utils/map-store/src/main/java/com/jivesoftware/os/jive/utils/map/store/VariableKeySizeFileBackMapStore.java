@@ -3,14 +3,14 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
+import com.jivesoftware.os.jive.utils.map.store.api.ParitionedKeyValueStore;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueStore<K, V> {
+public abstract class VariableKeySizeFileBackMapStore<K, V> implements ParitionedKeyValueStore<K, V> {
 
     private final int[] keySizeThresholds;
     private final FileBackMapStore<K, V>[] mapStores;
@@ -89,6 +89,7 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements KeyValueS
         return getMapStore(keyLength(key)).get(key);
     }
 
+    @Override
     public V getUnsafe(K key) throws KeyValueStoreException {
         return getMapStore(keyLength(key)).getUnsafe(key);
     }
