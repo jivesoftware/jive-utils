@@ -1,6 +1,7 @@
 package com.jivesoftware.os.jive.utils.map.store;
 
 import com.jivesoftware.os.jive.utils.io.FilerIO;
+import com.jivesoftware.os.jive.utils.io.HeapByteBufferFactory;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertTrue;
@@ -22,7 +23,7 @@ public class ByteBufferObjectMapStoreTest {
             System.out.println("---------------------- " + i + " ----------------------");
 
             // bytebuffer mapstore setup
-            BytesObjectMapStore<Long, Object> byteBufferObjectMapStore = new BytesObjectMapStore<Long, Object>(8, 10, null) {
+            BytesObjectMapStore<Long, Object> byteBufferObjectMapStore = new BytesObjectMapStore<Long, Object>(8, 10, null, new HeapByteBufferFactory()) {
                 @Override
                 public byte[] keyBytes(Long key) {
                     return FilerIO.longBytes(key);

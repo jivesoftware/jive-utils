@@ -4,15 +4,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
-import com.jivesoftware.os.jive.utils.io.HeapByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
-import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore.Entry;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,23 +28,16 @@ public abstract class BytesObjectMapStore<K, V> implements KeyValueStore<K, V> {
     private final int keySize;
     private final int initialPageCapacity;
     private final V returnWhenGetReturnsNull;
-    private final HeapByteBufferFactory factory = new HeapByteBufferFactory();
+    private final ByteBufferFactory byteBufferFactory;
 
     public BytesObjectMapStore(int keySize,
         int initialPageCapacity,
-        V returnWhenGetReturnsNull) {
+        V returnWhenGetReturnsNull,
+        ByteBufferFactory byteBufferFactory) {
         this.keySize = keySize;
         this.initialPageCapacity = initialPageCapacity;
         this.returnWhenGetReturnsNull = returnWhenGetReturnsNull;
-    }
-
-    @Override
-    public long estimateSizeInBytes() {
-        Index index = indexRef.get();
-        if (index != null) {
-            return index.chunk.size() + (index.payloads.length * 8);
-        }
-        return -1;
+        this.byteBufferFactory = byteBufferFactory;
     }
 
     @Override
@@ -107,12 +96,12 @@ public abstract class BytesObjectMapStore<K, V> implements KeyValueStore<K, V> {
     }
 
     @Override
-    public V bytesValue(K key, byte[] bytes, int offset) {
+    final public V bytesValue(K key, byte[] bytes, int offset) {
         return null;
     }
 
     @Override
-    public byte[] valueBytes(V value) {
+    final public byte[] valueBytes(V value) {
         return EMPTY_PAYLOAD;
     }
 
@@ -173,25 +162,19 @@ public abstract class BytesObjectMapStore<K, V> implements KeyValueStore<K, V> {
     }
 
     private Index allocate(int maxCapacity) {
-        MapChunk chunk = mapStore.allocate((byte) 0, (byte) 0, EMPTY_ID, 0, maxCapacity, keySize, 0,
-            new ByteBufferFactory() {
-                @Override
-                public ByteBuffer allocate(long _size) {
-                    return factory.allocate(_size);
-                }
-            });
+        MapChunk chunk = mapStore.allocate((byte) 0, (byte) 0, EMPTY_ID, 0, maxCapacity, keySize, 0, byteBufferFactory);
         return new Index(
             chunk,
             new Object[mapStore.getCapacity(chunk)]);
     }
 
-    public long sizeInBytes() throws IOException {
+    @Override
+    public long estimateSizeInBytes() {
         Index index = indexRef.get();
         if (index != null) {
-            return index.chunk.size();
-        } else {
-            return 0;
+            return index.chunk.size() + (index.payloads.length * 8);
         }
+        return 0;
     }
 
     @Override
