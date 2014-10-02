@@ -56,6 +56,16 @@ public abstract class VariableKeySizeBytesObjectMapStore<K, V> implements KeyVal
     protected abstract int keyLength(K key);
 
     @Override
+    final public byte[] valueBytes(V value) {
+        return new byte[0];
+    }
+
+    @Override
+    final public V bytesValue(K key, byte[] bytes, int offset) {
+        return null;
+    }
+
+    @Override
     public void add(K key, V value) throws KeyValueStoreException {
         getMapStore(keyLength(key)).add(key, value);
     }
