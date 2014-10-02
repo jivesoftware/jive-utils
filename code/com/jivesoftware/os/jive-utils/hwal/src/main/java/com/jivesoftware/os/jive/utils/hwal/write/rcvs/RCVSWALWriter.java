@@ -25,17 +25,17 @@ public class RCVSWALWriter implements WALWriter {
     private final SipWALTimeProvider sipWALTimeProvider;
     private final RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> wal;
     private final RowColumnValueStore<String, Integer, SipWALTime, SipWALEntry, ? extends Exception> sipWAL;
-    private final WALPartitioningStrategy paritioningStrategy;
+    private final WALPartitioningStrategy partitioningStrategy;
     private final int numberOfPartitions;
 
     public RCVSWALWriter(SipWALTimeProvider sipWALTimeProvider, RowColumnValueStore<String, Integer, Long, WALEntry, ? extends Exception> wal,
             RowColumnValueStore<String, Integer, SipWALTime, SipWALEntry, ? extends Exception> sipWAL,
-            WALPartitioningStrategy paritioningStrategy,
+            WALPartitioningStrategy partitioningStrategy,
             int numberOfPartitions) {
         this.sipWALTimeProvider = sipWALTimeProvider;
         this.wal = wal;
         this.sipWAL = sipWAL;
-        this.paritioningStrategy = paritioningStrategy;
+        this.partitioningStrategy = partitioningStrategy;
         this.numberOfPartitions = numberOfPartitions;
     }
 
@@ -45,7 +45,7 @@ public class RCVSWALWriter implements WALWriter {
         MultiAdd<Integer, SipWALTime, SipWALEntry> sipWALAdds = new MultiAdd<>();
         for (WALEntry entry : entries) {
             SipWALEntry sipWALEntry = entry.getSipWALEntry();
-            int partition = paritioningStrategy.partition(sipWALEntry.key, numberOfPartitions);
+            int partition = partitioningStrategy.partition(sipWALEntry.key, numberOfPartitions);
             walAdds.add(
                     partition,
                     sipWALEntry.uniqueOrderingId,
@@ -61,13 +61,13 @@ public class RCVSWALWriter implements WALWriter {
             );
         }
 
-        String paritionedTopicId = topicId + "-" + numberOfPartitions; // this allows us to change the number of paritions on the fly.
+        String partitionedTopicId = topicId + "-" + numberOfPartitions; // this allows us to change the number of partitions on the fly.
         List<RowColumValueTimestampAdd<Integer, Long, WALEntry>> tookWalAdds = walAdds.take();
-        wal.multiRowsMultiAdd(paritionedTopicId, tookWalAdds);
+        wal.multiRowsMultiAdd(partitionedTopicId, tookWalAdds);
         //LOG.info("Wrote to WAL "+tookWalAdds);
 
         List<RowColumValueTimestampAdd<Integer, SipWALTime, SipWALEntry>> tookSipWalAdds = sipWALAdds.take();
-        sipWAL.multiRowsMultiAdd(paritionedTopicId, tookSipWalAdds);
+        sipWAL.multiRowsMultiAdd(partitionedTopicId, tookSipWalAdds);
         //LOG.info("Wrote to sip WAL "+tookSipWalAdds);
 
     }

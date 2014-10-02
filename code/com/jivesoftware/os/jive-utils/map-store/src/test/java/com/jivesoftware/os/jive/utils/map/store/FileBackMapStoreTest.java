@@ -7,7 +7,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
-import com.jivesoftware.os.jive.utils.map.store.api.ParitionedKeyValueStore;
+import com.jivesoftware.os.jive.utils.map.store.api.PartitionedKeyValueStore;
 import java.nio.file.Files;
 import java.util.Set;
 import org.testng.annotations.Test;
@@ -70,7 +70,7 @@ public class FileBackMapStoreTest {
         Set<Integer> actualKeys = Sets.newTreeSet();
         Set<Long> actualPayloads = Sets.newTreeSet();
 
-        for (ParitionedKeyValueStore.Entry<Integer, Long> entry : fileBackMapStore) {
+        for (PartitionedKeyValueStore.Entry<Integer, Long> entry : fileBackMapStore) {
             actualKeys.add(entry.getKey());
             actualPayloads.add(entry.getValue());
         }

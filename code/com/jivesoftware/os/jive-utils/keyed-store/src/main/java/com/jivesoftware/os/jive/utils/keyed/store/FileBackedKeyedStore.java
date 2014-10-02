@@ -2,7 +2,6 @@ package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
-import java.io.IOException;
 import java.util.Collections;
 
 /**
@@ -75,12 +74,12 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
     }
 
     @Override
-    public long sizeInBytes() throws IOException {
-        return mapStore.sizeInBytes() + chunkStore.sizeInBytes();
+    public long sizeInBytes() throws Exception {
+        return mapStore.estimateSizeInBytes() + chunkStore.sizeInBytes();
     }
 
-    public long mapStoreSizeInBytes() throws IOException {
-        return mapStore.sizeInBytes();
+    public long mapStoreSizeInBytes() throws Exception {
+        return mapStore.estimateSizeInBytes();
     }
 
     @Override

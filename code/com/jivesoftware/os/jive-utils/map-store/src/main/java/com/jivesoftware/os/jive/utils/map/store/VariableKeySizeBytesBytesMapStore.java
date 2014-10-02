@@ -3,42 +3,34 @@ package com.jivesoftware.os.jive.utils.map.store;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
+import com.jivesoftware.os.jive.utils.io.HeapByteBufferFactory;
+import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
-import com.jivesoftware.os.jive.utils.map.store.api.PartitionedKeyValueStore;
-import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class VariableKeySizeFileBackMapStore<K, V> implements PartitionedKeyValueStore<K, V> {
+public abstract class VariableKeySizeBytesBytesMapStore<K, V> implements KeyValueStore<K, V> {
 
     private final int[] keySizeThresholds;
-    private final FileBackMapStore<K, V>[] mapStores;
+    private final BytesBytesMapStore<K, V>[] mapStores;
 
     @SuppressWarnings("unchecked")
-    public VariableKeySizeFileBackMapStore(String basePathToPartitions, int[] keySizeThresholds, int payloadSize, int initialPageCapacity,
-        int concurrency, V returnWhenGetReturnsNull) {
+    public VariableKeySizeBytesBytesMapStore(int[] keySizeThresholds, int payloadSize, int initialPageCapacity, V returnWhenGetReturnsNull) {
 
         this.keySizeThresholds = keySizeThresholds;
-        this.mapStores = new FileBackMapStore[keySizeThresholds.length];
+        this.mapStores = new BytesBytesMapStore[keySizeThresholds.length];
+
+        ByteBufferFactory byteBufferFactory = new HeapByteBufferFactory();
         for (int i = 0; i < keySizeThresholds.length; i++) {
             Preconditions.checkArgument(i == 0 || keySizeThresholds[i] > keySizeThresholds[i - 1], "Thresholds must be monotonically increasing");
 
             final int keySize = keySizeThresholds[i];
-            String pathToPartitions = new File(basePathToPartitions, String.valueOf(keySize)).getAbsolutePath();
-            mapStores[i] = new FileBackMapStore<K, V>(pathToPartitions, keySize, payloadSize, initialPageCapacity, concurrency, returnWhenGetReturnsNull) {
-                @Override
-                public String keyPartition(K key) {
-                    return VariableKeySizeFileBackMapStore.this.keyPartition(key);
-                }
-
-                @Override
-                public Iterable<String> keyPartitions() {
-                    return VariableKeySizeFileBackMapStore.this.keyPartitions();
-                }
+            mapStores[i] = new BytesBytesMapStore<K, V>(keySize, payloadSize, initialPageCapacity, returnWhenGetReturnsNull, byteBufferFactory) {
 
                 @Override
                 public byte[] keyBytes(K key) {
-                    byte[] keyBytes = VariableKeySizeFileBackMapStore.this.keyBytes(key);
+                    byte[] keyBytes = VariableKeySizeBytesBytesMapStore.this.keyBytes(key);
                     byte[] padded = new byte[keySize];
                     System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
                     return padded;
@@ -46,23 +38,23 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements Partition
 
                 @Override
                 public byte[] valueBytes(V value) {
-                    return VariableKeySizeFileBackMapStore.this.valueBytes(value);
+                    return VariableKeySizeBytesBytesMapStore.this.valueBytes(value);
                 }
 
                 @Override
                 public K bytesKey(byte[] bytes, int offset) {
-                    return VariableKeySizeFileBackMapStore.this.bytesKey(bytes, offset);
+                    return VariableKeySizeBytesBytesMapStore.this.bytesKey(bytes, offset);
                 }
 
                 @Override
                 public V bytesValue(K key, byte[] bytes, int offset) {
-                    return VariableKeySizeFileBackMapStore.this.bytesValue(key, bytes, offset);
+                    return VariableKeySizeBytesBytesMapStore.this.bytesValue(key, bytes, offset);
                 }
             };
         }
     }
 
-    private FileBackMapStore<K, V> getMapStore(int keyLength) {
+    private BytesBytesMapStore<K, V> getMapStore(int keyLength) {
         for (int i = 0; i < keySizeThresholds.length; i++) {
             if (keySizeThresholds[i] >= keyLength) {
                 return mapStores[i];
@@ -94,27 +86,27 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements Partition
     }
 
     @Override
+    public long estimateSizeInBytes() throws Exception {
+        long estimate = 0;
+        for (BytesBytesMapStore<K, V> mapStore : mapStores) {
+            estimate += mapStore.estimateSizeInBytes();
+        }
+        return estimate;
+    }
+
+    @Override
     public long estimatedMaxNumberOfKeys() {
         long estimate = 0;
-        for (FileBackMapStore<K, V> mapStore : mapStores) {
+        for (BytesBytesMapStore<K, V> mapStore : mapStores) {
             estimate += mapStore.estimatedMaxNumberOfKeys();
         }
         return estimate;
     }
 
     @Override
-    public long estimateSizeInBytes() throws Exception {
-        long sizeInBytes = 0;
-        for (FileBackMapStore<K, V> mapStore : mapStores) {
-            sizeInBytes += mapStore.estimateSizeInBytes();
-        }
-        return sizeInBytes;
-    }
-
-    @Override
     public Iterator<Entry<K, V>> iterator() {
         List<Iterator<Entry<K, V>>> iterators = Lists.newArrayListWithCapacity(mapStores.length);
-        for (FileBackMapStore<K, V> mapStore : mapStores) {
+        for (BytesBytesMapStore<K, V> mapStore : mapStores) {
             iterators.add(mapStore.iterator());
         }
         return Iterators.concat(iterators.iterator());

@@ -8,7 +8,7 @@ import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
-import com.jivesoftware.os.jive.utils.map.store.api.ParitionedKeyValueStore;
+import com.jivesoftware.os.jive.utils.map.store.api.PartitionedKeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
@@ -35,7 +35,7 @@ import org.apache.commons.lang.mutable.MutableLong;
  * @param <K>
  * @param <V>
  */
-public abstract class FileBackMapStore<K, V> implements ParitionedKeyValueStore<K, V> {
+public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore<K, V> {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger(true);
 
@@ -113,16 +113,16 @@ public abstract class FileBackMapStore<K, V> implements ParitionedKeyValueStore<
                 if (mapStore.getCount(index) >= index.maxCount) {
                     int newSize = index.maxCount * 2;
 
-                    File temporaryNewKeyIndexParition = createIndexTempFile(key);
-                    MapChunk newIndex = mmap(temporaryNewKeyIndexParition, newSize);
+                    File temporaryNewKeyIndexPartition = createIndexTempFile(key);
+                    MapChunk newIndex = mmap(temporaryNewKeyIndexPartition, newSize);
                     mapStore.copyTo(index, newIndex, null);
                     // TODO: implement to clean up
                     //index.close();
                     //newIndex.close();
                     File createIndexSetFile = createIndexSetFile(key);
                     FileUtils.forceDelete(createIndexSetFile);
-                    FileUtils.copyFile(temporaryNewKeyIndexParition, createIndexSetFile);
-                    FileUtils.forceDelete(temporaryNewKeyIndexParition);
+                    FileUtils.copyFile(temporaryNewKeyIndexPartition, createIndexSetFile);
+                    FileUtils.forceDelete(temporaryNewKeyIndexPartition);
 
                     index = mmap(createIndexSetFile(key), newSize);
 
@@ -226,12 +226,12 @@ public abstract class FileBackMapStore<K, V> implements ParitionedKeyValueStore<
                 File file = createIndexSetFile(key);
                 if (!file.exists()) {
                     // initializing in a temporary file prevents accidental corruption if the thread dies during mmap
-                    File temporaryNewKeyIndexParition = createIndexTempFile(key);
-                    mmap(temporaryNewKeyIndexParition, initialPageCapacity);
+                    File temporaryNewKeyIndexPartition = createIndexTempFile(key);
+                    mmap(temporaryNewKeyIndexPartition, initialPageCapacity);
 
                     File createIndexSetFile = createIndexSetFile(key);
-                    FileUtils.copyFile(temporaryNewKeyIndexParition, createIndexSetFile);
-                    FileUtils.forceDelete(temporaryNewKeyIndexParition);
+                    FileUtils.copyFile(temporaryNewKeyIndexPartition, createIndexSetFile);
+                    FileUtils.forceDelete(temporaryNewKeyIndexPartition);
                 }
 
                 got = mmap(file, initialPageCapacity);

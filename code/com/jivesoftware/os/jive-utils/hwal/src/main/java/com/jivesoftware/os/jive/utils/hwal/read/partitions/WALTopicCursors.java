@@ -124,7 +124,7 @@ public class WALTopicCursors {
 
             if (cursors.size() > desiredNumberOfPermits) {
                 int release = cursors.size() - desiredNumberOfPermits;
-                LOG.info("readerGroup:{} for topic:{} releasing {} paritions.", new Object[]{cursorGroup, topicId, release});
+                LOG.info("readerGroup:{} for topic:{} releasing {} partitions.", new Object[]{cursorGroup, topicId, release});
                 for (int i = 0; i < release; i++) {
                     Map.Entry<Permit, WALTopicCursor> entry = cursors.pollFirstEntry();
                     cursors.remove(entry.getKey());

@@ -5,11 +5,10 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
-import com.jivesoftware.os.jive.utils.map.store.api.ParitionedKeyValueStore;
+import com.jivesoftware.os.jive.utils.map.store.api.PartitionedKeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Iterator;
@@ -21,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @param <K>
  * @param <V>
  */
-public abstract class BytesBytesMapStore<K, V> implements ParitionedKeyValueStore<K, V> {
+public abstract class BytesBytesMapStore<K, V> implements PartitionedKeyValueStore<K, V> {
 
     private static final byte[] EMPTY_ID = new byte[16];
 
@@ -45,15 +44,6 @@ public abstract class BytesBytesMapStore<K, V> implements ParitionedKeyValueStor
         this.initialPageCapacity = initialPageCapacity;
         this.returnWhenGetReturnsNull = returnWhenGetReturnsNull;
         this.byteBufferFactory = byteBufferFactory;
-    }
-
-    @Override
-    public long estimateSizeInBytes() {
-        MapChunk mapChunk = indexRef.get();
-        if (mapChunk != null) {
-            return mapChunk.size();
-        }
-        return -1;
     }
 
     @Override
@@ -174,13 +164,13 @@ public abstract class BytesBytesMapStore<K, V> implements ParitionedKeyValueStor
             });
     }
 
-    public long sizeInBytes() throws IOException {
-        MapChunk index = indexRef.get();
-        if (index != null) {
-            return index.size();
-        } else {
-            return 0;
+    @Override
+    public long estimateSizeInBytes() {
+        MapChunk mapChunk = indexRef.get();
+        if (mapChunk != null) {
+            return mapChunk.size();
         }
+        return 0;
     }
 
     @Override

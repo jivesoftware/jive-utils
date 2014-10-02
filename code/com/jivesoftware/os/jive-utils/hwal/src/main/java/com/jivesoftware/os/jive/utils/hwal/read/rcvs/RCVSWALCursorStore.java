@@ -16,13 +16,13 @@ public class RCVSWALCursorStore implements WALCursorStore {
     }
 
     @Override
-    public void set(String readerGroup, String topic, int parition, long offset) {
-        cursors.add(readerGroup, topic, parition, offset, null, null);
+    public void set(String readerGroup, String topic, int partition, long offset) {
+        cursors.add(readerGroup, topic, partition, offset, null, null);
     }
 
     @Override
-    public long get(String readerGroup, String topic, int parition) {
-        Long got = cursors.get(readerGroup, topic, parition, null, null);
+    public long get(String readerGroup, String topic, int partition) {
+        Long got = cursors.get(readerGroup, topic, partition, null, null);
         if (got == null) {
             got = 0L;
         }
