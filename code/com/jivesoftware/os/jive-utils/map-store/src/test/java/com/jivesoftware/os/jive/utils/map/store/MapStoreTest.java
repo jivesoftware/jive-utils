@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
  */
 public class MapStoreTest {
 
-    @Test
+    @Test(enabled = false)
     public void basicTest() {
         test();
     }
@@ -41,15 +41,18 @@ public class MapStoreTest {
 
     public static void test() {
 
-        int it = 10000;
+        int it = 1_000_000;
         int ksize = 4;
-        test(it, ksize, it, new ByteBufferFactory() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println("----------------- " + i + " -----------------");
+            test(it, ksize, it, new ByteBufferFactory() {
 
-            @Override
-            public ByteBuffer allocate(long _size) {
-                return ByteBuffer.allocate((int) _size);
-            }
-        });
+                @Override
+                public ByteBuffer allocate(long _size) {
+                    return ByteBuffer.allocate((int) _size);
+                }
+            });
+        }
     }
 
     private static boolean test(int _iterations, int keySize, int _maxSize, ByteBufferFactory factory) {

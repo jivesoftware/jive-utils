@@ -27,14 +27,14 @@ public class RCVSWALWriterInitializer {
 
     public WALService<WALWriter> initialize(RCVSWALWriterConfig config,
             RCVSWALStorage storage,
-            WALPartitioningStrategy paritioningStrategy) {
+            WALPartitioningStrategy partitioningStrategy) {
 
         SipWALTimeProvider sipWALTimeProvider = new SipWALTimeProvider(new JiveEpochTimestampProvider());
 
         final WALWriter cursorStore = new RCVSWALWriter(sipWALTimeProvider,
                 storage.getWAL(),
                 storage.getSipWAL(),
-                paritioningStrategy,
+                partitioningStrategy,
                 config.getNumberOfPartitions());
 
         return new WALService<WALWriter>() {

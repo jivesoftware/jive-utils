@@ -300,7 +300,7 @@ public class HelloWALMain {
                 @Override
                 public void stream(String topic, int partition, List<WALEntry> entries) {
                     for (WALEntry entry : entries) {
-                        System.out.println("Topic:" + topic + " parition:" + partition + " readerGroup:" + readerGroup + " =>"
+                        System.out.println("Topic:" + topic + " partition:" + partition + " readerGroup:" + readerGroup + " =>"
                                 + new String(entry.getPayload()) + " batch size = " + entries.size());
                     }
                 }

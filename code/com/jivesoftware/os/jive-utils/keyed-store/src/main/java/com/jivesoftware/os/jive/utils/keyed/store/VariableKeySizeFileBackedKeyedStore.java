@@ -3,7 +3,6 @@ package com.jivesoftware.os.jive.utils.keyed.store;
 import com.google.common.base.Preconditions;
 import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import java.io.File;
-import java.io.IOException;
 
 public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
 
@@ -61,7 +60,7 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
     }
 
     @Override
-    public long sizeInBytes() throws IOException {
+    public long sizeInBytes() throws Exception {
         long sizeInBytes = 0;
         for (FileBackedKeyedStore keyedStore : keyedStores) {
             sizeInBytes += keyedStore.mapStoreSizeInBytes();

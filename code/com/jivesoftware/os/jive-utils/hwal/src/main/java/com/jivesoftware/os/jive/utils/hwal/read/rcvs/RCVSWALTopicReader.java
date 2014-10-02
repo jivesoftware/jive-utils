@@ -97,7 +97,7 @@ public class RCVSWALTopicReader implements WALTopicReader {
                     Long lastNonEmptyTimestamp = lastNonEmptyTimestamps.get(partition.get());
                     if (lastNonEmptyTimestamp != null
                             && System.currentTimeMillis() - lastNonEmptyTimestamp < pollEmptyPartitionIntervalMillis) {
-                        LOG.debug("Skipped idle parition:" + cursor);
+                        LOG.debug("Skipped idle partition:" + cursor);
                         continue;
                     }
 

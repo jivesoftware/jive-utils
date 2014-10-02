@@ -48,14 +48,14 @@ public class MapChunk {
     /**
      * @return
      */
-    final public Object raw() {
+    public Object raw() {
         return array;
     }
 
     /**
      * @return
      */
-    final public long size() {
+    public long size() {
         return array.capacity();
     }
 
@@ -63,7 +63,7 @@ public class MapChunk {
      * @param pageStart
      * @return
      */
-    final public byte read(int pageStart) {
+    public byte read(int pageStart) {
         return array.get(pageStart);
     }
 
@@ -71,7 +71,7 @@ public class MapChunk {
      * @param pageStart
      * @param v
      */
-    final public void write(int pageStart, byte v) {
+    public void write(int pageStart, byte v) {
         array.put(pageStart, v);
     }
 
@@ -79,7 +79,7 @@ public class MapChunk {
      * @param pageStart
      * @return
      */
-    final public int readInt(int pageStart) {
+    public int readInt(int pageStart) {
         return array.getInt(pageStart);
     }
 
@@ -87,7 +87,7 @@ public class MapChunk {
      * @param pageStart
      * @return
      */
-    final public float readFloat(int pageStart) {
+    public float readFloat(int pageStart) {
         return array.getFloat(pageStart);
     }
 
@@ -95,7 +95,7 @@ public class MapChunk {
      * @param pageStart
      * @return
      */
-    final public long readLong(int pageStart) {
+    public long readLong(int pageStart) {
         return array.getLong(pageStart);
     }
 
@@ -103,7 +103,7 @@ public class MapChunk {
      * @param pageStart
      * @return
      */
-    final public double readDouble(int pageStart) {
+    public double readDouble(int pageStart) {
         return array.getDouble(pageStart);
     }
 
@@ -111,7 +111,7 @@ public class MapChunk {
      * @param pageStart
      * @param v
      */
-    final public void writeInt(int pageStart, int v) {
+    public void writeInt(int pageStart, int v) {
         array.putInt(pageStart, v);
     }
 
@@ -121,7 +121,7 @@ public class MapChunk {
      * @param offset
      * @param length
      */
-    final public void read(int pageStart, byte[] read, int offset, int length) {
+    public void read(int pageStart, byte[] read, int offset, int length) {
         array.position(pageStart);
         array.get(read, offset, length);
     }
@@ -132,7 +132,7 @@ public class MapChunk {
      * @param offest
      * @param length
      */
-    final public void write(int pageStart, byte[] towrite, int offest, int length) {
+    public void write(int pageStart, byte[] towrite, int offest, int length) {
         array.position(pageStart);
         array.put(towrite, offest, length);
     }
@@ -144,7 +144,7 @@ public class MapChunk {
      * @param boffset
      * @return
      */
-    final public boolean equals(long pageStart, int keySize, byte[] b, int boffset) {
+    public boolean equals(long pageStart, int keySize, byte[] b, int boffset) {
         for (int i = 0; i < keySize; i++) {
             int pageIndex = (int) (pageStart + 1 + i);
             if (array.get(pageIndex) != b[boffset + i]) {
@@ -168,7 +168,7 @@ public class MapChunk {
     /**
      *
      */
-    final public void force() {
+    public void force() {
         if (array instanceof MappedByteBuffer) {
             ((MappedByteBuffer) array).force();
         }

@@ -7,8 +7,8 @@ import com.jivesoftware.os.jive.utils.io.ByteBufferFactory;
 import com.jivesoftware.os.jive.utils.io.FileBackedMemMappedByteBufferFactory;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
-import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.api.KeyValueStoreException;
+import com.jivesoftware.os.jive.utils.map.store.api.PartitionedKeyValueStore;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractIndex;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractKey;
 import com.jivesoftware.os.jive.utils.map.store.extractors.ExtractPayload;
@@ -35,9 +35,11 @@ import org.apache.commons.lang.mutable.MutableLong;
  * @param <K>
  * @param <V>
  */
-public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
+public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore<K, V> {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger(true);
+
+    private static final byte[] EMPTY_ID = new byte[16];
 
     private final ExtractPayload extractPayload = new ExtractPayload();
     private final MapStore mapStore = new MapStore(new ExtractIndex(), new ExtractKey(), extractPayload);
@@ -65,6 +67,34 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
     }
 
     @Override
+    public long estimateSizeInBytes() throws Exception {
+        File partitionsDir = new File(this.pathToPartitions);
+        if (!partitionsDir.exists()) {
+            return 0;
+        }
+
+        // TODO - Cache this value and only recalculate when add or remove is called?
+
+        final MutableLong size = new MutableLong(0);
+
+        Files.walkFileTree(partitionsDir.toPath(), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                size.add(attrs.size());
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                LOG.warn("Unable to calculate size of file: " + file, exc);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+        return size.longValue();
+    }
+
+    @Override
     public void add(K key, V value) throws KeyValueStoreException {
         if (key == null || value == null) {
             return;
@@ -83,16 +113,16 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 if (mapStore.getCount(index) >= index.maxCount) {
                     int newSize = index.maxCount * 2;
 
-                    File temporaryNewKeyIndexParition = createIndexTempFile(key);
-                    MapChunk newIndex = mmap(temporaryNewKeyIndexParition, newSize);
-                    mapStore.copyTo(index, newIndex);
+                    File temporaryNewKeyIndexPartition = createIndexTempFile(key);
+                    MapChunk newIndex = mmap(temporaryNewKeyIndexPartition, newSize);
+                    mapStore.copyTo(index, newIndex, null);
                     // TODO: implement to clean up
                     //index.close();
                     //newIndex.close();
                     File createIndexSetFile = createIndexSetFile(key);
                     FileUtils.forceDelete(createIndexSetFile);
-                    FileUtils.copyFile(temporaryNewKeyIndexParition, createIndexSetFile);
-                    FileUtils.forceDelete(temporaryNewKeyIndexParition);
+                    FileUtils.copyFile(temporaryNewKeyIndexPartition, createIndexSetFile);
+                    FileUtils.forceDelete(temporaryNewKeyIndexPartition);
 
                     index = mmap(createIndexSetFile(key), newSize);
 
@@ -142,6 +172,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         return new File(pathToPartitions, newIndexFilename);
     }
 
+    @Override
     public V getUnsafe(K key) throws KeyValueStoreException {
         if (key == null) {
             return returnWhenGetReturnsNull;
@@ -161,10 +192,10 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         if (key == null) {
             return returnWhenGetReturnsNull;
         }
-        MapChunk index = index(key);
         byte[] keyBytes = keyBytes(key);
         byte[] payload;
         synchronized (keyLocksProvider.lock(keyPartition(key))) {
+            MapChunk index = index(key);
             payload = mapStore.get(index, keyBytes, extractPayload);
         }
         if (payload == null) {
@@ -195,12 +226,12 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 File file = createIndexSetFile(key);
                 if (!file.exists()) {
                     // initializing in a temporary file prevents accidental corruption if the thread dies during mmap
-                    File temporaryNewKeyIndexParition = createIndexTempFile(key);
-                    MapChunk newIndex = mmap(temporaryNewKeyIndexParition, initialPageCapacity);
+                    File temporaryNewKeyIndexPartition = createIndexTempFile(key);
+                    mmap(temporaryNewKeyIndexPartition, initialPageCapacity);
 
                     File createIndexSetFile = createIndexSetFile(key);
-                    FileUtils.copyFile(temporaryNewKeyIndexParition, createIndexSetFile);
-                    FileUtils.forceDelete(temporaryNewKeyIndexParition);
+                    FileUtils.copyFile(temporaryNewKeyIndexPartition, createIndexSetFile);
+                    FileUtils.forceDelete(temporaryNewKeyIndexPartition);
                 }
 
                 got = mmap(file, initialPageCapacity);
@@ -223,7 +254,7 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
             page.init();
             return page;
         } else {
-            MapChunk set = mapStore.allocate((byte) 0, (byte) 0, new byte[16], 0, maxCapacity, keySize,
+            MapChunk set = mapStore.allocate((byte) 0, (byte) 0, EMPTY_ID, 0, maxCapacity, keySize,
                 payloadSize,
                 new ByteBufferFactory() {
 
@@ -236,33 +267,6 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
         }
     }
 
-    public long sizeInBytes() throws IOException {
-        File partitionsDir = new File(this.pathToPartitions);
-        if (!partitionsDir.exists()) {
-            return 0;
-        }
-
-        // TODO - Cache this value and only recalculate when add or remove is called?
-
-        final MutableLong size = new MutableLong(0);
-
-        Files.walkFileTree(partitionsDir.toPath(), new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                size.add(attrs.size());
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                LOG.warn("Unable to calculate size of file: " + file, exc);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
-        return size.longValue();
-    }
-
     @Override
     public Iterator<Entry<K, V>> iterator() {
         List<Iterator<Entry<K, V>>> iterators = Lists.newArrayList();
@@ -272,15 +276,18 @@ public abstract class FileBackMapStore<K, V> implements KeyValueStore<K, V> {
                 iterators.add(Iterators.transform(mapStore.iterator(got), new Function<MapStore.Entry, Entry<K, V>>() {
                     @Override
                     public Entry<K, V> apply(final MapStore.Entry input) {
+                        final K key = bytesKey(input.key, 0);
+                        final V value = bytesValue(key, input.payload, 0);
+
                         return new Entry<K, V>() {
                             @Override
                             public K getKey() {
-                                return bytesKey(input.key, 0);
+                                return key;
                             }
 
                             @Override
                             public V getValue() {
-                                return bytesValue(getKey(), input.payload, 0);
+                                return value;
                             }
                         };
                     }
