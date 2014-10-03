@@ -22,8 +22,11 @@ public class FileBackMapStoreTest {
     }
 
     private void testIteratorWithNumEntries(int numEntries) throws Exception {
-        String path = Files.createTempDirectory("testIterator").toFile().getAbsolutePath();
-        FileBackMapStore<Integer, Long> fileBackMapStore = new FileBackMapStore<Integer, Long>(path, 4, 8, 512, 4, null) {
+        String[] paths = new String[] {
+            Files.createTempDirectory("testIterator").toFile().getAbsolutePath(),
+            Files.createTempDirectory("testIterator").toFile().getAbsolutePath()
+        };
+        FileBackMapStore<Integer, Long> fileBackMapStore = new FileBackMapStore<Integer, Long>(paths, 4, 8, 512, 4, null) {
             @Override
             public String keyPartition(Integer key) {
                 return String.valueOf(key % 10);

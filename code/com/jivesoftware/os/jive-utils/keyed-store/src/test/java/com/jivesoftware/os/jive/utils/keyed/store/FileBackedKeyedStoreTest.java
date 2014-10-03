@@ -8,14 +8,11 @@
  */
 package com.jivesoftware.os.jive.utils.keyed.store;
 
-import com.jivesoftware.os.jive.utils.chunk.store.ChunkStore;
 import com.jivesoftware.os.jive.utils.chunk.store.ChunkStoreInitializer;
 import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
-import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -26,15 +23,23 @@ public class FileBackedKeyedStoreTest {
 
     @Test
     public void keyedStoreTest() throws Exception {
-        File mapDir = Files.createTempDirectory("map").toFile();
-        File swapDir = Files.createTempDirectory("swap").toFile();
-        Path chunksDir = Files.createTempDirectory("chunks");
-        File chunks = new File(chunksDir.toFile(), "chunks.data");
+        String[] mapDirs = new String[] {
+            Files.createTempDirectory("map").toFile().getAbsolutePath(),
+            Files.createTempDirectory("map").toFile().getAbsolutePath()
+        };
+        String[] swapDirs = new String[] {
+            Files.createTempDirectory("swap").toFile().getAbsolutePath(),
+            Files.createTempDirectory("swap").toFile().getAbsolutePath()
+        };
+        String[] chunkDirs = new String[] {
+            Files.createTempDirectory("chunk").toFile().getAbsolutePath(),
+            Files.createTempDirectory("chunk").toFile().getAbsolutePath()
+        };
 
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
-        ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 4096, false);
-        MultiChunkStore multChunkStore = new MultiChunkStore(chunkStore);
-        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        MultiChunkStore multChunkStore = chunkStoreInitializer.initializeMulti(chunkDirs, "data", 4, 4096, false);
+        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs,
+            4, 100, multChunkStore, 512, 4);
 
         byte[] key = FilerIO.intBytes(1010);
         Filer filer = fileBackedKeyedStore.get(key);
@@ -42,7 +47,7 @@ public class FileBackedKeyedStoreTest {
             FilerIO.writeInt(filer, 10, "");
         }
 
-        fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs, 4, 100, multChunkStore, 512, 4);
         filer = fileBackedKeyedStore.get(key);
         synchronized (filer.lock()) {
             filer.seek(0);
@@ -54,15 +59,23 @@ public class FileBackedKeyedStoreTest {
 
     @Test
     public void swapTest() throws Exception {
-        File mapDir = Files.createTempDirectory("map").toFile();
-        File swapDir = Files.createTempDirectory("swap").toFile();
-        Path chunksDir = Files.createTempDirectory("chunks");
-        File chunks = new File(chunksDir.toFile(), "chunks.data");
+        String[] mapDirs = new String[] {
+            Files.createTempDirectory("map").toFile().getAbsolutePath(),
+            Files.createTempDirectory("map").toFile().getAbsolutePath()
+        };
+        String[] swapDirs = new String[] {
+            Files.createTempDirectory("swap").toFile().getAbsolutePath(),
+            Files.createTempDirectory("swap").toFile().getAbsolutePath()
+        };
+        String[] chunkDirs = new String[] {
+            Files.createTempDirectory("chunk").toFile().getAbsolutePath(),
+            Files.createTempDirectory("chunk").toFile().getAbsolutePath()
+        };
 
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
-        ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 4096, false);
-        MultiChunkStore multChunkStore = new MultiChunkStore(chunkStore);
-        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        MultiChunkStore multChunkStore = chunkStoreInitializer.initializeMulti(chunkDirs, "data", 4, 4096, false);
+        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs,
+            4, 100, multChunkStore, 512, 4);
 
         byte[] key = FilerIO.intBytes(1020);
         SwappableFiler filer = fileBackedKeyedStore.get(key);
@@ -75,7 +88,8 @@ public class FileBackedKeyedStoreTest {
             swappingFiler.commit();
         }
 
-        fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs,
+            4, 100, multChunkStore, 512, 4);
         filer = fileBackedKeyedStore.get(key);
         synchronized (filer.lock()) {
             filer.sync();

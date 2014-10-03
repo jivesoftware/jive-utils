@@ -2,7 +2,7 @@ package com.jivesoftware.os.jive.utils.keyed.store;
 
 import com.jivesoftware.os.jive.utils.chunk.store.MultiChunkStore;
 import com.jivesoftware.os.jive.utils.map.store.FileBackMapStore;
-import java.util.Collections;
+import java.util.Arrays;
 
 /**
  * @author jonathan
@@ -13,26 +13,31 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
     private final FileBackMapStore<IBA, IBA> swapStore;
     private final MultiChunkStore chunkStore;
     private final long newFilerInitialCapacity;
+    private final String[] partitions;
 
-    public FileBackedKeyedStore(String mapDirectory, String swapDirectory, int mapKeySize, long initialMapKeyCapacity,
-            MultiChunkStore chunkStore, long newFilerInitialCapacity) throws Exception
+    public FileBackedKeyedStore(String[] mapDirectories, String[] swapDirectories, int mapKeySize, long initialMapKeyCapacity,
+        MultiChunkStore chunkStore, long newFilerInitialCapacity, int numPartitions) throws Exception
     {
-        this.mapStore = initializeMapStore(mapDirectory, mapKeySize, initialMapKeyCapacity);
-        this.swapStore = initializeMapStore(swapDirectory, mapKeySize, initialMapKeyCapacity);
+        this.mapStore = initializeMapStore(mapDirectories, mapKeySize, initialMapKeyCapacity);
+        this.swapStore = initializeMapStore(swapDirectories, mapKeySize, initialMapKeyCapacity);
         this.chunkStore = chunkStore;
         this.newFilerInitialCapacity = newFilerInitialCapacity;
+        this.partitions = new String[numPartitions];
+        for (int i = 0; i < numPartitions; i++) {
+            partitions[i] = String.valueOf(i).intern();
+        }
     }
 
-    private FileBackMapStore<IBA, IBA> initializeMapStore(String mapDirectory, int mapKeySize, long initialMapKeyCapacity) throws Exception {
-        return new FileBackMapStore<IBA, IBA>(mapDirectory, mapKeySize, 8, (int) initialMapKeyCapacity, 100, null) {
+    private FileBackMapStore<IBA, IBA> initializeMapStore(String[] mapDirectories, int mapKeySize, long initialMapKeyCapacity) throws Exception {
+        return new FileBackMapStore<IBA, IBA>(mapDirectories, mapKeySize, 8, (int) initialMapKeyCapacity, 100, null) {
             @Override
             public String keyPartition(IBA key) {
-                return "_";
+                return partitions[Math.abs(key.hashCode()) % partitions.length];
             }
 
             @Override
             public Iterable<String> keyPartitions() {
-                return Collections.singletonList("_");
+                return Arrays.asList(partitions);
             }
 
             @Override

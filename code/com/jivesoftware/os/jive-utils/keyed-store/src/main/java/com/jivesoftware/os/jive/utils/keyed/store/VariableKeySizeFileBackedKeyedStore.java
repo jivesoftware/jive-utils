@@ -9,19 +9,35 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
     private final int[] keySizeThresholds;
     private final FileBackedKeyedStore[] keyedStores;
 
-    public VariableKeySizeFileBackedKeyedStore(File baseMapDirectory, File baseSwapDirectory, MultiChunkStore chunkStore, int[] keySizeThresholds,
-            long initialMapKeyCapacity, long newFilerInitialCapacity) throws Exception
-    {
+    public VariableKeySizeFileBackedKeyedStore(String[] baseMapDirectories,
+        String[] baseSwapDirectories,
+        MultiChunkStore chunkStore,
+        int[] keySizeThresholds,
+        long initialMapKeyCapacity,
+        long newFilerInitialCapacity,
+        int numPartitions)
+        throws Exception {
+
         this.keySizeThresholds = keySizeThresholds;
         this.keyedStores = new FileBackedKeyedStore[keySizeThresholds.length];
-        for (int i = 0; i < keySizeThresholds.length; i++) {
-            Preconditions.checkArgument(i == 0 || keySizeThresholds[i] > keySizeThresholds[i - 1], "Thresholds must be monotonically increasing");
+        for (int keySizeIndex = 0; keySizeIndex < keySizeThresholds.length; keySizeIndex++) {
+            Preconditions.checkArgument(keySizeIndex == 0 || keySizeThresholds[keySizeIndex] > keySizeThresholds[keySizeIndex - 1],
+                "Thresholds must be monotonically increasing");
 
-            final int keySize = keySizeThresholds[i];
-            String mapDirectory = new File(baseMapDirectory, String.valueOf(keySize)).getAbsolutePath();
-            String swapDirectory = new File(baseSwapDirectory, String.valueOf(keySize)).getAbsolutePath();
-            keyedStores[i] = new FileBackedKeyedStore(mapDirectory, swapDirectory, keySize, initialMapKeyCapacity, chunkStore, newFilerInitialCapacity);
+            final int keySize = keySizeThresholds[keySizeIndex];
+            String[] mapDirectories = buildMapDirectories(baseMapDirectories, keySize);
+            String[] swapDirectories = buildMapDirectories(baseSwapDirectories, keySize);
+            keyedStores[keySizeIndex] = new FileBackedKeyedStore(mapDirectories, swapDirectories, keySize, initialMapKeyCapacity, chunkStore,
+                newFilerInitialCapacity, numPartitions);
         }
+    }
+
+    private String[] buildMapDirectories(String[] baseMapDirectories, int keySize) {
+        String[] mapDirectories = new String[baseMapDirectories.length];
+        for (int basePathIndex = 0; basePathIndex < baseMapDirectories.length; basePathIndex++) {
+            mapDirectories[basePathIndex] = new File(baseMapDirectories[basePathIndex], String.valueOf(keySize)).getAbsolutePath();
+        }
+        return mapDirectories;
     }
 
     private int keySize(byte[] key) {
