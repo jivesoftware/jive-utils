@@ -43,7 +43,7 @@ public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore
 
     private final ExtractPayload extractPayload = new ExtractPayload();
     private final MapStore mapStore = new MapStore(new ExtractIndex(), new ExtractKey(), extractPayload);
-    private final String pathToPartitions;
+    private final String[] pathsToPartitions;
     private final int keySize;
     private final int payloadSize;
     private final int initialPageCapacity;
@@ -51,47 +51,19 @@ public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore
     private final Map<String, MapChunk> indexPages;
     private final V returnWhenGetReturnsNull;
 
-    public FileBackMapStore(String pathToPartitions,
+    public FileBackMapStore(String[] pathsToPartitions,
         int keySize,
         int payloadSize,
         int initialPageCapacity,
         int concurrency,
         V returnWhenGetReturnsNull) {
-        this.pathToPartitions = pathToPartitions;
+        this.pathsToPartitions = pathsToPartitions;
         this.keySize = keySize;
         this.payloadSize = payloadSize;
         this.initialPageCapacity = initialPageCapacity;
         this.keyLocksProvider = new StripingLocksProvider<>(concurrency);
         this.returnWhenGetReturnsNull = returnWhenGetReturnsNull;
         this.indexPages = new ConcurrentSkipListMap<>();
-    }
-
-    @Override
-    public long estimateSizeInBytes() throws Exception {
-        File partitionsDir = new File(this.pathToPartitions);
-        if (!partitionsDir.exists()) {
-            return 0;
-        }
-
-        // TODO - Cache this value and only recalculate when add or remove is called?
-
-        final MutableLong size = new MutableLong(0);
-
-        Files.walkFileTree(partitionsDir.toPath(), new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                size.add(attrs.size());
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                LOG.warn("Unable to calculate size of file: " + file, exc);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
-        return size.longValue();
     }
 
     @Override
@@ -159,15 +131,12 @@ public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore
         return createIndexFilePostfixed(keyPartition(key), ".set");
     }
 
-    File createIndexSetFile(String partition) {
-        return createIndexFilePostfixed(partition, ".set");
-    }
-
     private File createIndexTempFile(K key) {
         return createIndexFilePostfixed(keyPartition(key) + "-" + UUID.randomUUID().toString(), ".tmp");
     }
 
     private File createIndexFilePostfixed(String partition, String postfix) {
+        String pathToPartitions = pathsToPartitions[Math.abs(partition.hashCode()) % pathsToPartitions.length];
         String newIndexFilename = partition + (postfix == null ? "" : postfix);
         return new File(pathToPartitions, newIndexFilename);
     }
@@ -202,11 +171,6 @@ public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore
             return returnWhenGetReturnsNull;
         }
         return bytesValue(key, payload, 0);
-    }
-
-    @Override
-    public long estimatedMaxNumberOfKeys() {
-        return mapStore.absoluteMaxCount(keySize, payloadSize);
     }
 
     private MapChunk index(K key) throws KeyValueStoreException {
@@ -265,6 +229,39 @@ public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore
                 });
             return set;
         }
+    }
+
+    @Override
+    public long estimatedMaxNumberOfKeys() {
+        return mapStore.absoluteMaxCount(keySize, payloadSize);
+    }
+
+    @Override
+    public long estimateSizeInBytes() throws Exception {
+        final MutableLong size = new MutableLong(0);
+        for (String pathToPartitions : pathsToPartitions) {
+            File partitionsDir = new File(pathToPartitions);
+            if (!partitionsDir.exists()) {
+                continue;
+            }
+
+            // TODO - Cache this value and only recalculate when add or remove is called?
+            Files.walkFileTree(partitionsDir.toPath(), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    size.add(attrs.size());
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    LOG.warn("Unable to calculate size of file: " + file, exc);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
+
+        return size.longValue();
     }
 
     @Override

@@ -250,33 +250,4 @@ public class ChunkStore {
         }
     }
 
-//    public static String name(String _chunkName) {
-//        String fileName = _chunkName + ".chunk";
-//        ensureDirectory(new File(fileName));
-//        return fileName;
-//    }
-//
-//    public static ChunkStore factory(String _chunkName) throws Exception {
-//        if (new File(name(_chunkName)).exists()) {
-//            return openInstance(_chunkName);
-//        }
-//        return newInstance(_chunkName);
-//    }
-//
-//    public static ChunkStore newInstance(String _chunkName) throws Exception {
-//        Filer chunkFiler = Filer.open(name(_chunkName), "rw");
-//        SubsetableFiler chunkSegment = new SubsetableFiler(chunkFiler, 0, Long.MAX_VALUE, 0);
-//        ChunkStore chunks = new ChunkStore();
-//        chunks.open(chunkSegment);
-//        return chunks;
-//    }
-//
-//    public static ChunkStore openInstance(String _chunkName) throws Exception {
-//        Filer chunkFiler = Filer.open(name(_chunkName), "rw");
-//        SubsetableFiler chunkSegment = new SubsetableFiler(chunkFiler, 0, Long.MAX_VALUE, 0);
-//        ChunkStore chunks = new ChunkStore(chunkSegment);
-//        chunks.open();
-//        return chunks;
-//    }
-
 }

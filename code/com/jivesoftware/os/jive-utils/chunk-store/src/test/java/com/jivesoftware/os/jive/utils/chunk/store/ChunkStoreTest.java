@@ -10,7 +10,7 @@ package com.jivesoftware.os.jive.utils.chunk.store;
 
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
-import java.io.File;
+import java.nio.file.Files;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -23,8 +23,8 @@ public class ChunkStoreTest {
     @Test
     public void testNewChunkStore() throws Exception {
         int size = 1024 * 10;
-        File chunkFile = File.createTempFile("testNewChunkStore", "1");
-        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), size, false);
+        String chunkPath = Files.createTempDirectory("testNewChunkStore").toFile().getAbsolutePath();
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkPath, "data", size, false);
 
         long chunk10 = chunkStore.newChunk(10);
         System.out.println("chunkId:" + chunk10);
@@ -45,8 +45,8 @@ public class ChunkStoreTest {
     @Test
     public void testExistingChunkStore() throws Exception {
         int size = 1024 * 10;
-        File chunkFile = File.createTempFile("testExistingChunkStore", "1");
-        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), size, false);
+        String chunkPath = Files.createTempDirectory("testExistingChunkStore").toFile().getAbsolutePath();
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkPath, "data", size, false);
 
         long chunk10 = chunkStore.newChunk(10);
         System.out.println("chunkId:" + chunk10);
@@ -58,7 +58,7 @@ public class ChunkStoreTest {
 
         long expectedReferenceNumber = chunkStore.getReferenceNumber();
 
-        chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), size, false);
+        chunkStore = new ChunkStoreInitializer().initialize(chunkPath, "data", size, false);
         assertEquals(chunkStore.getReferenceNumber(), expectedReferenceNumber);
 
         filer = chunkStore.getFiler(chunk10);
@@ -73,8 +73,8 @@ public class ChunkStoreTest {
     @Test
     public void testResizingChunkStore() throws Exception {
         int size = 512;
-        File chunkFile = File.createTempFile("testResizingChunkStore", "1");
-        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkFile.getAbsolutePath(), size, true);
+        String chunkPath = Files.createTempDirectory("testResizingChunkStore").toFile().getAbsolutePath();
+        ChunkStore chunkStore = new ChunkStoreInitializer().initialize(chunkPath, "data", size, true);
 
         long chunk10 = chunkStore.newChunk(size * 4);
         System.out.println("chunkId:" + chunk10);

@@ -14,8 +14,36 @@ public class ChunkStoreInitializer {
 
     private static final long referenceNumber = 1;
 
-    public ChunkStore initialize(String chunkFile, long chunkStoreCapacityInBytes, boolean autoResize) throws Exception {
-        File chunkStoreFile = new File(chunkFile);
+    public ChunkStore initialize(String chunkPath, String chunkPrefix, long chunkStoreCapacityInBytes, boolean autoResize) throws Exception {
+        return initialize(getChunkStoreFile(new String[] { chunkPath }, chunkPrefix, 0), chunkStoreCapacityInBytes, autoResize);
+    }
+
+    public MultiChunkStore initializeMulti(String[] chunkPaths, String chunkPrefix, int numberOfChunkStores, long chunkStoreCapacityInBytes, boolean autoResize)
+        throws Exception {
+
+        ChunkStore[] chunkStores = new ChunkStore[numberOfChunkStores];
+        for (int index = 0; index < chunkStores.length; index++) {
+            chunkStores[index] = initialize(getChunkStoreFile(chunkPaths, chunkPrefix, index), chunkStoreCapacityInBytes, autoResize);
+        }
+
+        return new MultiChunkStore(chunkStores);
+    }
+
+    public boolean checkExists(String[] chunkPaths, String chunkPrefix, int numberOfChunkStores) {
+        for (int index = 0; index < numberOfChunkStores; index++) {
+            File chunkStoreFile = getChunkStoreFile(chunkPaths, chunkPrefix, index);
+            if (!chunkStoreFile.exists() || !chunkStoreFile.isFile()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private File getChunkStoreFile(String[] chunkPaths, String chunkPrefix, int index) {
+        return new File(chunkPaths[index % chunkPaths.length], chunkPrefix + "-" + index + ".chunk");
+    }
+
+    private ChunkStore initialize(File chunkStoreFile, long chunkStoreCapacityInBytes, boolean autoResize) throws Exception {
         FileBackedMemMappedByteBufferFactory bufferFactory = new FileBackedMemMappedByteBufferFactory(chunkStoreFile);
 
         ChunkStore chunkStore;
@@ -44,4 +72,5 @@ public class ChunkStoreInitializer {
         }
         return chunkStore;
     }
+
 }

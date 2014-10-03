@@ -14,15 +14,18 @@ import org.testng.annotations.Test;
  */
 public class VariableKeySizeFileBackMapStoreTest {
 
-    private String pathToPartitions;
+    private String[] pathsToPartitions;
 
     @BeforeMethod
     public void setUp() throws Exception {
-        pathToPartitions = Files.createTempDirectory(getClass().getSimpleName()).toFile().getAbsolutePath();
+        pathsToPartitions = new String[] {
+            Files.createTempDirectory(getClass().getSimpleName()).toFile().getAbsolutePath(),
+            Files.createTempDirectory(getClass().getSimpleName()).toFile().getAbsolutePath()
+        };
     }
 
-    private VariableKeySizeFileBackMapStore<String, Long> createMapStore(String pathToPartitions, int[] keySizeThresholds) {
-        return new VariableKeySizeFileBackMapStore<String, Long>(pathToPartitions, keySizeThresholds, 8, 10, 1, null) {
+    private VariableKeySizeFileBackMapStore<String, Long> createMapStore(String[] pathsToPartitions, int[] keySizeThresholds) {
+        return new VariableKeySizeFileBackMapStore<String, Long>(pathsToPartitions, keySizeThresholds, 8, 10, 1, null) {
 
             @Override
             protected int keyLength(String key) {
@@ -63,8 +66,8 @@ public class VariableKeySizeFileBackMapStoreTest {
 
     @Test
     public void testAddGet() throws KeyValueStoreException {
-        int[] keySizeThresholds = new int[]{ 4, 16, 64, 256, 1_024};
-        VariableKeySizeFileBackMapStore<String, Long> mapStore = createMapStore(pathToPartitions, keySizeThresholds);
+        int[] keySizeThresholds = new int[] { 4, 16, 64, 256, 1_024 };
+        VariableKeySizeFileBackMapStore<String, Long> mapStore = createMapStore(pathsToPartitions, keySizeThresholds);
 
         for (int i = 0; i < keySizeThresholds.length; i++) {
             String key = keyOfLength(keySizeThresholds[i]);
@@ -74,19 +77,19 @@ public class VariableKeySizeFileBackMapStoreTest {
         }
     }
 
-    @Test (expectedExceptions = { IndexOutOfBoundsException.class })
+    @Test(expectedExceptions = { IndexOutOfBoundsException.class })
     public void testKeyTooBig() throws KeyValueStoreException {
-        int[] keySizeThresholds = new int[]{ 1, 2, 4 };
-        VariableKeySizeFileBackMapStore<String, Long> mapStore = createMapStore(pathToPartitions, keySizeThresholds);
+        int[] keySizeThresholds = new int[] { 1, 2, 4 };
+        VariableKeySizeFileBackMapStore<String, Long> mapStore = createMapStore(pathsToPartitions, keySizeThresholds);
 
         int maxLength = keySizeThresholds[keySizeThresholds.length - 1];
         mapStore.add(keyOfLength(maxLength + 1), 0l);
     }
 
-    @Test (expectedExceptions = { IllegalArgumentException.class })
+    @Test(expectedExceptions = { IllegalArgumentException.class })
     public void testBadThresholds() throws KeyValueStoreException {
-        int[] keySizeThresholds = new int[]{ 0, 0 };
-        createMapStore(pathToPartitions, keySizeThresholds);
+        int[] keySizeThresholds = new int[] { 0, 0 };
+        createMapStore(pathsToPartitions, keySizeThresholds);
     }
 
     private String keyOfLength(int length) {
