@@ -107,53 +107,52 @@ public class ChunkStore {
     }
 
     public long newChunk(long _capacity) throws Exception {
-        long resultFP;
+        long chunkPower = FilerIO.chunkPower(_capacity, cMinPower);
+        long chunkLength = FilerIO.chunkLength(chunkPower);
+        chunkLength += 8; // add magicNumber
+        chunkLength += 8; // add chunkPower
+        chunkLength += 8; // add next free chunk of equal size
+        chunkLength += 8; // add bytesLength
+        long chunkPosition = freeSeek(chunkPower);
         synchronized (filer.lock()) {
-            long chunkPower = FilerIO.chunkPower(_capacity, cMinPower);
-            resultFP = resuseChunk(chunkPower);
+            long resultFP = reuseChunk(chunkPosition);
             if (resultFP == -1) {
-                long chunkLength = FilerIO.chunkLength(chunkPower);
-                chunkLength += 8; // add magicNumber
-                chunkLength += 8; // add chunkPower
-                chunkLength += 8; // add next free chunk of equal size
-                chunkLength += 8; // add bytesLength
                 long newChunkFP = lengthOfFile;
                 if (newChunkFP + chunkLength > filer.endOfFP()) {
                     //!! to do over flow allocated chunk request reallocation
                     throw new RuntimeException("need larger allocation for ChunkFile" + this);
                 }
-                synchronized (filer.lock()) {
-                    filer.seek(newChunkFP + chunkLength - 1); // last byte in chunk
-                    filer.write(0); // cause file backed ChunkStore to grow file on disk. Use setLength()?
-                    filer.seek(newChunkFP);
-                    FilerIO.writeLong(filer, cMagicNumber, "magicNumber");
-                    FilerIO.writeLong(filer, chunkPower, "chunkPower");
-                    FilerIO.writeLong(filer, -1, "chunkNexFreeChunkFP");
-                    FilerIO.writeLong(filer, chunkLength, "chunkLength");
-                    lengthOfFile += chunkLength;
-                    filer.seek(0);
-                    FilerIO.writeLong(filer, lengthOfFile, "lengthOfFile");
-                    filer.flush();
-                }
+                filer.seek(newChunkFP + chunkLength - 1); // last byte in chunk
+                filer.write(0); // cause file backed ChunkStore to grow file on disk. Use setLength()?
+                filer.seek(newChunkFP);
+                FilerIO.writeLong(filer, cMagicNumber, "magicNumber");
+                FilerIO.writeLong(filer, chunkPower, "chunkPower");
+                FilerIO.writeLong(filer, -1, "chunkNexFreeChunkFP");
+                FilerIO.writeLong(filer, chunkLength, "chunkLength");
+                lengthOfFile += chunkLength;
+                filer.seek(0);
+                FilerIO.writeLong(filer, lengthOfFile, "lengthOfFile");
+                filer.flush();
                 return newChunkFP;
+            } else {
+                return resultFP;
             }
         }
-        return resultFP;
     }
 
-    private long resuseChunk(long _chunkPower) throws Exception {
-        synchronized (filer.lock()) {
-            long position = freeSeek(_chunkPower);
-            filer.seek(position);
-            long reuseFP = FilerIO.readLong(filer, "free");
-            if (reuseFP == -1) {
-                return reuseFP;
-            }
-            long nextFree = readNextFree(reuseFP);
-            filer.seek(position);
-            FilerIO.writeLong(filer, nextFree, "free");
+    /**
+     * Synchronize externally on filer.lock()
+     */
+    private long reuseChunk(long position) throws Exception {
+        filer.seek(position);
+        long reuseFP = FilerIO.readLong(filer, "free");
+        if (reuseFP == -1) {
             return reuseFP;
         }
+        long nextFree = readNextFree(reuseFP);
+        filer.seek(position);
+        FilerIO.writeLong(filer, nextFree, "free");
+        return reuseFP;
     }
 
     public Filer getFiler(long _chunkFP) throws Exception {
@@ -225,12 +224,12 @@ public class ChunkStore {
         }
     }
 
-    private static final byte[] zerosMin = new byte[(int) Math.pow(2, cMinPower)]; // never too big
-    private static final byte[] zerosMax = new byte[(int) Math.pow(2, 16)]; // 65536 max used until min needed
-
     private long freeSeek(long _chunkPower) {
         return 8 + 8 + ((_chunkPower - cMinPower) * 8);
     }
+
+    private static final byte[] zerosMin = new byte[(int) Math.pow(2, cMinPower)]; // never too big
+    private static final byte[] zerosMax = new byte[(int) Math.pow(2, 16)]; // 65536 max used until min needed
 
     private long readNextFree(long _chunkFP) throws Exception {
         synchronized (filer.lock()) {
