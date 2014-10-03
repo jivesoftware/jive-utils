@@ -206,7 +206,7 @@ public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore
 
     @Override
     public long estimatedMaxNumberOfKeys() {
-        return FileUtils.sizeOfDirectory(new File(pathToPartitions)) / payloadSize;
+        return mapStore.absoluteMaxCount(keySize, payloadSize);
     }
 
     private MapChunk index(K key) throws KeyValueStoreException {

@@ -10,7 +10,7 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
     private final FileBackedKeyedStore[] keyedStores;
 
     public VariableKeySizeFileBackedKeyedStore(File baseMapDirectory, File baseSwapDirectory, MultiChunkStore chunkStore, int[] keySizeThresholds,
-            long initialMapKeyCapacity, long newFilerInitialCapacity) throws Exception
+            long initialMapKeyCapacity, long newFilerInitialCapacity, int numPartitions) throws Exception
     {
         this.keySizeThresholds = keySizeThresholds;
         this.keyedStores = new FileBackedKeyedStore[keySizeThresholds.length];
@@ -20,7 +20,8 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
             final int keySize = keySizeThresholds[i];
             String mapDirectory = new File(baseMapDirectory, String.valueOf(keySize)).getAbsolutePath();
             String swapDirectory = new File(baseSwapDirectory, String.valueOf(keySize)).getAbsolutePath();
-            keyedStores[i] = new FileBackedKeyedStore(mapDirectory, swapDirectory, keySize, initialMapKeyCapacity, chunkStore, newFilerInitialCapacity);
+            keyedStores[i] = new FileBackedKeyedStore(mapDirectory, swapDirectory, keySize, initialMapKeyCapacity, chunkStore, newFilerInitialCapacity,
+                numPartitions);
         }
     }
 

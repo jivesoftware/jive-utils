@@ -34,7 +34,8 @@ public class FileBackedKeyedStoreTest {
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
         ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 4096, false);
         MultiChunkStore multChunkStore = new MultiChunkStore(chunkStore);
-        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(),
+            4, 100, multChunkStore, 512, 4);
 
         byte[] key = FilerIO.intBytes(1010);
         Filer filer = fileBackedKeyedStore.get(key);
@@ -42,7 +43,7 @@ public class FileBackedKeyedStoreTest {
             FilerIO.writeInt(filer, 10, "");
         }
 
-        fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512, 4);
         filer = fileBackedKeyedStore.get(key);
         synchronized (filer.lock()) {
             filer.seek(0);
@@ -62,7 +63,8 @@ public class FileBackedKeyedStoreTest {
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
         ChunkStore chunkStore = chunkStoreInitializer.initialize(chunks.getAbsolutePath(), 4096, false);
         MultiChunkStore multChunkStore = new MultiChunkStore(chunkStore);
-        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(),
+            4, 100, multChunkStore, 512, 4);
 
         byte[] key = FilerIO.intBytes(1020);
         SwappableFiler filer = fileBackedKeyedStore.get(key);
@@ -75,7 +77,8 @@ public class FileBackedKeyedStoreTest {
             swappingFiler.commit();
         }
 
-        fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(), 4, 100, multChunkStore, 512);
+        fileBackedKeyedStore = new FileBackedKeyedStore(mapDir.getAbsolutePath(), swapDir.getAbsolutePath(),
+            4, 100, multChunkStore, 512, 4);
         filer = fileBackedKeyedStore.get(key);
         synchronized (filer.lock()) {
             filer.sync();
