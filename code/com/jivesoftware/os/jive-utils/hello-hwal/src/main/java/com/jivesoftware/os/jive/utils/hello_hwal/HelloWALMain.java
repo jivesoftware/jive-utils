@@ -253,7 +253,8 @@ public class HelloWALMain {
 
             HBaseSetOfSortedMapsConfig hbaseConfig = BindInterfaceToConfiguration.bindDefault(HBaseSetOfSortedMapsConfig.class);
             hbaseConfig.setHBaseZookeeperQuorum(hbaseZookeeperQuorum);
-            SetOfSortedMapsImplInitializer hBaseSetOfSortedMapsImplInitializer = new HBaseSetOfSortedMapsImplInitializer(hbaseConfig);
+            hbaseConfig.setMarshalThreadPoolSize(4);
+            SetOfSortedMapsImplInitializer<Exception> hBaseSetOfSortedMapsImplInitializer = new HBaseSetOfSortedMapsImplInitializer(hbaseConfig);
 
             RCVSWALStorageConfig storageConfig = BindInterfaceToConfiguration.bindDefault(RCVSWALStorageConfig.class);
             storageService = new RCVSWALStorageInitializer().initialize(storageConfig, hBaseSetOfSortedMapsImplInitializer);

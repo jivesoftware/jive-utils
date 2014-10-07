@@ -23,6 +23,7 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.marshall.primatives
 import com.jivesoftware.os.jive.utils.row.column.value.store.tests.BaseRowColumnValueStore;
 import com.jivesoftware.os.jive.utils.row.column.value.store.tests.EmbeddedHBase;
 import java.util.UUID;
+import org.merlin.config.BindInterfaceToConfiguration;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -45,8 +46,10 @@ public class HBaseRowColumnValueStoreTest extends BaseRowColumnValueStore {
     @BeforeMethod
     public void setUpMethod() throws Exception {
         String env = UUID.randomUUID().toString();
-        final SetOfSortedMapsImplInitializer<Exception> hBase = new HBaseSetOfSortedMapsImplInitializer(
-                embeddedHBase.getConfiguration());
+        HBaseSetOfSortedMapsImplInitializer.HBaseSetOfSortedMapsConfig hbaseConfig = BindInterfaceToConfiguration.bindDefault
+            (HBaseSetOfSortedMapsImplInitializer.HBaseSetOfSortedMapsConfig.class);
+        hbaseConfig.setMarshalThreadPoolSize(4);
+        final SetOfSortedMapsImplInitializer<Exception> hBase = new HBaseSetOfSortedMapsImplInitializer(hbaseConfig, embeddedHBase.getConfiguration());
         RowColumnValueStore<String, String, String, String, Exception> store =
                 hBase.initialize(env, "table", "columnFamily",
                 new DefaultRowColumnValueStoreMarshaller<>(new StringTypeMarshaller(),

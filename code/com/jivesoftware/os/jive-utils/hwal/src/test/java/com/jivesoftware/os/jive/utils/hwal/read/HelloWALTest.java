@@ -79,7 +79,9 @@ public class HelloWALTest {
         if (2 + 2 == 5) {
             embeddedHBase = new EmbeddedHBase();
             embeddedHBase.start(false);
-            SetOfSortedMapsImplInitializer sos = new HBaseSetOfSortedMapsImplInitializer(embeddedHBase.getConfiguration());
+            HBaseSetOfSortedMapsImplInitializer.HBaseSetOfSortedMapsConfig hbaseConfig = BindInterfaceToConfiguration.bindDefault(HBaseSetOfSortedMapsImplInitializer.HBaseSetOfSortedMapsConfig.class);
+            hbaseConfig.setMarshalThreadPoolSize(4);
+            SetOfSortedMapsImplInitializer sos = new HBaseSetOfSortedMapsImplInitializer(hbaseConfig, embeddedHBase.getConfiguration());
             RCVSWALStorageInitializer.RCVSWALStorageConfig storageConfig = BindInterfaceToConfiguration
                     .bindDefault(RCVSWALStorageInitializer.RCVSWALStorageConfig.class);
             WALService<RCVSWALStorage> storageService = new RCVSWALStorageInitializer().initialize(storageConfig, sos);

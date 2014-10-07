@@ -20,6 +20,8 @@ import com.jivesoftware.os.jive.utils.row.column.value.store.api.RowColumnValueS
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.SetOfSortedMapsImplInitializer;
 import com.jivesoftware.os.jive.utils.row.column.value.store.api.timestamper.Timestamper;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.merlin.config.Config;
 import org.merlin.config.defaults.IntDefault;
@@ -38,18 +40,30 @@ public class HBaseSetOfSortedMapsImplInitializer implements SetOfSortedMapsImplI
         @IntDefault (2181)
         public Integer getHBaseZookeeperPort();
         public void setHBaseZookeeperPort(Integer hbaseZookeeperPort);
+
+        @IntDefault(24)
+        int getMarshalThreadPoolSize();
+        public void setMarshalThreadPoolSize(int marshalThreadPoolSize);
     }
     private final org.apache.hadoop.conf.Configuration hbaseConfig;
+    private final ExecutorService marshalExecutor;
 
     public HBaseSetOfSortedMapsImplInitializer(HBaseSetOfSortedMapsConfig config) {
-        hbaseConfig = new org.apache.hadoop.conf.Configuration();
+        this(config, defaultHbaseConfig(config));
+        defaultHbaseConfig(config);
+    }
+
+    public HBaseSetOfSortedMapsImplInitializer(HBaseSetOfSortedMapsConfig config, org.apache.hadoop.conf.Configuration hbaseConfig) {
+        this.hbaseConfig = hbaseConfig;
+        this.marshalExecutor = Executors.newFixedThreadPool(config.getMarshalThreadPoolSize());
+    }
+
+    private static org.apache.hadoop.conf.Configuration defaultHbaseConfig(HBaseSetOfSortedMapsConfig config) {
+        org.apache.hadoop.conf.Configuration hbaseConfig = new org.apache.hadoop.conf.Configuration();
         hbaseConfig.clear();
         hbaseConfig.set("hbase.zookeeper.quorum", config.getHBaseZookeeperQuorum());
         hbaseConfig.set("hbase.zookeeper.property.clientPort", String.valueOf(config.getHBaseZookeeperPort()));
-    }
-
-    public HBaseSetOfSortedMapsImplInitializer(org.apache.hadoop.conf.Configuration hbaseConfig) {
-        this.hbaseConfig = hbaseConfig;
+        return hbaseConfig;
     }
 
     @Override
@@ -70,7 +84,7 @@ public class HBaseSetOfSortedMapsImplInitializer implements SetOfSortedMapsImplI
             hBaseTableConfiguration.getFinalName(),
             hBaseTableConfiguration.getColumnFamilyName(),
             marshaller,
-            timestamper);
+            timestamper, marshalExecutor);
     }
 
     @Override
@@ -96,7 +110,7 @@ public class HBaseSetOfSortedMapsImplInitializer implements SetOfSortedMapsImplI
             hBaseTableConfiguration.getFinalName(),
             hBaseTableConfiguration.getColumnFamilyName(),
             marshaller,
-            timestamper);
+            timestamper, marshalExecutor);
     }
 
     @Override
@@ -117,6 +131,6 @@ public class HBaseSetOfSortedMapsImplInitializer implements SetOfSortedMapsImplI
             hBaseTableConfiguration.getFinalName(),
             hBaseTableConfiguration.getColumnFamilyName(),
             marshaller,
-            timestamper);
+            timestamper, marshalExecutor);
     }
 }
