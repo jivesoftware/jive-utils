@@ -15,6 +15,7 @@
  */
 package com.jivesoftware.os.jive.utils.row.column.value.store.hbase;
 
+import com.google.common.collect.Lists;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
@@ -40,6 +41,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
@@ -77,6 +82,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
     private final byte[] table;
     private final byte[] family;
     private final RowColumnValueStoreCounters counters;
+    private final ExecutorService marshalExecutor;
 
     /**
      * Create a new wrapper over an HBase table.
@@ -86,14 +92,16 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
      * @param family cannot be null
      * @param marshaller cannot be null
      * @param timestamper can't be null
+     * @param marshalExecutor
      * @throws IOException
      */
     public HBaseSetOfSortedMapsImpl(
-            HTablePool tablePool,
-            String tableName,
-            String family,
-            RowColumnValueStoreMarshaller<T, R, C, V> marshaller,
-            Timestamper timestamper) throws IOException {
+        HTablePool tablePool,
+        String tableName,
+        String family,
+        RowColumnValueStoreMarshaller<T, R, C, V> marshaller,
+        Timestamper timestamper,
+        ExecutorService marshalExecutor) throws IOException {
 
         if (timestamper == null) {
             throw new IllegalArgumentException("timestamper cannot be null");
@@ -105,6 +113,8 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
         this.family = family.getBytes("UTF-8");
         this.table = tableName.getBytes("UTF-8");
         this.tablePool = tablePool;
+
+        this.marshalExecutor = marshalExecutor;
     }
 
     // Un-tested
@@ -663,6 +673,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
 
         final MutableLong gotCount = new MutableLong();
         final int desiredBatchSize = (maxCount == null) ? batchSize : (int) Math.min(maxCount, batchSize);
+        final int marshalBatchSize = 24; //TODO expose to config
         HTableInterface t = tablePool.getTable(table);
         try {
             final byte[] rawRowKey = marshaller.toRowKeyBytes(tenantId, rowKey);
@@ -678,6 +689,7 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                 scan.setFilter(columnRangeFilter);
             }
             ResultScanner resultScanner = t.getScanner(scan);
+            List<Future<K>> marshalFutures = Lists.newArrayListWithCapacity(marshalBatchSize);
             EOS:
             for (Result result : resultScanner) {
 
@@ -685,27 +697,27 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                     continue;
                 }
                 counters.sliced(1);
-                for (KeyValue keyValue : result.list()) {
-                    K marshalled = marshall.marshall(keyValue);
-                    if (marshalled == null) {
-                        continue;
-                    }
 
-                    try {
-                        K returned = callback.callback(marshalled);
-                        if (marshalled != returned) {
+                for (final KeyValue keyValue : result.list()) {
+                    marshalFutures.add(marshalExecutor.submit(new Callable<K>() {
+                        @Override
+                        public K call() throws Exception {
+                            return marshall.marshall(keyValue);
+                        }
+                    }));
+
+                    if (marshalFutures.size() == marshalBatchSize) {
+                        if (completeFutureCallbacks(maxCount, callback, gotCount, marshalFutures)) {
+                            marshalFutures.clear();
                             break EOS;
+                        } else {
+                            marshalFutures.clear();
                         }
-                        gotCount.increment();
-                        if (maxCount != null) {
-                            if (gotCount.longValue() >= maxCount) {
-                                break EOS;
-                            }
-                        }
-                    } catch (Exception ex) {
-                        throw new CallbackStreamException(ex);
                     }
                 }
+            }
+            if (!marshalFutures.isEmpty()) {
+                completeFutureCallbacks(maxCount, callback, gotCount, marshalFutures);
             }
             // EOS end of stream
             try {
@@ -724,6 +736,33 @@ public class HBaseSetOfSortedMapsImpl<T, R, C, V> implements RowColumnValueStore
                 LOG.error("Failed to close hbase table!", e);
             }
         }
+    }
+
+    private <K> boolean completeFutureCallbacks(Long maxCount, CallbackStream<K> callback, MutableLong gotCount, List<Future<K>> marshalFutures)
+        throws InterruptedException, ExecutionException {
+
+        for (Future<K> future : marshalFutures) {
+            K marshalled = future.get();
+            if (marshalled == null) {
+                continue;
+            }
+
+            try {
+                K returned = callback.callback(marshalled);
+                if (marshalled != returned) {
+                    return true;
+                }
+                gotCount.increment();
+                if (maxCount != null) {
+                    if (gotCount.longValue() >= maxCount) {
+                        return true;
+                    }
+                }
+            } catch (Exception ex) {
+                throw new CallbackStreamException(ex);
+            }
+        }
+        return false;
     }
 
     /**
