@@ -12,16 +12,14 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
     private final FileBackMapStore<IBA, IBA> mapStore;
     private final FileBackMapStore<IBA, IBA> swapStore;
     private final MultiChunkStore chunkStore;
-    private final long newFilerInitialCapacity;
     private final String[] partitions;
 
     public FileBackedKeyedStore(String[] mapDirectories, String[] swapDirectories, int mapKeySize, long initialMapKeyCapacity,
-        MultiChunkStore chunkStore, long newFilerInitialCapacity, int numPartitions) throws Exception
+        MultiChunkStore chunkStore, int numPartitions) throws Exception
     {
         this.mapStore = initializeMapStore(mapDirectories, mapKeySize, initialMapKeyCapacity);
         this.swapStore = initializeMapStore(swapDirectories, mapKeySize, initialMapKeyCapacity);
         this.chunkStore = chunkStore;
-        this.newFilerInitialCapacity = newFilerInitialCapacity;
         this.partitions = new String[numPartitions];
         for (int i = 0; i < numPartitions; i++) {
             partitions[i] = String.valueOf(i).intern();
@@ -63,15 +61,10 @@ public class FileBackedKeyedStore implements KeyedFilerStore {
     }
 
     @Override
-    public SwappableFiler get(byte[] key) throws Exception {
-        return get(key, true);
-    }
-
-    @Override
-    public SwappableFiler get(byte[] keyBytes, boolean autoCreate) throws Exception {
+    public SwappableFiler get(byte[] keyBytes, long newFilerInitialCapacity) throws Exception {
         IBA key = new IBA(keyBytes);
         AutoResizingChunkFiler filer = new AutoResizingChunkFiler(mapStore, key, chunkStore);
-        if (!autoCreate && !filer.exists()) {
+        if (newFilerInitialCapacity <= 0 && !filer.exists()) {
             return null;
         }
         filer.init(newFilerInitialCapacity);

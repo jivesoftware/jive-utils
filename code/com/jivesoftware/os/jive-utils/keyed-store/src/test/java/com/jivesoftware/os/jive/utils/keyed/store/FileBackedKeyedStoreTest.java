@@ -38,17 +38,17 @@ public class FileBackedKeyedStoreTest {
 
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
         MultiChunkStore multChunkStore = chunkStoreInitializer.initializeMulti(chunkDirs, "data", 4, 4096, false);
-        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs,
-            4, 100, multChunkStore, 512, 4);
+        int newFilerInitialCapacity = 512;
+        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs, 4, 100, multChunkStore, 4);
 
         byte[] key = FilerIO.intBytes(1010);
-        Filer filer = fileBackedKeyedStore.get(key);
+        Filer filer = fileBackedKeyedStore.get(key, newFilerInitialCapacity);
         synchronized (filer.lock()) {
             FilerIO.writeInt(filer, 10, "");
         }
 
-        fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs, 4, 100, multChunkStore, 512, 4);
-        filer = fileBackedKeyedStore.get(key);
+        fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs, 4, 100, multChunkStore, 4);
+        filer = fileBackedKeyedStore.get(key, newFilerInitialCapacity);
         synchronized (filer.lock()) {
             filer.seek(0);
             int ten = FilerIO.readInt(filer, "");
@@ -74,11 +74,11 @@ public class FileBackedKeyedStoreTest {
 
         ChunkStoreInitializer chunkStoreInitializer = new ChunkStoreInitializer();
         MultiChunkStore multChunkStore = chunkStoreInitializer.initializeMulti(chunkDirs, "data", 4, 4096, false);
-        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs,
-            4, 100, multChunkStore, 512, 4);
+        int newFilerInitialCapacity = 512;
+        FileBackedKeyedStore fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs, 4, 100, multChunkStore, 4);
 
         byte[] key = FilerIO.intBytes(1020);
-        SwappableFiler filer = fileBackedKeyedStore.get(key);
+        SwappableFiler filer = fileBackedKeyedStore.get(key, newFilerInitialCapacity);
         synchronized (filer.lock()) {
             filer.sync();
             FilerIO.writeInt(filer, 10, "");
@@ -88,9 +88,8 @@ public class FileBackedKeyedStoreTest {
             swappingFiler.commit();
         }
 
-        fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs,
-            4, 100, multChunkStore, 512, 4);
-        filer = fileBackedKeyedStore.get(key);
+        fileBackedKeyedStore = new FileBackedKeyedStore(mapDirs, swapDirs, 4, 100, multChunkStore, 4);
+        filer = fileBackedKeyedStore.get(key, newFilerInitialCapacity);
         synchronized (filer.lock()) {
             filer.sync();
             filer.seek(0);
