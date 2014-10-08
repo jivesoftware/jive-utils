@@ -90,11 +90,6 @@ public abstract class BytesBytesMapStore<K, V> implements PartitionedKeyValueSto
     }
 
     @Override
-    public Iterable<String> keyPartitions() {
-        return Collections.emptyList();
-    }
-
-    @Override
     public String keyPartition(K key) {
         return null;
     }

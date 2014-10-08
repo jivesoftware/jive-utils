@@ -38,7 +38,7 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements Partition
 
                     @Override
                     public Iterable<String> keyPartitions() {
-                        return VariableKeySizeFileBackMapStore.this.keyPartitions();
+                        return VariableKeySizeFileBackMapStore.this.keyPartitions(keySize);
                     }
 
                     @Override
@@ -77,6 +77,8 @@ public abstract class VariableKeySizeFileBackMapStore<K, V> implements Partition
     }
 
     protected abstract int keyLength(K key);
+
+    protected abstract Iterable<String> keyPartitions(int keyLength);
 
     @Override
     public void add(K key, V value) throws KeyValueStoreException {

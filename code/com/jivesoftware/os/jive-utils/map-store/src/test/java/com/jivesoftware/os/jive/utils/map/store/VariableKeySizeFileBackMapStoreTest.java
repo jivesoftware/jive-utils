@@ -38,7 +38,7 @@ public class VariableKeySizeFileBackMapStoreTest {
             }
 
             @Override
-            public Iterable<String> keyPartitions() {
+            protected Iterable<String> keyPartitions(int keyLength) {
                 return Collections.singletonList("0");
             }
 
