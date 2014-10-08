@@ -14,7 +14,6 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
         MultiChunkStore chunkStore,
         int[] keySizeThresholds,
         long initialMapKeyCapacity,
-        long newFilerInitialCapacity,
         int numPartitions)
         throws Exception {
 
@@ -27,8 +26,7 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
             final int keySize = keySizeThresholds[keySizeIndex];
             String[] mapDirectories = buildMapDirectories(baseMapDirectories, keySize);
             String[] swapDirectories = buildMapDirectories(baseSwapDirectories, keySize);
-            keyedStores[keySizeIndex] = new FileBackedKeyedStore(mapDirectories, swapDirectories, keySize, initialMapKeyCapacity, chunkStore,
-                newFilerInitialCapacity, numPartitions);
+            keyedStores[keySizeIndex] = new FileBackedKeyedStore(mapDirectories, swapDirectories, keySize, initialMapKeyCapacity, chunkStore, numPartitions);
         }
     }
 
@@ -66,13 +64,8 @@ public class VariableKeySizeFileBackedKeyedStore implements KeyedFilerStore {
     }
 
     @Override
-    public SwappableFiler get(byte[] key) throws Exception {
-        return getKeyedStore(key).get(pad(key));
-    }
-
-    @Override
-    public SwappableFiler get(byte[] key, boolean autoCreate) throws Exception {
-        return getKeyedStore(key).get(pad(key), autoCreate);
+    public SwappableFiler get(byte[] keyBytes, long newFilerInitialCapacity) throws Exception {
+        return getKeyedStore(keyBytes).get(pad(keyBytes), newFilerInitialCapacity);
     }
 
     @Override

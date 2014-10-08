@@ -41,11 +41,12 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         final int[] keySizeThresholds = new int[] { 4, 16, 64, 256, 1024 };
         int chunkStoreCapacityInBytes = 30 * 1024 * 1024;
         MultiChunkStore multChunkStore = new ChunkStoreInitializer().initializeMulti(chunkDirectories, "data", 4, chunkStoreCapacityInBytes, false);
+        long newFilerInitialCapacity = 512;
         VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
-            mapDirectories, swapDirectories, multChunkStore, keySizeThresholds, 100, 512, 4);
+            mapDirectories, swapDirectories, multChunkStore, keySizeThresholds, 100, 4);
 
         for (int keySize : keySizeThresholds) {
-            Filer filer = keyedStore.get(keyOfLength(keySize), true);
+            Filer filer = keyedStore.get(keyOfLength(keySize), newFilerInitialCapacity);
             synchronized (filer.lock()) {
                 filer.seek(0);
                 FilerIO.writeInt(filer, keySize, "keySize");
@@ -53,7 +54,7 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         }
 
         for (int keySize : keySizeThresholds) {
-            Filer filer = keyedStore.get(keyOfLength(keySize), false);
+            Filer filer = keyedStore.get(keyOfLength(keySize), -1);
             synchronized (filer.lock()) {
                 filer.seek(0);
                 int actual = FilerIO.readInt(filer, "keySize");
@@ -69,7 +70,7 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         int newFilerInitialCapacity = 512;
         MultiChunkStore multChunkStore = new ChunkStoreInitializer().initializeMulti(chunkDirectories, "data", 4, chunkStoreCapacityInBytes, false);
         VariableKeySizeFileBackedKeyedStore keyedStore = new VariableKeySizeFileBackedKeyedStore(
-            mapDirectories, swapDirectories, multChunkStore, keySizeThresholds, 100, newFilerInitialCapacity, 4);
+            mapDirectories, swapDirectories, multChunkStore, keySizeThresholds, 100, 4);
 
         int numberOfIntsInInitialCapacity = newFilerInitialCapacity / 4;
         int numberOfIntsInActualCapacity = numberOfIntsInInitialCapacity * 2; // actual capacity is doubled
@@ -77,7 +78,7 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         int totalNumberOfInts = numberOfIntsInActualCapacity * MathUtils.pow(2, numberOfTimesToGrow - 1);
 
         for (int keySize : keySizeThresholds) {
-            Filer filer = keyedStore.get(keyOfLength(keySize), true);
+            Filer filer = keyedStore.get(keyOfLength(keySize), newFilerInitialCapacity);
             synchronized (filer.lock()) {
                 filer.seek(0);
                 for (int i = 0; i < totalNumberOfInts; i++) {
@@ -87,7 +88,7 @@ public class VariableKeySizeFileBackedKeyedStoreTest {
         }
 
         for (int keySize : keySizeThresholds) {
-            Filer filer = keyedStore.get(keyOfLength(keySize), true);
+            Filer filer = keyedStore.get(keyOfLength(keySize), newFilerInitialCapacity);
             synchronized (filer.lock()) {
                 filer.seek(0);
                 for (int i = 0; i < totalNumberOfInts; i++) {

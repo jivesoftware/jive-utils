@@ -10,7 +10,16 @@ package com.jivesoftware.os.jive.utils.chunk.store;
 
 import com.jivesoftware.os.jive.utils.io.Filer;
 import com.jivesoftware.os.jive.utils.io.FilerIO;
+import com.jivesoftware.os.jive.utils.io.RandomAccessFiler;
+import com.jivesoftware.os.jive.utils.io.SubsetableFiler;
+import java.io.File;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -19,6 +28,51 @@ import static org.testng.Assert.assertEquals;
  * @author jonathan.colt
  */
 public class ChunkStoreTest {
+
+    @Test(enabled = false)
+    public void testChunkStorePerformance() throws Exception {
+        final File chunkFile = File.createTempFile("chunk", "test");
+        final int numThreads = 16;
+        final ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
+
+        final int numLoops = 100;
+        final int numIterations = 100_000;
+        final long filerSize = 200_000_000;
+        final int chunkLength = 1_000;
+
+        for (int loop = 0; loop < numLoops; loop++) {
+            chunkFile.createNewFile();
+
+            /*
+            ChunkStore chunkStore = new ChunkStore(new SubsetableFiler(
+                new ByteBufferBackedFiler(new Object(), ByteBuffer.allocate((int) filerSize)),
+                0, filerSize, filerSize));
+            */
+            final ChunkStore chunkStore = new ChunkStore(new SubsetableFiler(new RandomAccessFiler(chunkFile, "rw"), 0, Long.MAX_VALUE, 0));
+
+            long start = System.currentTimeMillis();
+            List<Future<?>> futures = new ArrayList<>(numThreads);
+            for (int n = 0; n < numThreads; n++) {
+                futures.add(executorService.submit(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        for (int i = 0; i < numIterations / numThreads; i++) {
+                            long chunkFP = chunkStore.newChunk(chunkLength);
+                        }
+                        return null;
+                    }
+                }));
+            }
+
+            for (Future<?> future : futures) {
+                future.get();
+            }
+
+            System.out.println("Finished in " + (System.currentTimeMillis() - start));
+
+            chunkFile.delete();
+        }
+    }
 
     @Test
     public void testNewChunkStore() throws Exception {

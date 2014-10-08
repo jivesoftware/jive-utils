@@ -231,22 +231,24 @@ public class ChunkStore {
     private static final byte[] zerosMin = new byte[(int) Math.pow(2, cMinPower)]; // never too big
     private static final byte[] zerosMax = new byte[(int) Math.pow(2, 16)]; // 65536 max used until min needed
 
+    /**
+     * Synchronize externally on filer.lock()
+     */
     private long readNextFree(long _chunkFP) throws Exception {
-        synchronized (filer.lock()) {
-            filer.seek(_chunkFP);
-            FilerIO.readLong(filer, "magicNumber");
-            FilerIO.readLong(filer, "chunkPower");
-            return FilerIO.readLong(filer, "chunkNexFreeChunkFP");
-        }
+        filer.seek(_chunkFP);
+        FilerIO.readLong(filer, "magicNumber");
+        FilerIO.readLong(filer, "chunkPower");
+        return FilerIO.readLong(filer, "chunkNexFreeChunkFP");
     }
 
+    /**
+     * Synchronize externally on filer.lock()
+     */
     private void writeNextFree(long _chunkFP, long _nextFreeFP) throws Exception {
-        synchronized (filer.lock()) {
-            filer.seek(_chunkFP);
-            FilerIO.readLong(filer, "magicNumber");
-            FilerIO.readLong(filer, "chunkPower");
-            FilerIO.writeLong(filer, _nextFreeFP, "chunkNexFreeChunkFP");
-        }
+        filer.seek(_chunkFP);
+        FilerIO.readLong(filer, "magicNumber");
+        FilerIO.readLong(filer, "chunkPower");
+        FilerIO.writeLong(filer, _nextFreeFP, "chunkNexFreeChunkFP");
     }
 
 }
