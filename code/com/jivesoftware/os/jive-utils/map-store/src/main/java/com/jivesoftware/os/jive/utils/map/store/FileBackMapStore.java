@@ -264,6 +264,8 @@ public abstract class FileBackMapStore<K, V> implements PartitionedKeyValueStore
         return size.longValue();
     }
 
+    protected abstract Iterable<String> keyPartitions();
+
     @Override
     public Iterator<Entry<K, V>> iterator() {
         List<Iterator<Entry<K, V>>> iterators = Lists.newArrayList();
