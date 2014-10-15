@@ -16,13 +16,13 @@
 package com.jivesoftware.os.server.http.jetty.jersey.endpoints.base;
 
 import com.google.common.base.Joiner;
+import com.jivesoftware.os.jive.utils.health.FatalHealthCheck;
+import com.jivesoftware.os.jive.utils.health.HealthCheckResponse;
+import com.jivesoftware.os.jive.utils.health.HealthCheckService;
 import com.jivesoftware.os.jive.utils.jaxrs.util.ResponseHelper;
 import com.jivesoftware.os.jive.utils.logger.LoggerSummary;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
-import com.jivesoftware.os.server.http.health.check.FatalHealthCheck;
-import com.jivesoftware.os.server.http.health.check.HealthCheckResponse;
-import com.jivesoftware.os.server.http.health.check.HealthCheckService;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -67,7 +67,7 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 @Singleton
-@Path("/")
+@Path ("/")
 public class RestfulBaseEndpoints {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
@@ -86,7 +86,7 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/forceGC")
+    @Path ("/forceGC")
     public Response forceGC() {
         LOG.info("forced GC");
         Runtime.getRuntime().gc();
@@ -94,8 +94,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/threadDump")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Path ("/threadDump")
+    @Produces (MediaType.TEXT_PLAIN)
     public Response stackDump() {
         StringBuilder builder = new StringBuilder();
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
@@ -117,8 +117,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/gcLoad")
-    public Response gcLoad(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/gcLoad")
+    public Response gcLoad(@QueryParam ("callback") @DefaultValue ("") String callback) {
 
         GCLoad gcLoad = new GCLoad();
         try {
@@ -146,6 +146,7 @@ public class RestfulBaseEndpoints {
     }
 
     class GCLoad {
+
         public float percentageOfTimeCPUIsSpendingInGC = 0f;
 
         @Override
@@ -155,8 +156,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/errors")
-    public Response executeErrors(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/errors")
+    public Response executeErrors(@QueryParam ("callback") @DefaultValue ("") String callback) {
         LOG.info("Logged errors:" + LoggerSummary.INSTANCE.errors);
         if (callback.length() > 0) {
             return ResponseHelper.INSTANCE.jsonpResponse(callback, Long.toString(LoggerSummary.INSTANCE.errors));
@@ -165,7 +166,7 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/resetErrors")
+    @Path ("/resetErrors")
     public Response resetErrors() {
         LOG.info("Logged errors counter has been reset.");
         LoggerSummary.INSTANCE.errors = 0;
@@ -173,8 +174,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/interactionErrors")
-    public Response executeInteractionErrors(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/interactionErrors")
+    public Response executeInteractionErrors(@QueryParam ("callback") @DefaultValue ("") String callback) {
         LOG.info("Logged interaction errors:" + LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors);
         if (callback.length() > 0) {
             return ResponseHelper.INSTANCE.jsonpResponse(callback, Long.toString(LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors));
@@ -183,7 +184,7 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/resetInteractionErrors")
+    @Path ("/resetInteractionErrors")
     public Response resetInteractionErrors() {
         LOG.info("Logged interaction errors counter has been reset.");
         LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors = 0;
@@ -192,8 +193,8 @@ public class RestfulBaseEndpoints {
 
     /** Easy to remember way to ensure a service is reachable. */
     @GET
-    @Path("/ping")
-    public Response executePing(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/ping")
+    public Response executePing(@QueryParam ("callback") @DefaultValue ("") String callback) {
         if (callback.length() > 0) {
             return ResponseHelper.INSTANCE.jsonpResponse(callback, new Ping());
         }
@@ -201,12 +202,13 @@ public class RestfulBaseEndpoints {
     }
 
     class Ping {
+
         public String ping = "ping";
     }
 
     @GET
-    @Path("/system/env")
-    public Response env(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/system/env")
+    public Response env(@QueryParam ("callback") @DefaultValue ("") String callback) {
         if (callback.length() > 0) {
             Env env = new Env();
             for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
@@ -224,12 +226,13 @@ public class RestfulBaseEndpoints {
     }
 
     class Env {
+
         public Map<String, String> systemEnv = new HashMap<>();
     }
 
     @GET
-    @Path("/system/properties")
-    public Response properties(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/system/properties")
+    public Response properties(@QueryParam ("callback") @DefaultValue ("") String callback) {
         if (callback.length() > 0) {
             Env env = new Env();
             for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
@@ -253,8 +256,8 @@ public class RestfulBaseEndpoints {
 
     /** Easy way to see the last ~10 errors, warns and infos */
     @GET
-    @Path("/tail")
-    public Response tail(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/tail")
+    public Response tail(@QueryParam ("callback") @DefaultValue ("") String callback) {
         File logFile = new File("./var/log/service.log");
         if (callback.length() > 0) {
             Tail tail = new Tail();
@@ -295,6 +298,7 @@ public class RestfulBaseEndpoints {
     }
 
     class Tail {
+
         public List<String> errors = new LinkedList<>();
         public List<String> warns = new LinkedList<>();
         public List<String> infos = new LinkedList<>();
@@ -302,41 +306,61 @@ public class RestfulBaseEndpoints {
     }
 
     class Status {
+
         public boolean healthy = true;
         public List<HealthCheckResponse> healthCheckResponses = new ArrayList<>();
     }
 
+    @GET
+    @Path ("/recentErrors")
+    public Response recentErrors(@QueryParam ("callback") @DefaultValue ("") String callback) {
+        Tail tail = new Tail();
+        tail.errors = Arrays.asList(LoggerSummary.INSTANCE.lastNErrors.get());
+        tail.warns = Arrays.asList(LoggerSummary.INSTANCE.lastNWarns.get());
+        tail.infos = Arrays.asList(LoggerSummary.INSTANCE.lastNInfos.get());
+        return ResponseHelper.INSTANCE.jsonpResponse(callback, tail);
+
+    }
+
     /** Summery of service */
     @GET
-    @Path("/status")
-    public Response status(@QueryParam("callback") @DefaultValue("") String callback) {
-        Status status = new Status();
-        status.healthCheckResponses = healthCheckService.checkHealth();
-        for (HealthCheckResponse response : status.healthCheckResponses) {
-            if (response instanceof FatalHealthCheck && !response.isHealthy()) {
-                status.healthy = false;
-                break;
+    @Path ("/status")
+    public Response status(@QueryParam ("callback") @DefaultValue ("") String callback) {
+        try {
+            Status status = new Status();
+            status.healthCheckResponses = healthCheckService.checkHealth();
+            for (HealthCheckResponse response : status.healthCheckResponses) {
+                if (response instanceof FatalHealthCheck && response.getHealth() != HealthCheckResponse.SICK) {
+                    status.healthy = false;
+                    break;
+                }
             }
-        }
 
-        ResponseBuilder builder;
-        if (status.healthy) {
-            builder = Response.ok();
-        } else {
-            builder = Response.status(Response.Status.SERVICE_UNAVAILABLE);
-        }
-        if (callback.length() > 0) {
-            return builder.entity(ResponseHelper.INSTANCE.jsonpResponse(callback, status).getEntity()).type(new MediaType("application", "javascript")).build();
-        } else {
-            return builder.entity(status).type(MediaType.APPLICATION_JSON).build();
+            ResponseBuilder builder;
+            if (status.healthy) {
+                builder = Response.ok();
+            } else {
+                builder = Response.status(Response.Status.SERVICE_UNAVAILABLE);
+            }
+            if (callback.length() > 0) {
+                return builder.entity(ResponseHelper.INSTANCE.jsonpResponse(callback, status).getEntity()).type(new MediaType("application", "javascript")).
+                    build();
+            } else {
+                return builder.entity(status).type(MediaType.APPLICATION_JSON).build();
+            }
+        } catch (Exception x) {
+            LOG.warn("Failed to get status.", x);
+            return ResponseHelper.INSTANCE.errorResponse("Failed to get status.", x);
         }
 
     }
 
     /** Summery of service */
     @GET
-    @Path("/jettyStatus")
-    public Response jettyStatus(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/jettyStatus")
+    public Response jettyStatus(@QueryParam ("callback")
+        @DefaultValue ("") String callback
+    ) {
         if (callback.length() > 0) {
             JettyStatus status = new JettyStatus();
             status.state = server.getState();
@@ -351,7 +375,7 @@ public class RestfulBaseEndpoints {
             sb.append("Server thread pool number=").append(server.getThreadPool().getThreads()).append("\n");
             sb.append("Server thread pool idle=").append(server.getThreadPool().getIdleThreads()).append("\n");
 
-            @SuppressWarnings("rawtypes")
+            @SuppressWarnings ("rawtypes")
             Enumeration enumeration = server.getAttributeNames();
             if (enumeration != null) {
                 while (enumeration.hasMoreElements()) {
@@ -366,15 +390,15 @@ public class RestfulBaseEndpoints {
     }
 
     class JettyStatus {
+
         public String state;
         public boolean isLowOnThreads;
         public int serverNumThread;
         public int serverIdleThreads;
     }
 
-
     @GET
-    @Path("/help")
+    @Path ("/help")
     public Response help() {
         try {
             Set<Class<?>> annotated = getReflected();
@@ -507,8 +531,8 @@ public class RestfulBaseEndpoints {
 
     /** Summary of service */
     @GET
-    @Path("/classpath")
-    public Response classpath(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/classpath")
+    public Response classpath(@QueryParam ("callback") @DefaultValue ("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
         if (callback.length() > 0) {
@@ -520,8 +544,8 @@ public class RestfulBaseEndpoints {
 
     /** Summary of service */
     @GET
-    @Path("/releaseNotes")
-    public Response releaseNotes(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/releaseNotes")
+    public Response releaseNotes(@QueryParam ("callback") @DefaultValue ("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
 
@@ -548,8 +572,8 @@ public class RestfulBaseEndpoints {
 
     /** Summary of service */
     @GET
-    @Path("/releaseNote")
-    public Response releaseNote(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/releaseNote")
+    public Response releaseNote(@QueryParam ("callback") @DefaultValue ("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
 
@@ -582,8 +606,8 @@ public class RestfulBaseEndpoints {
      * @return
      */
     @GET
-    @Path("/version")
-    public Response version(@QueryParam("callback") @DefaultValue("") String callback) {
+    @Path ("/version")
+    public Response version(@QueryParam ("callback") @DefaultValue ("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
 
@@ -608,8 +632,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path("/shutdown")
-    public Response shutdown(@QueryParam("userName") @DefaultValue("anonymous") final String userName) {
+    @Path ("/shutdown")
+    public Response shutdown(@QueryParam ("userName") @DefaultValue ("anonymous") final String userName) {
         if (userName.equals("anonymous")) {
             LOG.info("user anonymous is trying to shutdown this service. This currently isn't supported! Please provide a valid userName.");
             return Response.status(Response.Status.FORBIDDEN).build();

@@ -13,25 +13,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.jivesoftware.os.server.http.health.check;
+package com.jivesoftware.os.jive.utils.health;
 
-import java.util.ArrayList;
-import java.util.List;
+public interface HealthCheck {
 
-public class HealthCheckService {
-
-    private final List<HealthCheck> healthChecks = new ArrayList<>();
-
-    public void addHealthCheck(List<HealthCheck> toAdd) {
-        healthChecks.addAll(toAdd);
-    }
-
-    public List<HealthCheckResponse> checkHealth() {
-        List<HealthCheckResponse> response = new ArrayList<>();
-        for (HealthCheck healthCheck : healthChecks) {
-            response.add(healthCheck.checkHealth());
-        }
-        return response;
-    }
+    HealthCheckResponse checkHealth() throws Exception;
 
 }

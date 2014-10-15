@@ -23,13 +23,26 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
  */
 public class Timer implements TimerMXBean {
 
-    DescriptiveStatistics stats = new DescriptiveStatistics(5000); // TODO expose to start call.
+    final DescriptiveStatistics stats;
+    private volatile long sampleCount;
+    private long lastSample;
 
-    public Timer() {
+    public Timer(int sampleWindowSize) {
+        this.stats = new DescriptiveStatistics(sampleWindowSize);
     }
 
-    public void sample(long elapse) {
-        stats.addValue(elapse);
+    public long getSampleCount() {
+        return sampleCount;
+    }
+
+    public long getLastSample() {
+        return lastSample;
+    }
+
+    public void sample(long sample) {
+        sampleCount++;
+        this.lastSample = sample;
+        stats.addValue(sample);
     }
 
     public void reset() {
@@ -77,7 +90,7 @@ public class Timer implements TimerMXBean {
     }
 
     @Override
-    public double get999ThPercentile() {
-        return stats.getPercentile(99.9);
+    public double get99ThPercentile() {
+        return stats.getPercentile(99);
     }
 }

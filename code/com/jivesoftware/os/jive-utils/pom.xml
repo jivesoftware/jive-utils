@@ -23,6 +23,7 @@
         <module>shell-utils</module>
         <module>merlin-config</module>
         <module>id</module>
+        <module>health</module>
     </modules>
 
 </project>

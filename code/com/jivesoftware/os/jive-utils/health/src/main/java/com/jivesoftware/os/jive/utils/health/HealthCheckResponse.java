@@ -13,12 +13,25 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.jivesoftware.os.server.http.health.check;
+package com.jivesoftware.os.jive.utils.health;
 
-/**
- *
- * Marker interface
- */
-public interface FatalHealthCheck extends HealthCheckResponse {
+public interface HealthCheckResponse {
+
+    static public double SICK = -Double.MIN_VALUE;
+    static public double HEALTHY = 1.0d;
+    static public double UNKNOWN = -Double.MAX_VALUE;
+
+    String getName();
+
+    /**
+     Any number less than zero means this health check failed.
+     Otherwise typically usages will return a number between 0.0 and 1.0 where 0.0 == sick very sick and 1.0 == very healthy
+     @return
+     */
+    double getHealth();
+
+    String getMessage();
+
+    long getTimestamp();
 
 }

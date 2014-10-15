@@ -26,7 +26,7 @@ public class TimerTest {
 
     @Test
     public void testIncAndDec() {
-        Timer timer = new Timer();
+        Timer timer = new Timer(5000);
 
         timer.sample(100);
         timer.sample(200);
