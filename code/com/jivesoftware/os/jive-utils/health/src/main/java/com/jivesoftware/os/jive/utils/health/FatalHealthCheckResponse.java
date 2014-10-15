@@ -13,11 +13,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.jivesoftware.os.server.http.health.check;
+package com.jivesoftware.os.jive.utils.health;
 
 public class FatalHealthCheckResponse extends HealthCheckResponseImpl implements FatalHealthCheck {
 
-    public FatalHealthCheckResponse(String checkName, boolean isHealthy, String message) {
-        super(checkName, isHealthy, message);
+    public FatalHealthCheckResponse(String name, double healthy, String message, long timestamp) {
+        super(name, healthy, message, timestamp);
     }
 }

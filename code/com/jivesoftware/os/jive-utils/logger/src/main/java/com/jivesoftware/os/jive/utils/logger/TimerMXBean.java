@@ -33,5 +33,5 @@ public interface TimerMXBean {
 
     public double get95ThPercentile();
 
-    public double get999ThPercentile();
+    public double get99ThPercentile();
 }

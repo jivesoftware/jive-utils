@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class MetricLogger {
 
-    final CountersAndTimers countersAndTimers;
+    final public CountersAndTimers countersAndTimers;
 
     final LazyCounter loggerErrorsCount;
 
@@ -962,7 +962,6 @@ public final class MetricLogger {
     public long stopTimer(String name) {
         return countersAndTimers.stopTimer(name, name);
     }
-
 
     /**
      * Starts a named timer. Each time a time is started and stopped its elapse is added as a sample to

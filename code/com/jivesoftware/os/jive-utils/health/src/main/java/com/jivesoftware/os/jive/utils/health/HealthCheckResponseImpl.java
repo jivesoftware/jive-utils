@@ -13,33 +13,40 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.jivesoftware.os.server.http.health.check;
+package com.jivesoftware.os.jive.utils.health;
 
 public class HealthCheckResponseImpl implements HealthCheckResponse {
 
-    private final String checkName;
-    private final boolean isHealthy;
+    private final String name;
+    private final double health;
     private final String message;
+    private final long timestamp;
 
-    public HealthCheckResponseImpl(String checkName, boolean isHealthy, String message) {
-        this.checkName = checkName;
-        this.isHealthy = isHealthy;
+    public HealthCheckResponseImpl(String name, double health, String message, long timestamp) {
+        this.name = name;
+        this.health = health;
         this.message = message;
+        this.timestamp = timestamp;
     }
 
     @Override
-    public String getCheckName() {
-        return checkName;
+    public String getName() {
+        return name;
     }
 
     @Override
-    public boolean isHealthy() {
-        return isHealthy;
+    public double getHealth() {
+        return health;
     }
 
     @Override
-    public String getStatusMessage() {
+    public String getMessage() {
         return message;
+    }
+
+    @Override
+    public long getTimestamp() {
+        return timestamp;
     }
 
 }

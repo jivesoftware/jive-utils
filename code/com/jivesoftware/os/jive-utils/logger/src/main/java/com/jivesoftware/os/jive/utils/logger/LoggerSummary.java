@@ -17,7 +17,6 @@ package com.jivesoftware.os.jive.utils.logger;
 
 import com.jivesoftware.os.jive.utils.base.util.ISO8601DateFormat;
 import com.jivesoftware.os.jive.utils.base.util.LastN;
-
 import java.util.Date;
 import java.util.TimeZone;
 

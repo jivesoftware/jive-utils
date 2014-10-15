@@ -97,7 +97,7 @@ public final class CountersAndTimers {
         return timers.entrySet();
     }
 
-    Counter counter(ValueType type, String key) {
+    public Counter counter(ValueType type, String key) {
         Counter counter = counters.get(key);
 
         if (counter == null) {
@@ -111,7 +111,7 @@ public final class CountersAndTimers {
         return counter;
     }
 
-    AtomicCounter atomicCounter(ValueType type, String key) {
+    public AtomicCounter atomicCounter(ValueType type, String key) {
         AtomicCounter counter = atomicCounters.get(key);
 
         if (counter == null) {
@@ -125,7 +125,7 @@ public final class CountersAndTimers {
         return counter;
     }
 
-    void startNanoTimer(String key) {
+    public void startNanoTimer(String key) {
 
         String threadKey = key + Thread.currentThread().getId();
         Long startTime = startTimes.get(threadKey);
@@ -136,7 +136,7 @@ public final class CountersAndTimers {
         }
     }
 
-    long stopNanoTimer(String key, String recordedKey) {
+    public long stopNanoTimer(String key, String recordedKey) {
 
         String threadKey = key + Thread.currentThread().getId();
         Long startTime = startTimes.remove(threadKey);
@@ -147,7 +147,7 @@ public final class CountersAndTimers {
 
         Timer timer = timers.get(recordedKey);
         if (timer == null) {
-            timer = new Timer();
+            timer = new Timer(5000);
             Timer exisitingTimer = timers.putIfAbsent(recordedKey, timer);
             if (exisitingTimer == null) {
                 register(className + ">" + recordedKey, timer);
@@ -160,7 +160,7 @@ public final class CountersAndTimers {
         return elapseInNanos;
     }
 
-    void startTimer(String key) {
+    public void startTimer(String key) {
 
         String threadKey = key + Thread.currentThread().getId();
         Long startTime = startTimes.get(threadKey);
@@ -171,18 +171,30 @@ public final class CountersAndTimers {
         }
     }
 
-    long stopTimer(String key, String recordedKey) {
+    /**
+
+     @param key
+     @param recordedKey
+     @return
+     @deprecated Suggested you use stopAndGetTimer.
+     */
+    @Deprecated
+    public long stopTimer(String key, String recordedKey) {
+        return stopAndGetTimer(key, recordedKey, 5000).getLastSample();
+    }
+
+    public Timer stopAndGetTimer(String key, String recordedKey, int sampleWindowSize) {
 
         String threadKey = key + Thread.currentThread().getId();
         Long startTime = startTimes.remove(threadKey);
         if (startTime == null) {
             logger.warn("Trying to stop a timer you never called start on: TimerId:" + key);
-            return -1;
+            return new Timer(2);
         }
 
         Timer timer = timers.get(recordedKey);
         if (timer == null) {
-            timer = new Timer();
+            timer = new Timer(sampleWindowSize);
             Timer exisitingTimer = timers.putIfAbsent(recordedKey, timer);
             if (exisitingTimer == null) {
                 register(className + ">" + recordedKey, timer);
@@ -192,7 +204,7 @@ public final class CountersAndTimers {
         }
         long elapseInMillis = System.currentTimeMillis() - startTime;
         timer.sample(elapseInMillis);
-        return elapseInMillis;
+        return timer;
     }
 
     /**
@@ -247,7 +259,7 @@ public final class CountersAndTimers {
 
             logger.debug("registered bean: " + objectName);
         } catch (MalformedObjectNameException | NotCompliantMBeanException |
-                InstanceAlreadyExistsException | InstanceNotFoundException | MBeanRegistrationException e) {
+            InstanceAlreadyExistsException | InstanceNotFoundException | MBeanRegistrationException e) {
             logger.warn("unable to register bean: " + objectName + "cause: " + e.getMessage(), e);
         }
     }

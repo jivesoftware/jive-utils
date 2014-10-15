@@ -16,8 +16,8 @@
 package com.jivesoftware.os.server.http.jetty.jersey.server;
 
 import com.jivesoftware.os.jive.utils.base.service.ServiceHandle;
-import com.jivesoftware.os.server.http.health.check.HealthCheck;
-import com.jivesoftware.os.server.http.health.check.HealthCheckService;
+import com.jivesoftware.os.jive.utils.health.HealthCheck;
+import com.jivesoftware.os.jive.utils.health.HealthCheckService;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.base.RestfulBaseEndpoints;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch.KillSwitch;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch.KillSwitchService;
