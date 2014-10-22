@@ -11,17 +11,17 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- *
  * @author jonathan.colt
  */
 public class TimerHealthChecker implements HealthChecker<Timer> {
 
-    static public HealthFactory.HealthCheckerConstructor<Timer, TimerHealthCheckConfig> FACTORY = new HealthFactory.HealthCheckerConstructor<Timer, TimerHealthCheckConfig>() {
-        @Override
-        public HealthChecker<Timer> construct(TimerHealthCheckConfig config) {
-            return new TimerHealthChecker(config);
-        }
-    };
+    static public HealthFactory.HealthCheckerConstructor<Timer, TimerHealthCheckConfig> FACTORY =
+        new HealthFactory.HealthCheckerConstructor<Timer, TimerHealthCheckConfig>() {
+            @Override
+            public HealthChecker<Timer> construct(TimerHealthCheckConfig config) {
+                return new TimerHealthChecker(config);
+            }
+        };
 
     private final TimerHealthCheckConfig config;
     private final AtomicReference<Callable<HealthCheckResponse>> lastTimer = new AtomicReference<>();
@@ -44,8 +44,7 @@ public class TimerHealthChecker implements HealthChecker<Timer> {
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get90ThPecentileMax(), 0, timer.get90ThPercentile()));
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get95ThPecentileMax(), 0, timer.get95ThPercentile()));
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get99ThPecentileMax(), 0, timer.get99ThPercentile()));
-                return new HealthCheckResponseImpl(config.getName(), health, healthString(timer)+ " "+ context, System.currentTimeMillis());
-
+                return new HealthCheckResponseImpl(config.getName(), health, healthString(timer) + " " + context, System.currentTimeMillis());
             }
         });
     }

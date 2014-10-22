@@ -1,6 +1,8 @@
 package com.jivesoftware.os.jive.utils.health.api;
 
+import com.jivesoftware.os.jive.utils.logger.Counter;
 import com.jivesoftware.os.jive.utils.logger.CountersAndTimers;
+import com.jivesoftware.os.jive.utils.logger.Timer;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -25,19 +27,19 @@ public class HealthFactory {
         HealthChecker<T> construct(C config);
     }
 
-    static public <T, C extends ScheduledMinMaxHealthCheckConfig> void scheduleHealthChecker(
-        Class<C> healthCheckConfig, HealthCheckerConstructor<T, C> constructor) {
+    static public <C extends ScheduledMinMaxHealthCheckConfig> void scheduleHealthChecker(
+        Class<C> healthCheckConfig, HealthCheckerConstructor<?, C> constructor) {
 
         C config = configBinder.bindConfig(healthCheckConfig);
-        HealthChecker checker = constructor.construct(config);
+        HealthChecker<?> checker = constructor.construct(config);
         healthCheckRegistry.register(checker);
     }
 
-    static public <T, C extends HealthCheckConfig> HealthCounter getHealthCounter(
-        Class<C> healthCheckConfig, HealthCheckerConstructor<T, C> constructor) {
+    static public <C extends HealthCheckConfig> HealthCounter getHealthCounter(
+        Class<C> healthCheckConfig, HealthCheckerConstructor<Counter, C> constructor) {
 
         C config = configBinder.bindConfig(healthCheckConfig);
-        HealthChecker checker = constructor.construct(config);
+        HealthChecker<Counter> checker = constructor.construct(config);
         healthCheckRegistry.register(checker);
         return new HealthCounter(countersAndTimers,
             config.getName(),
@@ -45,11 +47,11 @@ public class HealthFactory {
         );
     }
 
-    static public <T, D extends HealthCheckConfig, C extends D> HealthTimer getHealthTimer(
-        Class<C> healthCheckConfig, HealthCheckerConstructor<T, D> constructor) {
+    static public <D extends HealthCheckConfig, C extends D> HealthTimer getHealthTimer(
+        Class<C> healthCheckConfig, HealthCheckerConstructor<Timer, D> constructor) {
 
         C config = configBinder.bindConfig(healthCheckConfig);
-        HealthChecker checker = constructor.construct(config);
+        HealthChecker<Timer> checker = constructor.construct(config);
         healthCheckRegistry.register(checker);
         return new HealthTimer(countersAndTimers,
             config.getName(),
