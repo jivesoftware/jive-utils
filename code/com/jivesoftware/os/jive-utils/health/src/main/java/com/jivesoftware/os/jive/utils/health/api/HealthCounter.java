@@ -20,13 +20,23 @@ public class HealthCounter {
         this.healthChecker = healthChecker;
     }
 
-    public void inc(String unhealthyMessage) {
-        inc(1, unhealthyMessage);
+    public void inc(String context) {
+        inc(1, context);
     }
 
     public void inc(long amount, String context) {
         Counter counter = countersAndTimers.counter(ValueType.COUNT, name);
         counter.inc(amount);
+        healthChecker.check(counter, context);
+    }
+
+    public void dec(String context) {
+        dec(1, context);
+    }
+
+    public void dec(long amount, String context) {
+        Counter counter = countersAndTimers.counter(ValueType.COUNT, name);
+        counter.dec(amount);
         healthChecker.check(counter, context);
     }
 
