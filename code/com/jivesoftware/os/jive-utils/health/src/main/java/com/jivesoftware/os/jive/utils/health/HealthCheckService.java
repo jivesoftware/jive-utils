@@ -61,7 +61,9 @@ public class HealthCheckService {
 
     public void addHealthCheck(List<HealthCheck> toAdd) {
         for (HealthCheck add : toAdd) {
-            healthChecks.add(add);
+            synchronized (healthChecks) {
+                healthChecks.add(add);
+            }
             if (add instanceof ScheduledHealthCheck) {
                 ScheduledHealthCheck schedualedHealthCheck = (ScheduledHealthCheck) add;
                 long checkIntervalInMillis = schedualedHealthCheck.getCheckIntervalInMillis();
@@ -72,8 +74,10 @@ public class HealthCheckService {
 
     public List<HealthCheckResponse> checkHealth() throws Exception {
         List<HealthCheckResponse> response = new ArrayList<>();
-        for (HealthCheck healthCheck : healthChecks) {
-            response.add(healthCheck.checkHealth());
+        synchronized (healthChecks) {
+            for (HealthCheck healthCheck : healthChecks) {
+                response.add(healthCheck.checkHealth());
+            }
         }
         return response;
     }

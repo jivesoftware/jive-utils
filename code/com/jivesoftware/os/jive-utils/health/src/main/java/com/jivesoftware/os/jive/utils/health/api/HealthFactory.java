@@ -3,17 +3,14 @@ package com.jivesoftware.os.jive.utils.health.api;
 import com.jivesoftware.os.jive.utils.logger.Counter;
 import com.jivesoftware.os.jive.utils.logger.CountersAndTimers;
 import com.jivesoftware.os.jive.utils.logger.Timer;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
- *
  * @author jonathan.colt
  */
 public class HealthFactory {
 
     static HealthCheckConfigBinder configBinder;
     static HealthCheckRegistry healthCheckRegistry;
-    static ScheduledExecutorService scheduledHealthChecks;
     static CountersAndTimers countersAndTimers = CountersAndTimers.getOrCreate("health");
 
     static public void initialize(HealthCheckConfigBinder _configBinder,
@@ -35,8 +32,8 @@ public class HealthFactory {
         healthCheckRegistry.register(checker);
     }
 
-    static public <C extends HealthCheckConfig> HealthCounter getHealthCounter(
-        Class<C> healthCheckConfig, HealthCheckerConstructor<Counter, C> constructor) {
+    static public <D extends HealthCheckConfig, C extends D> HealthCounter getHealthCounter(
+        Class<C> healthCheckConfig, HealthCheckerConstructor<Counter, D> constructor) {
 
         C config = configBinder.bindConfig(healthCheckConfig);
         HealthChecker<Counter> checker = constructor.construct(config);
