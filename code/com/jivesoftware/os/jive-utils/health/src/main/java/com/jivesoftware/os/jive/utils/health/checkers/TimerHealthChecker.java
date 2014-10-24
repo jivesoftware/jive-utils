@@ -32,6 +32,7 @@ public class TimerHealthChecker implements HealthChecker<Timer> {
 
     @Override
     public void check(final Timer timer, final String context) {
+        final long time = System.currentTimeMillis();
         lastTimer.set(new Callable<HealthCheckResponse>() {
 
             @Override
@@ -44,7 +45,7 @@ public class TimerHealthChecker implements HealthChecker<Timer> {
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get90ThPecentileMax(), 0, timer.get90ThPercentile()));
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get95ThPecentileMax(), 0, timer.get95ThPercentile()));
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get99ThPecentileMax(), 0, timer.get99ThPercentile()));
-                return new HealthCheckResponseImpl(config.getName(), health, healthString(timer) + " " + context, System.currentTimeMillis());
+                return new HealthCheckResponseImpl(config.getName(), health, healthString(timer) + " " + context, time);
             }
         });
     }
@@ -52,7 +53,13 @@ public class TimerHealthChecker implements HealthChecker<Timer> {
     @Override
     public HealthCheckResponse checkHealth() throws Exception {
         Callable<HealthCheckResponse> callable = lastTimer.get();
-        return callable.call();
+        if (callable != null) {
+            return callable.call();
+        } else {
+            return new HealthCheckResponseImpl(config.getName(),
+                HealthCheckResponse.UNKNOWN, "Health is currently unknown for this check.",
+                System.currentTimeMillis());
+        }
     }
 
     private String healthString(Timer timer) {
