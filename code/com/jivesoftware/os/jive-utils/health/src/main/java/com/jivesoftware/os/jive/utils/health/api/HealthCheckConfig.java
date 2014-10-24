@@ -4,17 +4,18 @@ import org.merlin.config.Config;
 import org.merlin.config.defaults.StringDefault;
 
 /**
- *
  * @author jonathan.colt
  */
 public interface HealthCheckConfig extends Config {
 
-    @StringDefault ("unknownHealthCheckName")
+    @StringDefault("unknownHealthCheckName")
     String getName();
+
     void setName(String name);
 
-    @StringDefault ("unknownUnHealthMessage")
+    @StringDefault("unknownUnhealthyMessage")
     String getUnhealthyMessage();
+
     void setUnhealthyMessage(String unhealthyMessage);
 
 }

@@ -29,6 +29,10 @@ public class GCLoadHealthChecker extends MinMaxHealthChecker implements Schedule
         @LongDefault (10)
         @Override
         Long getMax();
+
+        @StringDefault("Sustained GC load is too high")
+        @Override
+        String getUnhealthyMessage();
     }
 
     private final GCLoadHealthCheckerConfig config;

@@ -28,6 +28,7 @@ public class MinMaxHealthChecker implements HealthChecker<Counter> {
 
     @Override
     public void check(final Counter counter, final String context) {
+        final long time = System.currentTimeMillis();
         check.set(new Callable<HealthCheckResponse>() {
 
             @Override
@@ -39,8 +40,9 @@ public class MinMaxHealthChecker implements HealthChecker<Counter> {
                     health = 0.0d;
                 }
                 return new HealthCheckResponseImpl(config.getName(),
-                    health, healthString(counter) + " " + context,
-                    System.currentTimeMillis());
+                    health,
+                    healthString(counter) + " " + context,
+                    time);
             }
         });
     }
@@ -59,9 +61,9 @@ public class MinMaxHealthChecker implements HealthChecker<Counter> {
 
     private String healthString(Counter counter) {
         StringBuilder sb = new StringBuilder();
-        sb.append(" min:" + config.getMin());
-        sb.append(" count:" + counter.getCount());
-        sb.append(" max:" + config.getMax());
+        sb.append(" min:").append(config.getMin());
+        sb.append(" count:").append(counter.getCount());
+        sb.append(" max:").append(config.getMax());
         return sb.toString();
     }
 
