@@ -27,6 +27,10 @@ public class DirectBufferHealthChecker extends MinMaxHealthChecker implements Sc
         @Override
         String getName();
 
+        @StringDefault("Direct buffer usage is over capacity.")
+        @Override
+        String getUnhealthyMessage();
+
         @LongDefault(10_000)
         Long getCheckIntervalInMillis();
 
