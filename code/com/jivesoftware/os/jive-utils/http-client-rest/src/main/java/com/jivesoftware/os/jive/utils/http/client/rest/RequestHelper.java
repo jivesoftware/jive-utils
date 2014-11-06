@@ -42,6 +42,10 @@ public class RequestHelper {
         this.mapper = mapper;
     }
 
+    public JsonRequestBuilder create(String url) {
+        return new JsonRequestBuilder(url, httpClient, mapper);
+    }
+
     /**
      * Sends the request to the server and returns the deserialized results.
      * <p/>
