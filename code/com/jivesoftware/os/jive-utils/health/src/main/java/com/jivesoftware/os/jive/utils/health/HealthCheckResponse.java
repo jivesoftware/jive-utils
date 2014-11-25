@@ -17,7 +17,6 @@ package com.jivesoftware.os.jive.utils.health;
 
 public interface HealthCheckResponse {
 
-    static public double SICK = -Double.MIN_VALUE;
     static public double HEALTHY = 1.0d;
     static public double UNKNOWN = -Double.MAX_VALUE;
 

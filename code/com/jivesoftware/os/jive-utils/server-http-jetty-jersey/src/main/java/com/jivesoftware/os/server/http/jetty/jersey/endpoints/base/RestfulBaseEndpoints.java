@@ -116,14 +116,16 @@ public class RestfulBaseEndpoints {
             canvas.td().content(String.valueOf("Timestamp"));
             canvas._tr();
             for (HealthCheckResponse response : checkHealth) {
-                canvas.tr();
-                canvas.td().content(String.valueOf(response.getHealth()));
-                canvas.td().content(String.valueOf(response.getName()));
-                canvas.td().content(String.valueOf(response.getStatus()));
-                canvas.td().content(String.valueOf(response.getDescription()));
-                canvas.td().content(String.valueOf(response.getResolution()));
-                canvas.td().content(String.valueOf(response.getTimestamp()));
-                canvas._tr();
+                if (-Double.MAX_VALUE != response.getHealth()) {
+                    canvas.tr();
+                    canvas.td().content(String.valueOf(response.getHealth()));
+                    canvas.td().content(String.valueOf(response.getName()));
+                    canvas.td().content(String.valueOf(response.getStatus()));
+                    canvas.td().content(String.valueOf(response.getDescription()));
+                    canvas.td().content(String.valueOf(response.getResolution()));
+                    canvas.td().content(String.valueOf(response.getTimestamp()));
+                    canvas._tr();
+                }
             }
             canvas._table();
 
@@ -490,7 +492,9 @@ public class RestfulBaseEndpoints {
             Health health = new Health();
             health.healthChecks = healthCheckService.checkHealth();
             for (HealthCheckResponse response : health.healthChecks) {
-                health.health = Math.min(health.health, response.getHealth());
+                if (-Double.MAX_VALUE != response.getHealth()) {
+                    health.health = Math.min(health.health, response.getHealth());
+                }
             }
 
             ResponseBuilder builder;
