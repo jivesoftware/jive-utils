@@ -19,6 +19,7 @@ import com.jivesoftware.os.jive.utils.base.service.ServiceHandle;
 import com.jivesoftware.os.jive.utils.health.HealthCheck;
 import com.jivesoftware.os.jive.utils.health.HealthCheckService;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.base.RestfulBaseEndpoints;
+import com.jivesoftware.os.server.http.jetty.jersey.endpoints.base.RestfulBaseEndpoints.ResfulServiceName;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch.KillSwitch;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch.KillSwitchService;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch.KillSwitchsRestEndpoints;
@@ -40,12 +41,13 @@ public class RestfulManageServer implements ServiceHandle {
         server = new RestfulServer(port, applicationName, maxNumberOfThreads, maxQueuedRequests);
 
         jerseyEndpoints = new JerseyEndpoints()
-                .enableCORS()
-                .humanReadableJson()
-                .addEndpoint(RestfulBaseEndpoints.class).addInjectable(healthCheckService)
-                .addEndpoint(LogMetricRestfulEndpoints.class)
-                .addEndpoint(LogLevelRestEndpoints.class)
-                .addEndpoint(KillSwitchsRestEndpoints.class).addInjectable(killSwitchService);
+            .enableCORS()
+            .humanReadableJson()
+            .addEndpoint(RestfulBaseEndpoints.class).addInjectable(healthCheckService)
+            .addEndpoint(LogMetricRestfulEndpoints.class)
+            .addEndpoint(LogLevelRestEndpoints.class)
+            .addEndpoint(KillSwitchsRestEndpoints.class).addInjectable(killSwitchService)
+            .addInjectable(ResfulServiceName.class, new ResfulServiceName(applicationName, port));
 
     }
 

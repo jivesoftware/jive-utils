@@ -26,13 +26,12 @@ import com.jivesoftware.os.jive.utils.logger.LoggerSummary;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.logging.metric.MetricsHelper;
+import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.annotation.Annotation;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,13 +59,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
-import org.apache.commons.lang.mutable.MutableLong;
 import org.eclipse.jetty.server.Server;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.rendersnake.HtmlAttributes;
 import org.rendersnake.HtmlAttributesFactory;
 import org.rendersnake.HtmlCanvas;
 import org.slf4j.LoggerFactory;
@@ -75,22 +74,35 @@ import org.slf4j.LoggerFactory;
 @Path("/")
 public class RestfulBaseEndpoints {
 
+    static public class ResfulServiceName {
+
+        public final String name;
+        public final int port;
+
+        public ResfulServiceName(String name, int port) {
+            this.name = name;
+            this.port = port;
+        }
+
+    }
+
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
     private static final Object LOCK = new Object();
     private static Set<Class<?>> reflected; // Synchronized on LOCK
 
+    private final ResfulServiceName resfulServiceName;
     private final Server server;
     private final HealthCheckService healthCheckService;
-    private final MutableLong lastGCTotalTime = new MutableLong();
-    private final List<GarbageCollectorMXBean> garbageCollectors;
     private final File logFile;
 
-    public RestfulBaseEndpoints(@Context Server server,
+    public RestfulBaseEndpoints(@Context ResfulServiceName resfulServiceName,
+        @Context Server server,
         @Context HealthCheckService healthCheckService,
         @Context File logFile) {
+
+        this.resfulServiceName = resfulServiceName;
         this.server = server;
         this.healthCheckService = healthCheckService;
-        this.garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
         this.logFile = logFile;
     }
 
@@ -103,40 +115,42 @@ public class RestfulBaseEndpoints {
             canvas.html();
             canvas.body();
 
-            canvas.h1().content("Service UI");
-            canvas.pre().content("Health: ");
+            canvas.h1().content("Service:" + resfulServiceName.name + ":" + resfulServiceName.port);
             List<HealthCheckResponse> checkHealth = healthCheckService.checkHealth();
-            canvas.table();
-            canvas.tr();
-            canvas.td().content(String.valueOf("Health"));
-            canvas.td().content(String.valueOf("Name"));
-            canvas.td().content(String.valueOf("Status"));
-            canvas.td().content(String.valueOf("Description"));
-            canvas.td().content(String.valueOf("Resolution"));
-            canvas.td().content(String.valueOf("Timestamp"));
+
+            HtmlAttributes border = HtmlAttributesFactory.style("border: 1px solid  gray;");
+            canvas.table(border);
+            canvas.tr(HtmlAttributesFactory.style("background-color:#bbbbbb;"));
+            canvas.td(border).content(String.valueOf("Health"));
+            canvas.td(border).content(String.valueOf("Name"));
+            canvas.td(border).content(String.valueOf("Status"));
+            canvas.td(border).content(String.valueOf("Description"));
+            canvas.td(border).content(String.valueOf("Resolution"));
+            canvas.td(border).content(String.valueOf("Age in millis"));
             canvas._tr();
             for (HealthCheckResponse response : checkHealth) {
                 if (-Double.MAX_VALUE != response.getHealth()) {
                     canvas.tr();
-                    canvas.td().content(String.valueOf(response.getHealth()));
-                    canvas.td().content(String.valueOf(response.getName()));
-                    canvas.td().content(String.valueOf(response.getStatus()));
-                    canvas.td().content(String.valueOf(response.getDescription()));
-                    canvas.td().content(String.valueOf(response.getResolution()));
-                    canvas.td().content(String.valueOf(response.getTimestamp()));
+                    canvas.td(HtmlAttributesFactory.style("background-color:#" + getHEXTrafficlightColor(response.getHealth()) + ";"))
+                        .content(String.valueOf(response.getHealth()));
+                    canvas.td(border).content(String.valueOf(response.getName()));
+                    canvas.td(border).content(String.valueOf(response.getStatus()));
+                    canvas.td(border).content(String.valueOf(response.getDescription()));
+                    canvas.td(border).content(String.valueOf(response.getResolution()));
+                    canvas.td(border).content(String.valueOf(response.getTimestamp()));
                     canvas._tr();
                 }
             }
             canvas._table();
 
             canvas.hr();
-            canvas.pre().content("Recent Internal Errors: " + LoggerSummary.INSTANCE.errors);
+            canvas.h2().content("Recent Internal Errors: " + LoggerSummary.INSTANCE.errors);
             canvas.pre().content(Joiner.on("\n").join(orEmpty(LoggerSummary.INSTANCE.lastNErrors.get())));
 
-            canvas.pre().content("Recent Interaction Errors: " + LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors);
+            canvas.h2().content("Recent Interaction Errors: " + LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors);
             canvas.pre().content(Joiner.on("\n").join(orEmpty(LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.lastNErrors.get())));
 
-            canvas.pre().content("Recent Infos");
+            canvas.h2().content("Recent Infos");
             canvas.pre().content(Joiner.on("\n").join(orEmpty(LoggerSummary.INSTANCE.lastNInfos.get())));
 
             canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "resetErrors").method("get").id("errors-form"))
@@ -152,7 +166,7 @@ public class RestfulBaseEndpoints {
                 ._form();
 
             canvas.hr();
-            canvas.pre().content("Counters: ");
+            canvas.h1().content("Counters: ");
             canvas.table();
             canvas.tr();
             canvas.td().content("Count");
@@ -176,7 +190,7 @@ public class RestfulBaseEndpoints {
             canvas._table();
 
             canvas.hr();
-            canvas.pre().content("Timers: ");
+            canvas.h1().content("Timers: ");
             canvas.table();
             canvas.tr();
             canvas.td().content("Timer");
@@ -200,7 +214,6 @@ public class RestfulBaseEndpoints {
             canvas._table();
 
             canvas.hr();
-            canvas.pre().content("Loggers: ");
 
             canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "logging/setLogLevel").method("get").id("setLogLevel-form"));
             canvas.fieldset();
@@ -274,6 +287,11 @@ public class RestfulBaseEndpoints {
             LOG.warn("Failed build UI html.", x);
             return ResponseHelper.INSTANCE.errorResponse("Failed build UI html.", x);
         }
+    }
+
+    String getHEXTrafficlightColor(double value) {
+        String s = Integer.toHexString(Color.HSBtoRGB((float) value / 3f, 1f, 1f) & 0xffffff);
+        return "000000".substring(s.length()) + s;
     }
 
     private String[] orEmpty(String[] strings) {
