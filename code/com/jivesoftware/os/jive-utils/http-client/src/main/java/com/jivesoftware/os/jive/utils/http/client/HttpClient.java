@@ -53,6 +53,36 @@ public interface HttpClient {
     /**
      * @param path everything but the leading "http/s://host:port"
      */
+    HttpResponse delete(String path) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse delete(String path, Map<String, String> headers) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpStreamResponse deleteStream(String path) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse delete(String path, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse delete(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpStreamResponse deleteStream(String path, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
     HttpResponse postJson(String path, String postJsonBody) throws HttpClientException;
 
     /**
@@ -79,5 +109,35 @@ public interface HttpClient {
      * @param path everything but the leading "http/s://host:port"
      */
     HttpResponse postBytes(String path, byte[] postBytes, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse putJson(String path, String putJsonBody) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse putJson(String path, String putJsonBody, Map<String, String> headers) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse putJson(String path, String putJsonBody, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse putJson(String path, String putJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse putBytes(String path, byte[] putBytes) throws HttpClientException;
+
+    /**
+     * @param path everything but the leading "http/s://host:port"
+     */
+    HttpResponse putBytes(String path, byte[] putBytes, int timeoutMillis) throws HttpClientException;
 
 }

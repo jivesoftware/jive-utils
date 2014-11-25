@@ -63,31 +63,91 @@ public class NoClientAvailableHttpClient implements HttpClient {
 
     @Override
     public HttpResponse get(String path, Map<String, String> headers) throws HttpClientException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public HttpStreamResponse getStream(String path) throws HttpClientException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public HttpResponse get(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public HttpStreamResponse getStream(String path, int timeoutMillis) throws HttpClientException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers) throws HttpClientException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse delete(String path) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse delete(String path, Map<String, String> headers) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpStreamResponse deleteStream(String path) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse delete(String path, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse delete(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpStreamResponse deleteStream(String path, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody, Map<String, String> headers) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse putBytes(String path, byte[] putBytes) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public HttpResponse putBytes(String path, byte[] putBytes, int timeoutMillis) throws HttpClientException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
