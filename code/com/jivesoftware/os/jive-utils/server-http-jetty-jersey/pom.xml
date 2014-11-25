@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>shared-lib-build-management</artifactId>
-        <version>0.56</version>
+        <version>0.57</version>
         <relativePath>../inheritance-poms/shared-lib-build-management/pom.xml</relativePath>
     </parent>
     <groupId>com.jivesoftware.os.jive.utils</groupId>
@@ -14,6 +14,11 @@
         <module.type>shared_lib</module.type>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.rendersnake</groupId>
+            <artifactId>rendersnake</artifactId>
+            <version>1.8</version>
+        </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>

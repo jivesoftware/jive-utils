@@ -27,9 +27,9 @@ public class DirectBufferHealthChecker extends MinMaxHealthChecker implements Sc
         @Override
         String getName();
 
-        @StringDefault("Direct buffer usage is over capacity.")
+        @StringDefault("Total off heap memory used as declared by -XX:MaxDirectMemorySize")
         @Override
-        String getUnhealthyMessage();
+        String getDescription();
 
         @LongDefault(10_000)
         Long getCheckIntervalInMillis();
@@ -104,7 +104,7 @@ public class DirectBufferHealthChecker extends MinMaxHealthChecker implements Sc
 
             Counter counter = new Counter(ValueType.VALUE);
             counter.set(memoryUsed);
-            check(counter, config.getUnhealthyMessage());
+            check(counter, config.getDescription(), "Allocate more direct memory. ");
         } catch (Exception x) {
             // TODO what?
         }

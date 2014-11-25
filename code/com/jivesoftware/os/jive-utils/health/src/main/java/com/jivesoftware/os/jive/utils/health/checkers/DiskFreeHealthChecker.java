@@ -42,7 +42,7 @@ public class DiskFreeHealthChecker extends MinMaxHealthChecker implements Schedu
             }
             Counter counter = new Counter(ValueType.RATE);
             counter.set((int) (worstHealth * 100));
-            check(counter, sb.toString());
+            check(counter, sb.toString(), "Remove some unused files or get more or larger drive.");
         } catch (Exception x) {
             // TODO what?
         }

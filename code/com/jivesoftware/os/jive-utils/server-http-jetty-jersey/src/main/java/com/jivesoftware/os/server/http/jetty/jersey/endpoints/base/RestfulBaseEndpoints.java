@@ -15,7 +15,10 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.endpoints.base;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.google.common.base.Joiner;
+import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
 import com.jivesoftware.os.jive.utils.health.FatalHealthCheck;
 import com.jivesoftware.os.jive.utils.health.HealthCheckResponse;
 import com.jivesoftware.os.jive.utils.health.HealthCheckService;
@@ -23,6 +26,7 @@ import com.jivesoftware.os.jive.utils.jaxrs.util.ResponseHelper;
 import com.jivesoftware.os.jive.utils.logger.LoggerSummary;
 import com.jivesoftware.os.jive.utils.logger.MetricLogger;
 import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
+import com.jivesoftware.os.server.http.jetty.jersey.endpoints.logging.metric.MetricsHelper;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -32,9 +36,7 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,6 +60,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang.mutable.MutableLong;
 import org.eclipse.jetty.server.Server;
 import org.reflections.Reflections;
@@ -65,9 +68,12 @@ import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.rendersnake.HtmlAttributesFactory;
+import org.rendersnake.HtmlCanvas;
+import org.slf4j.LoggerFactory;
 
 @Singleton
-@Path ("/")
+@Path("/")
 public class RestfulBaseEndpoints {
 
     private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
@@ -78,24 +84,222 @@ public class RestfulBaseEndpoints {
     private final HealthCheckService healthCheckService;
     private final MutableLong lastGCTotalTime = new MutableLong();
     private final List<GarbageCollectorMXBean> garbageCollectors;
+    private final File logFile;
 
-    public RestfulBaseEndpoints(@Context Server server, @Context HealthCheckService healthCheckService) {
+    public RestfulBaseEndpoints(@Context Server server,
+        @Context HealthCheckService healthCheckService,
+        @Context File logFile) {
         this.server = server;
         this.healthCheckService = healthCheckService;
         this.garbageCollectors = ManagementFactory.getGarbageCollectorMXBeans();
+        this.logFile = logFile;
     }
 
     @GET
-    @Path ("/forceGC")
+    @Path("/ui")
+    public Response ui(@Context UriInfo uriInfo) {
+        LOG.info("ui");
+        try {
+            final HtmlCanvas canvas = new HtmlCanvas();
+            canvas.html();
+            canvas.body();
+
+            canvas.h1().content("Service UI");
+            canvas.pre().content("Health: ");
+            List<HealthCheckResponse> checkHealth = healthCheckService.checkHealth();
+            canvas.table();
+            canvas.tr();
+            canvas.td().content(String.valueOf("Health"));
+            canvas.td().content(String.valueOf("Name"));
+            canvas.td().content(String.valueOf("Status"));
+            canvas.td().content(String.valueOf("Description"));
+            canvas.td().content(String.valueOf("Resolution"));
+            canvas.td().content(String.valueOf("Timestamp"));
+            canvas._tr();
+            for (HealthCheckResponse response : checkHealth) {
+                canvas.tr();
+                canvas.td().content(String.valueOf(response.getHealth()));
+                canvas.td().content(String.valueOf(response.getName()));
+                canvas.td().content(String.valueOf(response.getStatus()));
+                canvas.td().content(String.valueOf(response.getDescription()));
+                canvas.td().content(String.valueOf(response.getResolution()));
+                canvas.td().content(String.valueOf(response.getTimestamp()));
+                canvas._tr();
+            }
+            canvas._table();
+
+            canvas.hr();
+            canvas.pre().content("Recent Internal Errors: " + LoggerSummary.INSTANCE.errors);
+            canvas.pre().content(Joiner.on("\n").join(orEmpty(LoggerSummary.INSTANCE.lastNErrors.get())));
+
+            canvas.pre().content("Recent Interaction Errors: " + LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors);
+            canvas.pre().content(Joiner.on("\n").join(orEmpty(LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.lastNErrors.get())));
+
+            canvas.pre().content("Recent Infos");
+            canvas.pre().content(Joiner.on("\n").join(orEmpty(LoggerSummary.INSTANCE.lastNInfos.get())));
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "resetErrors").method("get").id("errors-form"))
+                .fieldset()
+                .input(HtmlAttributesFactory.type("submit").value("Reset Errors"))
+                ._fieldset()
+                ._form();
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "tail").method("get").id("tail-form"))
+                .fieldset()
+                .input(HtmlAttributesFactory.type("submit").value("Tail"))
+                ._fieldset()
+                ._form();
+
+            canvas.hr();
+            canvas.pre().content("Counters: ");
+            canvas.table();
+            canvas.tr();
+            canvas.td().content("Count");
+            canvas.td().content("Name");
+            canvas._tr();
+
+            MetricsHelper.INSTANCE.getCounters("").getAll(new CallbackStream<Map.Entry<String, Long>>() {
+
+                @Override
+                public Map.Entry<String, Long> callback(Map.Entry<String, Long> v) throws Exception {
+                    if (v != null) {
+                        canvas.tr();
+                        canvas.td().content(String.valueOf(v.getValue()));
+                        canvas.td().content(v.getKey());
+                        canvas._tr();
+                    }
+                    return v;
+                }
+            });
+
+            canvas._table();
+
+            canvas.hr();
+            canvas.pre().content("Timers: ");
+            canvas.table();
+            canvas.tr();
+            canvas.td().content("Timer");
+            canvas.td().content("Name");
+            canvas._tr();
+
+            MetricsHelper.INSTANCE.getTimers("").getAll(new CallbackStream<Map.Entry<String, Long>>() {
+
+                @Override
+                public Map.Entry<String, Long> callback(Map.Entry<String, Long> v) throws Exception {
+                    if (v != null) {
+                        canvas.tr();
+                        canvas.td().content(String.valueOf(v.getValue()));
+                        canvas.td().content(v.getKey());
+                        canvas._tr();
+                    }
+                    return v;
+                }
+            });
+
+            canvas._table();
+
+            canvas.hr();
+            canvas.pre().content("Loggers: ");
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "logging/setLogLevel").method("get").id("setLogLevel-form"));
+            canvas.fieldset();
+
+
+            LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+            Logger rl = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+            List<Logger> loggerList = lc.getLoggerList();
+
+            canvas.select(HtmlAttributesFactory.name("logger"));
+            for (Logger logger : loggerList) {
+                try {
+                    Class.forName(logger.getName());
+                    String level = (logger.getLevel() == null) ? null : logger.getLevel().toString();
+                    canvas.option(HtmlAttributesFactory.value(logger.getName())).content(level + "=" + logger.getName());
+                } catch (ClassNotFoundException e) {
+                }
+                
+            }
+            canvas._select();
+
+            canvas.select(HtmlAttributesFactory.name("level"));
+            canvas.option(HtmlAttributesFactory.value("")).content("Inherit");
+            canvas.option(HtmlAttributesFactory.value("TRACE")).content("TRACE");
+            canvas.option(HtmlAttributesFactory.value("DEBUG")).content("DEBUG");
+            canvas.option(HtmlAttributesFactory.value("INFO")).content("INFO");
+            canvas.option(HtmlAttributesFactory.value("WARN")).content("WARN");
+            canvas.option(HtmlAttributesFactory.value("ERROR")).content("ERROR");
+            canvas.option(HtmlAttributesFactory.value("OFF")).content("OFF");
+            canvas._select();
+
+            canvas.input(HtmlAttributesFactory.type("submit").value("Change"))
+                ._fieldset()
+                ._form();
+
+            canvas.hr();
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "system/env").method("get").id("sysEnv-form"))
+                .fieldset()
+                .input(HtmlAttributesFactory.type("submit").value("Env Properties"))
+                ._fieldset()
+                ._form();
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "system/properties").method("get").id("sysProps-form"))
+                .fieldset()
+                .input(HtmlAttributesFactory.type("submit").value("System Properties"))
+                ._fieldset()
+                ._form();
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "threadDump").method("get").id("threadDump-form"))
+                .fieldset()
+                .input(HtmlAttributesFactory.type("submit").value("Thread Dump"))
+                ._fieldset()
+                ._form();
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "forceGC").method("get").id("forceGC-form"))
+                .fieldset()
+                .input(HtmlAttributesFactory.type("submit").value("ForceGC"))
+                ._fieldset()
+                ._form();
+
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "shutdown").method("get").id("shutdown-form"))
+                .fieldset()
+                .input(HtmlAttributesFactory.type("submit").value("Shutdown"))
+                ._fieldset()
+                ._form();
+
+            canvas._body();
+            canvas._html();
+            return Response.ok(canvas.toHtml(), MediaType.TEXT_HTML).build();
+        } catch (Exception x) {
+            LOG.warn("Failed build UI html.", x);
+            return ResponseHelper.INSTANCE.errorResponse("Failed build UI html.", x);
+        }
+    }
+
+    private String[] orEmpty(String[] strings) {
+        return (strings == null) ? new String[]{""} : emptyNulls(strings);
+    }
+
+    private String[] emptyNulls(String[] strings) {
+        for (int i = 0; i < strings.length; i++) {
+            if (strings[i] == null) {
+                strings[i] = "";
+            }
+        }
+        return strings;
+    }
+
+    @GET
+    @Path("/forceGC")
     public Response forceGC() {
         LOG.info("forced GC");
         Runtime.getRuntime().gc();
-        return Response.ok().build();
+        return Response.ok("Forced GC", MediaType.TEXT_PLAIN).build();
     }
 
     @GET
-    @Path ("/threadDump")
-    @Produces (MediaType.TEXT_PLAIN)
+    @Path("/threadDump")
+    @Produces(MediaType.TEXT_PLAIN)
     public Response stackDump() {
         StringBuilder builder = new StringBuilder();
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
@@ -116,35 +320,6 @@ public class RestfulBaseEndpoints {
         return Response.ok(builder.toString()).build();
     }
 
-    @GET
-    @Path ("/gcLoad")
-    public Response gcLoad(@QueryParam ("callback") @DefaultValue ("") String callback) {
-
-        GCLoad gcLoad = new GCLoad();
-        try {
-
-            long totalTimeInGC = 0;
-            for (GarbageCollectorMXBean gc : garbageCollectors) {
-                totalTimeInGC += gc.getCollectionTime();
-            }
-            long lastGC = lastGCTotalTime.longValue();
-            gcLoad.percentageOfTimeCPUIsSpendingInGC = ((float) (totalTimeInGC - lastGC) / (float) lastGC);
-            lastGCTotalTime.setValue(totalTimeInGC);
-
-            LOG.info("gcLoad:" + gcLoad);
-            if (callback.length() > 0) {
-                return ResponseHelper.INSTANCE.jsonpResponse(callback, gcLoad);
-            } else {
-                return ResponseHelper.INSTANCE.jsonResponse(gcLoad);
-            }
-
-        } catch (Exception x) {
-            LOG.warn("Failed to compute gc load.", x);
-            return ResponseHelper.INSTANCE.errorResponse("Failed to compute gc load.", x);
-        }
-
-    }
-
     class GCLoad {
 
         public float percentageOfTimeCPUIsSpendingInGC = 0f;
@@ -156,8 +331,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path ("/errors")
-    public Response executeErrors(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/errors")
+    public Response executeErrors(@QueryParam("callback") @DefaultValue("") String callback) {
         LOG.info("Logged errors:" + LoggerSummary.INSTANCE.errors);
         if (callback.length() > 0) {
             return ResponseHelper.INSTANCE.jsonpResponse(callback, Long.toString(LoggerSummary.INSTANCE.errors));
@@ -166,35 +341,25 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path ("/resetErrors")
+    @Path("/resetErrors")
     public Response resetErrors() {
         LOG.info("Logged errors counter has been reset.");
         LoggerSummary.INSTANCE.errors = 0;
-        return Response.ok().build();
-    }
-
-    @GET
-    @Path ("/interactionErrors")
-    public Response executeInteractionErrors(@QueryParam ("callback") @DefaultValue ("") String callback) {
-        LOG.info("Logged interaction errors:" + LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors);
-        if (callback.length() > 0) {
-            return ResponseHelper.INSTANCE.jsonpResponse(callback, Long.toString(LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors));
-        }
-        return Response.ok(Long.toString(LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors), MediaType.TEXT_PLAIN).build();
-    }
-
-    @GET
-    @Path ("/resetInteractionErrors")
-    public Response resetInteractionErrors() {
-        LOG.info("Logged interaction errors counter has been reset.");
+        LoggerSummary.INSTANCE.lastNErrors.clear("");
         LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.errors = 0;
-        return Response.ok().build();
+        LoggerSummary.INSTANCE_EXTERNAL_INTERACTIONS.lastNErrors.clear("");
+        return Response.ok("Reset Errors", MediaType.TEXT_PLAIN).build();
     }
 
-    /** Easy to remember way to ensure a service is reachable. */
+    /**
+     * Easy to remember way to ensure a service is reachable.
+     *
+     * @param callback
+     * @return
+     */
     @GET
-    @Path ("/ping")
-    public Response executePing(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/ping")
+    public Response executePing(@QueryParam("callback") @DefaultValue("") String callback) {
         if (callback.length() > 0) {
             return ResponseHelper.INSTANCE.jsonpResponse(callback, new Ping());
         }
@@ -207,8 +372,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path ("/system/env")
-    public Response env(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/system/env")
+    public Response env(@QueryParam("callback") @DefaultValue("") String callback) {
         if (callback.length() > 0) {
             Env env = new Env();
             for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
@@ -231,8 +396,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path ("/system/properties")
-    public Response properties(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/system/properties")
+    public Response properties(@QueryParam("callback") @DefaultValue("") String callback) {
         if (callback.length() > 0) {
             Env env = new Env();
             for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
@@ -254,22 +419,22 @@ public class RestfulBaseEndpoints {
         public Map<String, String> systemProperties = new HashMap<>();
     }
 
-    /** Easy way to see the last ~10 errors, warns and infos */
+    /**
+     * Easy way to see the last ~10 errors, warns and infos
+     *
+     * @param nLines
+     * @param callback
+     * @return
+     */
     @GET
-    @Path ("/tail")
-    public Response tail(@QueryParam ("callback") @DefaultValue ("") String callback) {
-        File logFile = new File("./var/log/service.log");
+    @Path("/tail")
+    public Response tail(@QueryParam("lastNLines") @DefaultValue("100") int nLines,
+        @QueryParam("callback") @DefaultValue("") String callback) {
         if (callback.length() > 0) {
-            Tail tail = new Tail();
-            tail.errors = Arrays.asList(LoggerSummary.INSTANCE.lastNErrors.get());
-            tail.warns = Arrays.asList(LoggerSummary.INSTANCE.lastNWarns.get());
-            tail.infos = Arrays.asList(LoggerSummary.INSTANCE.lastNInfos.get());
-            tail.tail = tailLogFile(logFile, 80 * 500);
-            return ResponseHelper.INSTANCE.jsonpResponse(callback, tail);
+            return ResponseHelper.INSTANCE.jsonpResponse(callback, tailLogFile(logFile, 80 * nLines));
         } else {
-
             StringBuilder sb = new StringBuilder();
-            sb.append(tailLogFile(logFile, 80 * 500));
+            sb.append(tailLogFile(logFile, 80 * nLines));
             return Response.ok(sb.toString(), MediaType.TEXT_PLAIN).build();
         }
     }
@@ -297,96 +462,58 @@ public class RestfulBaseEndpoints {
         }
     }
 
-    class Tail {
-
-        public List<String> errors = new LinkedList<>();
-        public List<String> warns = new LinkedList<>();
-        public List<String> infos = new LinkedList<>();
-        public String tail = "";
-    }
-
-    class Status {
-
-        public boolean healthy = true;
-        public List<HealthCheckResponse> healthCheckResponses = new ArrayList<>();
-    }
-
     @GET
-    @Path ("/recentErrors")
-    public Response recentErrors(@QueryParam ("callback") @DefaultValue ("") String callback) {
-        Tail tail = new Tail();
-        tail.errors = Arrays.asList(LoggerSummary.INSTANCE.lastNErrors.get());
-        tail.warns = Arrays.asList(LoggerSummary.INSTANCE.lastNWarns.get());
-        tail.infos = Arrays.asList(LoggerSummary.INSTANCE.lastNInfos.get());
-        return ResponseHelper.INSTANCE.jsonpResponse(callback, tail);
+    @Path("/recentErrors")
+    public Response recentErrors(@QueryParam("callback") @DefaultValue("") String callback) {
+        if (callback.length() > 0) {
+            return ResponseHelper.INSTANCE.jsonpResponse(callback, LoggerSummary.INSTANCE.lastNErrors.get());
+        } else {
+            return ResponseHelper.INSTANCE.jsonResponse(LoggerSummary.INSTANCE.lastNErrors.get());
+        }
 
     }
 
-    /** Summery of service */
+    class Health {
+
+        public double health = 1.0d;
+        public List<HealthCheckResponse> healthChecks = new ArrayList<>();
+    }
+
+    /**
+     * Health of service
+     *
+     * @param callback
+     * @return
+     */
     @GET
-    @Path ("/status")
-    public Response status(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/health")
+    public Response health(@QueryParam("callback") @DefaultValue("") String callback) {
         try {
-            Status status = new Status();
-            status.healthCheckResponses = healthCheckService.checkHealth();
-            for (HealthCheckResponse response : status.healthCheckResponses) {
+            Health health = new Health();
+            health.healthChecks = healthCheckService.checkHealth();
+            for (HealthCheckResponse response : health.healthChecks) {
                 if (response instanceof FatalHealthCheck && response.getHealth() != HealthCheckResponse.SICK) {
-                    status.healthy = false;
-                    break;
+                    health.health = Math.min(health.health, response.getHealth());
                 }
             }
 
             ResponseBuilder builder;
-            if (status.healthy) {
+            if (health.health > 0.0d) {
                 builder = Response.ok();
             } else {
                 builder = Response.status(Response.Status.SERVICE_UNAVAILABLE);
             }
             if (callback.length() > 0) {
-                return builder.entity(ResponseHelper.INSTANCE.jsonpResponse(callback, status).getEntity()).type(new MediaType("application", "javascript")).
+                return builder.entity(ResponseHelper.INSTANCE.jsonpResponse(callback, health).getEntity()).type(new MediaType("application", "javascript")).
                     build();
             } else {
-                return builder.entity(status).type(MediaType.APPLICATION_JSON).build();
+                return builder.entity(health).type(MediaType.APPLICATION_JSON).build();
             }
         } catch (Exception x) {
-            LOG.warn("Failed to get status.", x);
-            return ResponseHelper.INSTANCE.errorResponse("Failed to get status.", x);
+            LOG.warn("Failed to get health.", x);
+            return ResponseHelper.INSTANCE.errorResponse("Failed to get health.", x);
         }
 
-    }
-
-    /** Summery of service */
-    @GET
-    @Path ("/jettyStatus")
-    public Response jettyStatus(@QueryParam ("callback")
-        @DefaultValue ("") String callback
-    ) {
-        if (callback.length() > 0) {
-            JettyStatus status = new JettyStatus();
-            status.state = server.getState();
-            status.isLowOnThreads = server.getThreadPool().isLowOnThreads();
-            status.serverNumThread = server.getThreadPool().getThreads();
-            status.serverIdleThreads = server.getThreadPool().getIdleThreads();
-            return ResponseHelper.INSTANCE.jsonpResponse(callback, status);
-        } else {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Server state=").append(server.getState()).append("\n");
-            sb.append("Server thread pool isLowOnThreads=").append(server.getThreadPool().isLowOnThreads()).append("\n");
-            sb.append("Server thread pool number=").append(server.getThreadPool().getThreads()).append("\n");
-            sb.append("Server thread pool idle=").append(server.getThreadPool().getIdleThreads()).append("\n");
-
-            @SuppressWarnings ("rawtypes")
-            Enumeration enumeration = server.getAttributeNames();
-            if (enumeration != null) {
-                while (enumeration.hasMoreElements()) {
-                    Object next = enumeration.nextElement();
-                    sb.append("Server attribute ").append(next).append("=").append(server.getAttribute(next.toString())).append(
-                        '\n');
-                }
-            }
-
-            return Response.ok(sb.toString(), MediaType.TEXT_PLAIN).build();
-        }
     }
 
     class JettyStatus {
@@ -397,8 +524,32 @@ public class RestfulBaseEndpoints {
         public int serverIdleThreads;
     }
 
+    /**
+     * JettyStatus for service
+     *
+     * @param callback
+     * @return
+     */
     @GET
-    @Path ("/help")
+    @Path("/jettyStatus")
+    public Response jettyStatus(@QueryParam("callback")
+        @DefaultValue("") String callback
+    ) {
+
+        JettyStatus status = new JettyStatus();
+        status.state = server.getState();
+        status.isLowOnThreads = server.getThreadPool().isLowOnThreads();
+        status.serverNumThread = server.getThreadPool().getThreads();
+        status.serverIdleThreads = server.getThreadPool().getIdleThreads();
+        if (callback.length() > 0) {
+            return ResponseHelper.INSTANCE.jsonpResponse(callback, status);
+        } else {
+            return ResponseHelper.INSTANCE.jsonResponse(status);
+        }
+    }
+
+    @GET
+    @Path("/help")
     public Response help() {
         try {
             Set<Class<?>> annotated = getReflected();
@@ -529,10 +680,15 @@ public class RestfulBaseEndpoints {
 
     }
 
-    /** Summary of service */
+    /**
+     * Summary of service
+     *
+     * @param callback
+     * @return
+     */
     @GET
-    @Path ("/classpath")
-    public Response classpath(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/classpath")
+    public Response classpath(@QueryParam("callback") @DefaultValue("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
         if (callback.length() > 0) {
@@ -542,10 +698,15 @@ public class RestfulBaseEndpoints {
         }
     }
 
-    /** Summary of service */
+    /**
+     * Summary of service
+     *
+     * @param callback
+     * @return
+     */
     @GET
-    @Path ("/releaseNotes")
-    public Response releaseNotes(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/releaseNotes")
+    public Response releaseNotes(@QueryParam("callback") @DefaultValue("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
 
@@ -570,10 +731,15 @@ public class RestfulBaseEndpoints {
         }
     }
 
-    /** Summary of service */
+    /**
+     * Summary of service
+     *
+     * @param callback
+     * @return
+     */
     @GET
-    @Path ("/releaseNote")
-    public Response releaseNote(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/releaseNote")
+    public Response releaseNote(@QueryParam("callback") @DefaultValue("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
 
@@ -603,11 +769,12 @@ public class RestfulBaseEndpoints {
     /**
      * Summary of service
      *
+     * @param callback
      * @return
      */
     @GET
-    @Path ("/version")
-    public Response version(@QueryParam ("callback") @DefaultValue ("") String callback) {
+    @Path("/version")
+    public Response version(@QueryParam("callback") @DefaultValue("") String callback) {
 
         String classpath = System.getProperty("java.class.path");
 
@@ -632,8 +799,8 @@ public class RestfulBaseEndpoints {
     }
 
     @GET
-    @Path ("/shutdown")
-    public Response shutdown(@QueryParam ("userName") @DefaultValue ("anonymous") final String userName) {
+    @Path("/shutdown")
+    public Response shutdown(@QueryParam("userName") @DefaultValue("anonymous") final String userName) {
         if (userName.equals("anonymous")) {
             LOG.info("user anonymous is trying to shutdown this service. This currently isn't supported! Please provide a valid userName.");
             return Response.status(Response.Status.FORBIDDEN).build();
@@ -660,7 +827,6 @@ public class RestfulBaseEndpoints {
         } else {
             return null;
         }
-
     }
 
 }

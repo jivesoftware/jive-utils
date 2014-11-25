@@ -20,30 +20,30 @@ public class HealthCounter {
         this.healthChecker = healthChecker;
     }
 
-    public void inc(String context) {
-        inc(1, context);
+    public void inc(String description, String resolution) {
+        inc(1, description, resolution);
     }
 
-    public void inc(long amount, String context) {
+    public void inc(long amount, String description, String resolution) {
         Counter counter = countersAndTimers.counter(ValueType.COUNT, name);
         counter.inc(amount);
-        healthChecker.check(counter, context);
+        healthChecker.check(counter, description, resolution);
     }
 
-    public void dec(String context) {
-        dec(1, context);
+    public void dec(String description, String resolution) {
+        dec(1, description, resolution);
     }
 
-    public void dec(long amount, String context) {
+    public void dec(long amount, String description, String resolution) {
         Counter counter = countersAndTimers.counter(ValueType.COUNT, name);
         counter.dec(amount);
-        healthChecker.check(counter, context);
+        healthChecker.check(counter, description, resolution);
     }
 
-    public void set(long value, String context) {
+    public void set(long value, String description, String resolution) {
         Counter counter = countersAndTimers.counter(ValueType.COUNT, name);
         counter.set(value);
-        healthChecker.check(counter, context);
+        healthChecker.check(counter, description, resolution);
     }
 
 

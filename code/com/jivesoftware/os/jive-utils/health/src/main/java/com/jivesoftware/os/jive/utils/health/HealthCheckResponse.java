@@ -30,7 +30,11 @@ public interface HealthCheckResponse {
      */
     double getHealth();
 
-    String getMessage();
+    String getStatus();
+
+    String getDescription();
+
+    String getResolution();
 
     long getTimestamp();
 

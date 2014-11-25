@@ -30,9 +30,9 @@ public class GCLoadHealthChecker extends MinMaxHealthChecker implements Schedule
         @Override
         Long getMax();
 
-        @StringDefault("Sustained GC load is too high")
+        @StringDefault("Amount of time CPU is spending in GC as reported by GarbageCollectorMXBean.")
         @Override
-        String getUnhealthyMessage();
+        String getDescription();
     }
 
     private final GCLoadHealthCheckerConfig config;
@@ -71,7 +71,7 @@ public class GCLoadHealthChecker extends MinMaxHealthChecker implements Schedule
 
             Counter counter = new Counter(ValueType.RATE);
             counter.set((int) (percentageOfCPUTimeInGC * 100));
-            check(counter, config.getUnhealthyMessage());
+            check(counter, config.getDescription(), "Consider tuning GC parameters.");
         } catch (Exception x) {
             // TODO what?
         }

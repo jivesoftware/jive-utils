@@ -13,9 +13,9 @@ public interface HealthCheckConfig extends Config {
 
     void setName(String name);
 
-    @StringDefault("unknownUnhealthyMessage")
-    String getUnhealthyMessage();
+    @StringDefault("unknownDescription")
+    String getDescription();
 
-    void setUnhealthyMessage(String unhealthyMessage);
+    void setDescription(String description);
 
 }
