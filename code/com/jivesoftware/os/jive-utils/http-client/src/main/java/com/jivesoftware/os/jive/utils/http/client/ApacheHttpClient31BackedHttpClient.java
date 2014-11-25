@@ -39,8 +39,11 @@ import org.apache.commons.httpclient.StatusLine;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -82,45 +85,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
     @Override
     public HttpResponse get(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
-        GetMethod get = new GetMethod(path);
-
-        setRequestHeaders(headers, get);
-
-        if (timeoutMillis > 0) {
-            return executeWithTimeout(get, timeoutMillis);
-        }
-        try {
-            return execute(get);
-        } catch (Exception e) {
-            throw new HttpClientException("Error executing GET request to: " + client.getHostConfiguration().getHostURL()
-                    + " path: " + path, e);
-        }
-    }
-
-    private HttpResponse executeWithTimeout(final HttpMethodBase HttpMethod, int timeoutMillis) {
-        client.getParams().setParameter("http.method.retry-handler", new DefaultHttpMethodRetryHandler(0, false));
-        ExecutorService service = Executors.newSingleThreadExecutor();
-
-        Future<HttpResponse> future = service.submit(new Callable<HttpResponse>() {
-            @Override
-            public HttpResponse call() throws IOException {
-                return execute(HttpMethod);
-            }
-        });
-
-        try {
-            return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            String uriInfo = "";
-            try {
-                uriInfo = " for " + HttpMethod.getURI();
-            } catch (Exception ie) {
-            }
-            LOG.warn("Http connection thread was interrupted or has timed out" + uriInfo, e);
-            return new HttpResponse(HttpStatus.SC_REQUEST_TIMEOUT, "Request Timeout", null);
-        } finally {
-            service.shutdownNow();
-        }
+        return executeMethod(new GetMethod(path), headers, timeoutMillis);
     }
 
     @Override
@@ -130,14 +95,37 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
     @Override
     public HttpStreamResponse getStream(String path, int timeoutMillis) throws HttpClientException {
-        GetMethod get = new GetMethod(path);
+        return executeMethodStream(new DeleteMethod(path), timeoutMillis);
+    }
 
-        try {
-            return executeStreamWithTimeout(get, timeoutMillis);
-        } catch (Exception e) {
-            throw new HttpClientException("Error executing GET request to: " + client.getHostConfiguration().getHostURL()
-                    + " path: " + path, e);
-        }
+    @Override
+    public HttpResponse delete(String path) throws HttpClientException {
+        return delete(path, null, -1);
+    }
+
+    @Override
+    public HttpResponse delete(String path, Map<String, String> headers) throws HttpClientException {
+        return delete(path, headers, -1);
+    }
+
+    @Override
+    public HttpResponse delete(String path, int timeoutMillis) throws HttpClientException {
+        return delete(path, null, timeoutMillis);
+    }
+
+    @Override
+    public HttpResponse delete(String path, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        return executeMethod(new DeleteMethod(path), headers, timeoutMillis);
+    }
+
+    @Override
+    public HttpStreamResponse deleteStream(String path) throws HttpClientException {
+        return deleteStream(path, -1);
+    }
+
+    @Override
+    public HttpStreamResponse deleteStream(String path, int timeoutMillis) throws HttpClientException {
+        return executeMethodStream(new DeleteMethod(path), timeoutMillis);
     }
 
     @Override
@@ -157,24 +145,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
     @Override
     public HttpResponse postJson(String path, String postJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
-        try {
-            PostMethod post = new PostMethod(path);
-
-            setRequestHeaders(headers, post);
-
-            post.setRequestEntity(new StringRequestEntity(postJsonBody, Constants.APPLICATION_JSON_CONTENT_TYPE, "UTF-8"));
-            post.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_JSON_CONTENT_TYPE);
-            if (timeoutMillis > 0) {
-                return executeWithTimeout(post, timeoutMillis);
-            } else {
-                return execute(post);
-            }
-        } catch (Exception e) {
-            String trimmedPostBody = (postJsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ?
-                    postJsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : postJsonBody;
-            throw new HttpClientException("Error executing POST request to: "
-                    + client.getHostConfiguration().getHostURL() + " path: " + path + " JSON body: " + trimmedPostBody, e);
-        }
+        return executeMethodJson(new PostMethod(path), postJsonBody, headers, timeoutMillis);
     }
 
     @Override
@@ -184,20 +155,73 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
     @Override
     public HttpResponse postBytes(String path, byte[] postBytes, int timeoutMillis) throws HttpClientException {
+        return executeMethodBytes(new PostMethod(path), postBytes, timeoutMillis);
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody) throws HttpClientException {
+        return putJson(path, putJsonBody, null, -1);
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody, Map<String, String> headers) throws HttpClientException {
+        return putJson(path, putJsonBody, headers, -1);
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody, int timeoutMillis) throws HttpClientException {
+        return putJson(path, putJsonBody, null, timeoutMillis);
+    }
+
+    @Override
+    public HttpResponse putJson(String path, String putJsonBody, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        return executeMethodJson(new PutMethod(path), putJsonBody, headers, timeoutMillis);
+    }
+
+    @Override
+    public HttpResponse putBytes(String path, byte[] putBytes) throws HttpClientException {
+        return putBytes(path, putBytes, -1);
+    }
+
+    @Override
+    public HttpResponse putBytes(String path, byte[] putBytes, int timeoutMillis) throws HttpClientException {
+        return executeMethodBytes(new PutMethod(path), putBytes, timeoutMillis);
+    }
+
+    private HttpResponse executeMethodJson(EntityEnclosingMethod method, String jsonBody, Map<String, String> headers, int timeoutMillis)
+        throws HttpClientException {
         try {
-            PostMethod post = new PostMethod(path);
-            post.setRequestEntity(new ByteArrayRequestEntity(postBytes, Constants.APPLICATION_JSON_CONTENT_TYPE));
-            post.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_OCTET_STREAM_TYPE);
+            setRequestHeaders(headers, method);
+
+            method.setRequestEntity(new StringRequestEntity(jsonBody, Constants.APPLICATION_JSON_CONTENT_TYPE, "UTF-8"));
+            method.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_JSON_CONTENT_TYPE);
             if (timeoutMillis > 0) {
-                return executeWithTimeout(post, timeoutMillis);
+                return executeWithTimeout(method, timeoutMillis);
             } else {
-                return execute(post);
+                return execute(method);
             }
         } catch (Exception e) {
-            String trimmedPostBody = (postBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ?
-                    new String(postBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(postBytes);
-            throw new HttpClientException("Error executing POST request to:"
-                    + client.getHostConfiguration().getHostURL() + " path: " + path + " byte body: " + trimmedPostBody, e);
+            String trimmedMethodBody = (jsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ?
+                jsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : jsonBody;
+            throw new HttpClientException("Error executing " + method.getName() + " request to: "
+                + client.getHostConfiguration().getHostURL() + " path: " + method.getPath() + " JSON body: " + trimmedMethodBody, e);
+        }
+    }
+
+    private HttpResponse executeMethodBytes(EntityEnclosingMethod method, byte[] putBytes, int timeoutMillis) throws HttpClientException {
+        try {
+            method.setRequestEntity(new ByteArrayRequestEntity(putBytes, Constants.APPLICATION_JSON_CONTENT_TYPE));
+            method.setRequestHeader(Constants.CONTENT_TYPE_HEADER_NAME, Constants.APPLICATION_OCTET_STREAM_TYPE);
+            if (timeoutMillis > 0) {
+                return executeWithTimeout(method, timeoutMillis);
+            } else {
+                return execute(method);
+            }
+        } catch (Exception e) {
+            String trimmedMethodBody = (putBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ?
+                    new String(putBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(putBytes);
+            throw new HttpClientException("Error executing " + method.getName() + " request to:"
+                    + client.getHostConfiguration().getHostURL() + " path: " + method.getPath() + " byte body: " + trimmedMethodBody, e);
         }
     }
 
@@ -211,6 +235,55 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
                 + ", isOauthEnabled=" + isOauthEnabled
                 + ", isSSLEnabled=" + isSSLEnabled
                 + '}';
+    }
+
+    private HttpResponse executeMethod(HttpMethodBase method, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
+        setRequestHeaders(headers, method);
+
+        if (timeoutMillis > 0) {
+            return executeWithTimeout(method, timeoutMillis);
+        }
+        try {
+            return execute(method);
+        } catch (Exception e) {
+            throw new HttpClientException("Error executing " + method.getName() + " request to: " + client.getHostConfiguration().getHostURL()
+                + " path: " + method.getPath(), e);
+        }
+    }
+
+    private HttpStreamResponse executeMethodStream(HttpMethodBase method, int timeoutMillis) throws HttpClientException {
+        try {
+            return executeStreamWithTimeout(method, timeoutMillis);
+        } catch (Exception e) {
+            throw new HttpClientException("Error executing " + method.getName() + " request to: " + client.getHostConfiguration().getHostURL()
+                + " path: " + method.getPath(), e);
+        }
+    }
+
+    private HttpResponse executeWithTimeout(final HttpMethodBase httpMethod, int timeoutMillis) {
+        client.getParams().setParameter("http.method.retry-handler", new DefaultHttpMethodRetryHandler(0, false));
+        ExecutorService service = Executors.newSingleThreadExecutor();
+
+        Future<HttpResponse> future = service.submit(new Callable<HttpResponse>() {
+            @Override
+            public HttpResponse call() throws IOException {
+                return execute(httpMethod);
+            }
+        });
+
+        try {
+            return future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            String uriInfo = "";
+            try {
+                uriInfo = " for " + httpMethod.getURI();
+            } catch (Exception ie) {
+            }
+            LOG.warn("Http connection thread was interrupted or has timed out" + uriInfo, e);
+            return new HttpResponse(HttpStatus.SC_REQUEST_TIMEOUT, "Request Timeout", null);
+        } finally {
+            service.shutdownNow();
+        }
     }
 
     private HttpResponse execute(HttpMethod method) throws IOException {
