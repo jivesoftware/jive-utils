@@ -27,7 +27,7 @@ public class MinMaxHealthChecker implements HealthChecker<Counter> {
     }
 
     @Override
-    public void check(final Counter counter, final String context) {
+    public void check(final Counter counter, final String description, final String resolution) {
         final long time = System.currentTimeMillis();
         check.set(new Callable<HealthCheckResponse>() {
 
@@ -41,7 +41,9 @@ public class MinMaxHealthChecker implements HealthChecker<Counter> {
                 }
                 return new HealthCheckResponseImpl(config.getName(),
                     health,
-                    healthString(counter) + " " + context,
+                    healthString(counter),
+                    description,
+                    resolution,
                     time);
             }
         });
@@ -54,7 +56,10 @@ public class MinMaxHealthChecker implements HealthChecker<Counter> {
             return callable.call();
         } else {
             return new HealthCheckResponseImpl(config.getName(),
-                HealthCheckResponse.UNKNOWN, "Health is currently unknown for this check.",
+                HealthCheckResponse.UNKNOWN,
+                "Health is currently unknown for this check.",
+                "Description is currently unknown for this check.",
+                "Resolution is currently unkown for this check.",
                 System.currentTimeMillis());
         }
     }

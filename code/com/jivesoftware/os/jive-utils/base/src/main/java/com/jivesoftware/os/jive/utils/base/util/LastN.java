@@ -44,7 +44,7 @@ public class LastN<T> {
     public T[] get() {
         T[] clone = lastN.clone();
         for (int j = 0; j < clone.length; j++) {
-            clone[j] = lastN[j + i % clone.length];
+            clone[j] = lastN[(j + i) % clone.length];
         }
         return clone;
     }

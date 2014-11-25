@@ -17,7 +17,11 @@ package com.jivesoftware.os.jive.utils.health;
 
 public class FatalHealthCheckResponse extends HealthCheckResponseImpl implements FatalHealthCheck {
 
-    public FatalHealthCheckResponse(String name, double healthy, String message, long timestamp) {
-        super(name, healthy, message, timestamp);
+    public FatalHealthCheckResponse(String name, double healthy,
+        String status,
+        String description,
+        String resolution,
+        long timestamp) {
+        super(name, healthy, status, description, resolution, timestamp);
     }
 }

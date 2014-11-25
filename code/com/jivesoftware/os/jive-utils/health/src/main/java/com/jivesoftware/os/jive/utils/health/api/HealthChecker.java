@@ -9,6 +9,6 @@ import com.jivesoftware.os.jive.utils.health.HealthCheck;
  */
 public interface HealthChecker<C> extends HealthCheck {
 
-    public void check(C checkable, String unhealthyMessage);
+    public void check(C checkable, String description, String resolution);
 
 }

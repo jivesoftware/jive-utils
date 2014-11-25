@@ -19,13 +19,22 @@ public class HealthCheckResponseImpl implements HealthCheckResponse {
 
     private final String name;
     private final double health;
-    private final String message;
+    private final String status;
+    private final String description;
+    private final String resolution;
     private final long timestamp;
 
-    public HealthCheckResponseImpl(String name, double health, String message, long timestamp) {
+    public HealthCheckResponseImpl(String name,
+        double health,
+        String status,
+        String description,
+        String resolution,
+        long timestamp) {
         this.name = name;
         this.health = health;
-        this.message = message;
+        this.status = status;
+        this.description = description;
+        this.resolution = resolution;
         this.timestamp = timestamp;
     }
 
@@ -40,8 +49,18 @@ public class HealthCheckResponseImpl implements HealthCheckResponse {
     }
 
     @Override
-    public String getMessage() {
-        return message;
+    public String getStatus() {
+        return status;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public String getResolution() {
+        return resolution;
     }
 
     @Override

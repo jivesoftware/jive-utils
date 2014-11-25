@@ -23,9 +23,9 @@ public class HealthTimer {
         countersAndTimers.startTimer(name);
     }
 
-    public long stopTimer(String context) {
+    public long stopTimer(String description, String resolution) {
         Timer timer = countersAndTimers.stopAndGetTimer(name, name, 5000);
-        healthChecker.check(timer, context);
+        healthChecker.check(timer, description, resolution);
         return timer.getLastSample();
     }
 
