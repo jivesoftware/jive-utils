@@ -76,7 +76,10 @@ public class HealthCheckService {
         List<HealthCheckResponse> response = new ArrayList<>();
         synchronized (healthChecks) {
             for (HealthCheck healthCheck : healthChecks) {
-                response.add(healthCheck.checkHealth());
+                HealthCheckResponse healthCheckResponse = healthCheck.checkHealth();
+                if (-Double.MAX_VALUE != healthCheckResponse.getHealth()) {
+                    response.add(healthCheckResponse);
+                }
             }
         }
         return response;
