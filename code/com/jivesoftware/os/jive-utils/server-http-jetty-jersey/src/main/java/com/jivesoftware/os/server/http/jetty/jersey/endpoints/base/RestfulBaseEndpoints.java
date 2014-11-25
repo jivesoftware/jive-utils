@@ -19,7 +19,6 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import com.google.common.base.Joiner;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
-import com.jivesoftware.os.jive.utils.health.FatalHealthCheck;
 import com.jivesoftware.os.jive.utils.health.HealthCheckResponse;
 import com.jivesoftware.os.jive.utils.health.HealthCheckService;
 import com.jivesoftware.os.jive.utils.jaxrs.util.ResponseHelper;
@@ -204,7 +203,6 @@ public class RestfulBaseEndpoints {
             canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "logging/setLogLevel").method("get").id("setLogLevel-form"));
             canvas.fieldset();
 
-
             LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
             Logger rl = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
             List<Logger> loggerList = lc.getLoggerList();
@@ -217,7 +215,7 @@ public class RestfulBaseEndpoints {
                     canvas.option(HtmlAttributesFactory.value(logger.getName())).content(level + "=" + logger.getName());
                 } catch (ClassNotFoundException e) {
                 }
-                
+
             }
             canvas._select();
 
@@ -492,9 +490,7 @@ public class RestfulBaseEndpoints {
             Health health = new Health();
             health.healthChecks = healthCheckService.checkHealth();
             for (HealthCheckResponse response : health.healthChecks) {
-                if (response instanceof FatalHealthCheck && response.getHealth() != HealthCheckResponse.SICK) {
-                    health.health = Math.min(health.health, response.getHealth());
-                }
+                health.health = Math.min(health.health, response.getHealth());
             }
 
             ResponseBuilder builder;
