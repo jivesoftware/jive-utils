@@ -15,16 +15,14 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.endpoints.base;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import com.google.common.base.Joiner;
 import com.jivesoftware.os.jive.utils.base.interfaces.CallbackStream;
 import com.jivesoftware.os.jive.utils.health.HealthCheckResponse;
 import com.jivesoftware.os.jive.utils.health.HealthCheckService;
 import com.jivesoftware.os.jive.utils.jaxrs.util.ResponseHelper;
-import com.jivesoftware.os.jive.utils.logger.LoggerSummary;
-import com.jivesoftware.os.jive.utils.logger.MetricLogger;
-import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
+import com.jivesoftware.os.mlogger.core.LoggerSummary;
+import com.jivesoftware.os.mlogger.core.MetricLogger;
+import com.jivesoftware.os.mlogger.core.MetricLoggerFactory;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.logging.metric.MetricsHelper;
 import java.awt.Color;
 import java.io.File;
@@ -34,6 +32,7 @@ import java.io.RandomAccessFile;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -59,6 +58,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.eclipse.jetty.server.Server;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
@@ -68,7 +70,6 @@ import org.reflections.util.ConfigurationBuilder;
 import org.rendersnake.HtmlAttributes;
 import org.rendersnake.HtmlAttributesFactory;
 import org.rendersnake.HtmlCanvas;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 @Path("/")
@@ -218,12 +219,11 @@ public class RestfulBaseEndpoints {
             canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "logging/setLogLevel").method("get").id("setLogLevel-form"));
             canvas.fieldset();
 
-            LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-            Logger rl = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-            List<Logger> loggerList = lc.getLoggerList();
+            LoggerContext rl = (LoggerContext) LogManager.getRootLogger();
+            Collection<org.apache.logging.log4j.core.Logger> loggers = rl.getLoggers();
 
             canvas.select(HtmlAttributesFactory.name("logger"));
-            for (Logger logger : loggerList) {
+            for (Logger logger : loggers) {
                 try {
                     Class.forName(logger.getName());
                     String level = (logger.getLevel() == null) ? null : logger.getLevel().toString();

@@ -9,6 +9,9 @@
     </parent>
     <artifactId>global-version-management</artifactId>
     <packaging>pom</packaging>
+    <properties>
+        <mlogger-version>0.3</mlogger-version>
+    </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -37,9 +40,9 @@
                 <version>0.62-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>com.jivesoftware.os.jive.utils</groupId>
-                <artifactId>logger</artifactId>
-                <version>0.62-SNAPSHOT</version>
+                <groupId>com.jivesoftware.os.mlogger</groupId>
+                <artifactId>core</artifactId>
+                <version>${mlogger-version}</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>

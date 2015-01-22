@@ -4,8 +4,8 @@ import com.jivesoftware.os.jive.utils.health.api.HealthCheckUtil;
 import com.jivesoftware.os.jive.utils.health.api.MinMaxHealthChecker;
 import com.jivesoftware.os.jive.utils.health.api.ScheduledHealthCheck;
 import com.jivesoftware.os.jive.utils.health.api.ScheduledMinMaxHealthCheckConfig;
-import com.jivesoftware.os.jive.utils.logger.Counter;
-import com.jivesoftware.os.jive.utils.logger.ValueType;
+import com.jivesoftware.os.mlogger.core.Counter;
+import com.jivesoftware.os.mlogger.core.ValueType;
 import java.io.File;
 
 /**

@@ -1,8 +1,8 @@
 package com.jivesoftware.os.jive.utils.health.api;
 
-import com.jivesoftware.os.jive.utils.logger.Counter;
-import com.jivesoftware.os.jive.utils.logger.CountersAndTimers;
-import com.jivesoftware.os.jive.utils.logger.Timer;
+import com.jivesoftware.os.mlogger.core.Counter;
+import com.jivesoftware.os.mlogger.core.CountersAndTimers;
+import com.jivesoftware.os.mlogger.core.Timer;
 
 /**
  * @author jonathan.colt

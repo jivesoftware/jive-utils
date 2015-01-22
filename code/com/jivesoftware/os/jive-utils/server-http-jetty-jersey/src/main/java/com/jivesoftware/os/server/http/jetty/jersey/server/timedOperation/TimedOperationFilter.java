@@ -15,9 +15,9 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.server.timedOperation;
 
-import com.jivesoftware.os.jive.utils.logger.MetricLogger;
-import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
-import com.jivesoftware.os.jive.utils.logger.TimedOperation;
+import com.jivesoftware.os.mlogger.core.MetricLogger;
+import com.jivesoftware.os.mlogger.core.MetricLoggerFactory;
+import com.jivesoftware.os.mlogger.core.TimedOperation;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import javax.inject.Inject;
