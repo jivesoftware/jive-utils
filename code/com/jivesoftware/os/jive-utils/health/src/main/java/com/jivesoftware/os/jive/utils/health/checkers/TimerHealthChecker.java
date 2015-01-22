@@ -6,7 +6,7 @@ import com.jivesoftware.os.jive.utils.health.api.HealthCheckUtil;
 import com.jivesoftware.os.jive.utils.health.api.HealthChecker;
 import com.jivesoftware.os.jive.utils.health.api.HealthFactory;
 import com.jivesoftware.os.jive.utils.health.api.TimerHealthCheckConfig;
-import com.jivesoftware.os.jive.utils.logger.Timer;
+import com.jivesoftware.os.mlogger.core.Timer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 

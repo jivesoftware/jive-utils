@@ -15,12 +15,10 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.endpoints.logging.level;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import com.google.inject.Singleton;
-import com.jivesoftware.os.jive.utils.logger.MetricLogger;
-import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
+import com.jivesoftware.os.mlogger.core.MetricLogger;
+import com.jivesoftware.os.mlogger.core.MetricLoggerFactory;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import javax.ws.rs.Consumes;
@@ -32,7 +30,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 @Singleton
 @Path("/logging")
@@ -63,15 +66,16 @@ public class LogLevelRestEndpoints {
     }
 
     private void changeLogLevel(String loggerName, String loggerLevel) {
-        ch.qos.logback.classic.Logger loggerForName = (ch.qos.logback.classic.Logger) LoggerFactory
-                .getLogger(loggerName);
 
+        LoggerContext loggerForName = (LoggerContext) LogManager.getLogger(loggerName);
         if (loggerForName != null) {
             Level level = null;
             if (!loggerLevel.equals("null")) {
                 level = Level.toLevel(loggerLevel);
             }
-            loggerForName.setLevel(level);
+            Configuration configuration = loggerForName.getConfiguration();
+            LoggerConfig loggerConfig = configuration.getLoggerConfig(loggerName);
+            loggerConfig.setLevel(level);
             log.info("set logger=" + loggerForName.getName() + " to level=" + level);
         }
     }
@@ -83,15 +87,15 @@ public class LogLevelRestEndpoints {
     public JsonLogLevels getLogLevels(String tenantId) {
         log.info("listing logging levels");
 
-        List<JsonLogLevel> logLevels = new LinkedList<JsonLogLevel>();
-
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        List<Logger> loggerList = lc.getLoggerList();
-        for (Logger logger : loggerList) {
+        List<JsonLogLevel> logLevels = new LinkedList<>();
+        
+        LoggerContext lc = (LoggerContext) LogManager.getRootLogger();
+        Collection<org.apache.logging.log4j.core.Logger> loggers = lc.getLoggers();
+        for (Logger logger : loggers) {
             addToLogLevels(logger, logLevels);
         }
 
-        Logger rl = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        Logger rl = (Logger) LogManager.getRootLogger();
         addToLogLevels(rl, logLevels);
         return new JsonLogLevels(tenantId, logLevels);
     }

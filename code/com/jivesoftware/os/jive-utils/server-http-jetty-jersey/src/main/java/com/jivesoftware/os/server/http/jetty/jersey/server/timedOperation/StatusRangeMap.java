@@ -15,7 +15,7 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.server.timedOperation;
 
-import com.jivesoftware.os.jive.utils.logger.TimedOperation;
+import com.jivesoftware.os.mlogger.core.TimedOperation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

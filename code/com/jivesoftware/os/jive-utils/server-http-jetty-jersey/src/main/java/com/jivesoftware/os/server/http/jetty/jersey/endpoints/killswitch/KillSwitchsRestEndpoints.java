@@ -16,8 +16,8 @@
 package com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch;
 
 import com.jivesoftware.os.jive.utils.jaxrs.util.ResponseHelper;
-import com.jivesoftware.os.jive.utils.logger.MetricLogger;
-import com.jivesoftware.os.jive.utils.logger.MetricLoggerFactory;
+import com.jivesoftware.os.mlogger.core.MetricLogger;
+import com.jivesoftware.os.mlogger.core.MetricLoggerFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
