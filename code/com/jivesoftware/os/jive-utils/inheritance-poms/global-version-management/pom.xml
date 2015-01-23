@@ -10,7 +10,7 @@
     <artifactId>global-version-management</artifactId>
     <packaging>pom</packaging>
     <properties>
-        <mlogger-version>0.4</mlogger-version>
+        <mlogger-version>0.5</mlogger-version>
     </properties>
     <dependencyManagement>
         <dependencies>
