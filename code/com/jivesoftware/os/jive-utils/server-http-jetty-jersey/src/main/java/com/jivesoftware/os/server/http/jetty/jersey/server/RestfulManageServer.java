@@ -25,6 +25,7 @@ import com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch.KillSwi
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.killswitch.KillSwitchsRestEndpoints;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.logging.level.LogLevelRestEndpoints;
 import com.jivesoftware.os.server.http.jetty.jersey.endpoints.logging.metric.LogMetricRestfulEndpoints;
+import java.io.File;
 import java.util.Arrays;
 
 public class RestfulManageServer implements ServiceHandle {
@@ -43,7 +44,7 @@ public class RestfulManageServer implements ServiceHandle {
         jerseyEndpoints = new JerseyEndpoints()
             .enableCORS()
             .humanReadableJson()
-            .addEndpoint(RestfulBaseEndpoints.class).addInjectable(healthCheckService)
+            .addEndpoint(RestfulBaseEndpoints.class).addInjectable(healthCheckService).addInjectable(new File("logs/service.log"))
             .addEndpoint(LogMetricRestfulEndpoints.class)
             .addEndpoint(LogLevelRestEndpoints.class)
             .addEndpoint(KillSwitchsRestEndpoints.class).addInjectable(killSwitchService)
