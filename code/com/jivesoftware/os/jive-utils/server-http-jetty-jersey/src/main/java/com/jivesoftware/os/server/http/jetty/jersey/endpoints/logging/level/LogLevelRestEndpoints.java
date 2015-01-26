@@ -88,7 +88,7 @@ public class LogLevelRestEndpoints {
         log.info("listing logging levels");
 
         List<JsonLogLevel> logLevels = new LinkedList<>();
-        
+
         LoggerContext lc = (LoggerContext) LogManager.getRootLogger();
         Collection<org.apache.logging.log4j.core.Logger> loggers = lc.getLoggers();
         for (Logger logger : loggers) {
