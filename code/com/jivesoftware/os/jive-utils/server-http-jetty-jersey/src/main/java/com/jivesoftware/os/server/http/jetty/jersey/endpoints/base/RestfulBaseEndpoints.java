@@ -59,7 +59,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.eclipse.jetty.server.Server;
 import org.reflections.Reflections;
@@ -219,20 +219,25 @@ public class RestfulBaseEndpoints {
             canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "logging/setLogLevel").method("get").id("setLogLevel-form"));
             canvas.fieldset();
 
-            LoggerContext rl = (LoggerContext) LogManager.getRootLogger();
-            Collection<org.apache.logging.log4j.core.Logger> loggers = rl.getLoggers();
+            org.apache.logging.log4j.Logger rl = LogManager.getRootLogger();
+            if (rl instanceof Logger) {
+                LoggerContext rlContext = ((Logger) rl).getContext();
+                Collection<Logger> loggers = rlContext.getLoggers();
 
-            canvas.select(HtmlAttributesFactory.name("logger"));
-            for (Logger logger : loggers) {
-                try {
-                    Class.forName(logger.getName());
-                    String level = (logger.getLevel() == null) ? null : logger.getLevel().toString();
-                    canvas.option(HtmlAttributesFactory.value(logger.getName())).content(level + "=" + logger.getName());
-                } catch (ClassNotFoundException e) {
+                canvas.select(HtmlAttributesFactory.name("logger"));
+                for (Logger logger : loggers) {
+                    try {
+                        Class.forName(logger.getName());
+                        String level = (logger.getLevel() == null) ? null : logger.getLevel().toString();
+                        canvas.option(HtmlAttributesFactory.value(logger.getName())).content(level + "=" + logger.getName());
+                    } catch (ClassNotFoundException e) {
+                    }
+
                 }
-
+                canvas._select();
+            } else {
+                canvas.h1().content("Loggers unavailable, RootLogger is: " + rl.getClass().getName() + " expected: " + Logger.class.getName());
             }
-            canvas._select();
 
             canvas.select(HtmlAttributesFactory.name("level"));
             canvas.option(HtmlAttributesFactory.value("")).content("Inherit");
@@ -295,7 +300,7 @@ public class RestfulBaseEndpoints {
     }
 
     private String[] orEmpty(String[] strings) {
-        return (strings == null) ? new String[]{""} : emptyNulls(strings);
+        return (strings == null) ? new String[] { "" } : emptyNulls(strings);
     }
 
     private String[] emptyNulls(String[] strings) {
@@ -551,7 +556,7 @@ public class RestfulBaseEndpoints {
     @GET
     @Path("/jettyStatus")
     public Response jettyStatus(@QueryParam("callback")
-        @DefaultValue("") String callback
+    @DefaultValue("") String callback
     ) {
 
         JettyStatus status = new JettyStatus();
