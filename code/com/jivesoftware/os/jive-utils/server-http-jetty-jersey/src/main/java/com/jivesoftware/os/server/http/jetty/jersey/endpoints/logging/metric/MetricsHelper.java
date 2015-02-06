@@ -40,12 +40,13 @@ public class MetricsHelper {
     private final static MetricLogger logger = MetricLoggerFactory.getLogger();
     public static final MetricsHelper INSTANCE = new MetricsHelper();
     private static final ObjectMapper mapper = new ObjectMapper();
+
     static {
         mapper.setVisibilityChecker(
             mapper.getVisibilityChecker()
-                .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-                .withGetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
-            );
+            .withSetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+            .withGetterVisibility(JsonAutoDetect.Visibility.PUBLIC_ONLY)
+        );
         mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -59,11 +60,11 @@ public class MetricsHelper {
         JVMMetrics.INSTANCE.logJMVMetrics();
         for (CountersAndTimers cat : get(loggerName)) {
             for (Entry<String, Counter> v : cat.getCounters()) {
-                counterMetrics.put("counter>" + cat.getLoggerName() + ">" + v.getKey(),
+                counterMetrics.put("counter>" + cat.getName() + ">" + v.getKey(),
                     v.getValue().getValue());
             }
             for (Entry<String, AtomicCounter> v : cat.getAtomicCounters()) {
-                counterMetrics.put("atomicCounter>" + cat.getLoggerName() + ">" + v.getKey(),
+                counterMetrics.put("atomicCounter>" + cat.getName() + ">" + v.getKey(),
                     v.getValue().getValue());
             }
         }
@@ -74,11 +75,11 @@ public class MetricsHelper {
 
         for (CountersAndTimers cat : get(loggerName)) {
             for (Entry<String, Timer> v : cat.getTimers()) {
-                timerMetrics.put("timer>" + cat.getLoggerName() + ">" + v.getKey() + ">min:millis",
+                timerMetrics.put("timer>" + cat.getName() + ">" + v.getKey() + ">min:millis",
                     (long) v.getValue().getMin());
-                timerMetrics.put("timer>" + cat.getLoggerName() + ">" + v.getKey() + ">max:millis",
+                timerMetrics.put("timer>" + cat.getName() + ">" + v.getKey() + ">max:millis",
                     (long) v.getValue().getMax());
-                timerMetrics.put("timer>" + cat.getLoggerName() + ">" + v.getKey() + ">mean:millis",
+                timerMetrics.put("timer>" + cat.getName() + ">" + v.getKey() + ">mean:millis",
                     (long) v.getValue().getMean());
             }
         }
