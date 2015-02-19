@@ -88,7 +88,7 @@ public class ServiceStartupHealthCheck implements HealthCheck {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             t.printStackTrace(pw);
-            messages.append(pw.toString());
+            messages.append(sw.toString());
         }
     }
 
