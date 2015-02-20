@@ -281,6 +281,7 @@ public class RestfulBaseEndpoints {
 
             canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "shutdown").method("get").id("shutdown-form"))
                 .fieldset()
+                .input(HtmlAttributesFactory.type("text").name("userName").value("anonymous"))
                 .input(HtmlAttributesFactory.type("submit").value("Shutdown"))
                 ._fieldset()
                 ._form();
