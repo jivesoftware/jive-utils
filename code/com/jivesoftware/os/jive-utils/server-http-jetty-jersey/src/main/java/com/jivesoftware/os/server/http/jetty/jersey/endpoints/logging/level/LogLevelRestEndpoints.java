@@ -34,8 +34,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.LoggerConfig;
 
 @Singleton
 @Path("/logging")
@@ -69,16 +67,12 @@ public class LogLevelRestEndpoints {
 
         Logger logger = LogManager.getLogger(loggerName);
         if (logger instanceof org.apache.logging.log4j.core.Logger) {
-            LoggerContext rlContext = ((org.apache.logging.log4j.core.Logger) logger).getContext();
-
             Level level = null;
             if (!loggerLevel.equals("null")) {
                 level = Level.toLevel(loggerLevel);
             }
-            Configuration configuration = rlContext.getConfiguration();
-            LoggerConfig loggerConfig = configuration.getLoggerConfig(loggerName);
-            loggerConfig.setLevel(level);
-            log.info("set logger=" + rlContext.getName() + " to level=" + level);
+            ((org.apache.logging.log4j.core.Logger) logger).setLevel(level);
+            log.info("set logger=" + logger.getName() + " to level=" + level);
         } else {
             log.warn("Cannot get log level because root lagger isn't an instance of org.apache.logging.log4j.core.Logger");
         }
