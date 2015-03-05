@@ -34,7 +34,17 @@ public class HasUI {
 
     public static class UI {
 
-        public String url;
         public String name;
+        public String portName;
+        public String url;
+
+        public UI() {
+        }
+
+        public UI(String name, String portName, String url) {
+            this.name = name;
+            this.portName = portName;
+            this.url = url;
+        }
     }
 }
