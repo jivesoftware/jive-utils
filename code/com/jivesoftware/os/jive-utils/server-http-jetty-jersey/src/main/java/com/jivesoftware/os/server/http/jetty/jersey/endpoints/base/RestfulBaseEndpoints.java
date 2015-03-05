@@ -95,16 +95,25 @@ public class RestfulBaseEndpoints {
     private final Server server;
     private final HealthCheckService healthCheckService;
     private final File logFile;
+    private final HasUI hasUI;
 
     public RestfulBaseEndpoints(@Context ResfulServiceName resfulServiceName,
         @Context Server server,
         @Context HealthCheckService healthCheckService,
-        @Context File logFile) {
+        @Context File logFile,
+        @Context HasUI hasUI) {
 
         this.resfulServiceName = resfulServiceName;
         this.server = server;
         this.healthCheckService = healthCheckService;
         this.logFile = logFile;
+        this.hasUI = hasUI;
+    }
+
+    @GET
+    @Path("/hasUI")
+    public Response hasUI() {
+        return ResponseHelper.INSTANCE.jsonResponse(hasUI);
     }
 
     @GET
@@ -301,7 +310,7 @@ public class RestfulBaseEndpoints {
     }
 
     private String[] orEmpty(String[] strings) {
-        return (strings == null) ? new String[] { "" } : emptyNulls(strings);
+        return (strings == null) ? new String[]{""} : emptyNulls(strings);
     }
 
     private String[] emptyNulls(String[] strings) {
@@ -557,7 +566,7 @@ public class RestfulBaseEndpoints {
     @GET
     @Path("/jettyStatus")
     public Response jettyStatus(@QueryParam("callback")
-    @DefaultValue("") String callback
+        @DefaultValue("") String callback
     ) {
 
         JettyStatus status = new JettyStatus();

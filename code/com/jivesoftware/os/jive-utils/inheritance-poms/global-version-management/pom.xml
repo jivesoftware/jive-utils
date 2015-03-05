@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-repo-management</artifactId>
-        <version>0.72</version>
+        <version>0.73</version>
         <relativePath>../global-repo-management/pom.xml</relativePath>
     </parent>
     <artifactId>global-version-management</artifactId>
@@ -17,27 +17,27 @@
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>health</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>ordered-id</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>id</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>jaxrs-util</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>base</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.mlogger</groupId>
@@ -47,12 +47,12 @@
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>http-client</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>http-client-rest</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
@@ -62,7 +62,7 @@
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>merlin-config</artifactId>
-                <version>0.72</version>
+                <version>0.73</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
