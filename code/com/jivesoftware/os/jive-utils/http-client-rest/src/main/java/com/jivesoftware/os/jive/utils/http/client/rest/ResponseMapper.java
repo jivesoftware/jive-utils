@@ -17,6 +17,7 @@ package com.jivesoftware.os.jive.utils.http.client.rest;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jivesoftware.os.jive.utils.http.client.HttpResponse;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -26,12 +27,46 @@ import java.nio.charset.Charset;
  */
 public class ResponseMapper {
 
-    private final ObjectMapper mapper;
-
+    private static final byte[] EMPTY = new byte[0];
     private static final Charset UTF_8 = Charset.forName("UTF-8");
+
+    private final ObjectMapper mapper;
 
     public ResponseMapper(ObjectMapper mapper) {
         this.mapper = mapper;
+    }
+
+    public <T> T extractResultFromResponse(HttpResponse response, Class<T> parametrized, Class<?>[] parameterClasses, T emptyResult) {
+        if (isSuccessStatusCode(response.getStatusCode())) {
+            byte[] responseBody = response.getResponseBody();
+            if (responseBody == null) {
+                responseBody = EMPTY;
+            }
+            return extractResultFromResponse(responseBody, parametrized, parameterClasses, emptyResult);
+        }
+        return emptyResult;
+    }
+
+    public <T> T extractResultFromResponse(HttpResponse response, Class<T> resultClass, T emptyResult) {
+        if (isSuccessStatusCode(response.getStatusCode())) {
+            byte[] responseBody = response.getResponseBody();
+            if (responseBody == null) {
+                responseBody = EMPTY;
+            }
+            return extractResultFromResponse(responseBody, resultClass, emptyResult);
+        }
+        return emptyResult;
+    }
+
+    public <T> T extractResultFromResponse(HttpResponse response, JavaType type, T emptyResult) {
+        if (isSuccessStatusCode(response.getStatusCode())) {
+            byte[] responseBody = response.getResponseBody();
+            if (responseBody == null) {
+                responseBody = EMPTY;
+            }
+            return extractResultFromResponse(responseBody, type, emptyResult);
+        }
+        return emptyResult;
     }
 
     public <T> T extractResultFromResponse(byte[] responseBody, Class<T> parametrized, Class<?>[] parameterClasses, T emptyResult) {
