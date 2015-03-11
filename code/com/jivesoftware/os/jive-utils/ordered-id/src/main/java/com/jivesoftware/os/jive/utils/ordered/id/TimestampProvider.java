@@ -19,4 +19,6 @@ public interface TimestampProvider {
 
     long getTimestamp();
 
+    long getApproximateTimestamp(long currentTimeMillis);
+
 }
