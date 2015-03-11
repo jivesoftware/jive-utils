@@ -21,6 +21,11 @@ public class JiveEpochTimestampProvider implements TimestampProvider {
 
     @Override
     public long getTimestamp() {
-        return System.currentTimeMillis() - JIVE_EPOCH;
+        return getApproximateTimestamp(System.currentTimeMillis());
+    }
+
+    @Override
+    public long getApproximateTimestamp(long currentTimeMillis) {
+        return currentTimeMillis - JIVE_EPOCH;
     }
 }

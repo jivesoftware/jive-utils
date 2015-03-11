@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * An order id provider which generates ids using a combination of system time, a logical writer id, and an incrementing sequence number.
  */
-public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider {
+public final /* hi mark */ class OrderIdProviderImpl implements TimestampedOrderIdProvider {
 
     private final int maxOrderId;
     final private TimestampProvider timestampProvider;
@@ -38,6 +38,13 @@ public final /* hi mark */ class OrderIdProviderImpl implements OrderIdProvider 
         this.idPacker = idPacker;
         this.timestampProvider = timestampProvider;
         this.state = new AtomicReference<>(new TimeAndOrder(timestampProvider.getTimestamp(), 0));
+    }
+
+    @Override
+    public long getApproximateId(long currentTimeMillis) {
+        WriterId writerId = getWriterId();
+        long approximateTimestamp = timestampProvider.getApproximateTimestamp(currentTimeMillis);
+        return idPacker.pack(approximateTimestamp, writerId.getId(), 0);
     }
 
     @Override
