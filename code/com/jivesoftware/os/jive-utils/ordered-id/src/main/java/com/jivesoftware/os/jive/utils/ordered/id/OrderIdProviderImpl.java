@@ -48,6 +48,12 @@ public final /* hi mark */ class OrderIdProviderImpl implements TimestampedOrder
     }
 
     @Override
+    public long getApproximateId(long id, long wallClockDeltaMillis) {
+        long[] unpacked = idPacker.unpack(id);
+        return idPacker.pack(timestampProvider.getApproximateTimestamp(unpacked[0], wallClockDeltaMillis), (int) unpacked[1], (int) unpacked[2]);
+    }
+
+    @Override
     public long nextId() {
         while (true) { // exits on successful compare-and-set
             long timestamp = timestampProvider.getTimestamp();
