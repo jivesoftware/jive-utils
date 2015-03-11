@@ -31,8 +31,7 @@ public class JiveEpochTimestampProvider implements TimestampProvider {
 
     @Override
     public long getApproximateTimestamp(long internalTimestamp, long wallClockDeltaMillis) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return internalTimestamp - wallClockDeltaMillis;
     }
-
 
 }
