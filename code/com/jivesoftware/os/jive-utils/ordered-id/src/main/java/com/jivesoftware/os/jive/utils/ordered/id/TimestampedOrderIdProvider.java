@@ -22,4 +22,6 @@ package com.jivesoftware.os.jive.utils.ordered.id;
 public interface TimestampedOrderIdProvider extends OrderIdProvider {
 
     long getApproximateId(long currentTimeMillis);
+
+    long getApproximateId(long id, long deltaMillis);
 }
