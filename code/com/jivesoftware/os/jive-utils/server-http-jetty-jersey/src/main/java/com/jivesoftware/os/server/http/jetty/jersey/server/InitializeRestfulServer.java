@@ -23,10 +23,10 @@ public class InitializeRestfulServer {
     private final RestfulServer server;
 
     public InitializeRestfulServer(
-            int port,
-            String applicationName,
-            int maxNumberOfThreads,
-            int maxQueuedRequests) {
+        int port,
+        String applicationName,
+        int maxNumberOfThreads,
+        int maxQueuedRequests) {
         server = new RestfulServer(port, applicationName, maxNumberOfThreads, maxQueuedRequests);
     }
 
@@ -38,6 +38,11 @@ public class InitializeRestfulServer {
     public InitializeRestfulServer addContextHandler(String context, JerseyEndpoints contextHandler) {
         contextHandler.humanReadableJson();
         server.addContextHandler(context, contextHandler);
+        return this;
+    }
+
+    public InitializeRestfulServer addClasspathResource(String path) throws Exception {
+        server.addClasspathResource(path);
         return this;
     }
 
