@@ -214,7 +214,7 @@ public class RequestHelper {
         }
 
         if (!isSuccessStatusCode(response.getStatusCode())) {
-            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") "
+            throw new NonSuccessStatusCodeException(response.getStatusCode(), "Received non success status code (" + response.getStatusCode() + ") "
                 + "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" "
                 + "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
         }
@@ -237,7 +237,7 @@ public class RequestHelper {
         }
 
         if (!isSuccessStatusCode(response.getStatusCode())) {
-            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") "
+            throw new NonSuccessStatusCodeException(response.getStatusCode(), "Received non success status code (" + response.getStatusCode() + ") "
                 + "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" "
                 + "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
         }
@@ -283,7 +283,7 @@ public class RequestHelper {
         }
 
         if (!isSuccessStatusCode(response.getStatusCode())) {
-            throw new RuntimeException("Received non success status code (" + response.getStatusCode() + ") "
+            throw new NonSuccessStatusCodeException(response.getStatusCode(), "Received non success status code (" + response.getStatusCode() + ") "
                 + "from the server.  The reason phrase on the response was \"" + response.getStatusReasonPhrase() + "\" "
                 + "and the body of the response was \"" + new String(responseBody, UTF_8) + "\".");
         }

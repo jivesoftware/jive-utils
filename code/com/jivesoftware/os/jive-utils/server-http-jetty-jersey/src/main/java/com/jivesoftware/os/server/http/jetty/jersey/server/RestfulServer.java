@@ -16,13 +16,18 @@
 package com.jivesoftware.os.server.http.jetty.jersey.server;
 
 import com.jivesoftware.os.jive.utils.base.service.ServiceHandle;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.URISyntaxException;
 import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.util.BlockingArrayQueue;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 public class RestfulServer implements ServiceHandle {
@@ -65,6 +70,19 @@ public class RestfulServer implements ServiceHandle {
             return;
         }
         handlers.addHandler(contextHandler.getHandler(server, context, applicationName));
+    }
+
+    public void addClasspathResource(String path) throws Exception {
+        addResourcesDir(path, "static");
+    }
+
+    private void addResourcesDir(String path, String dir) throws IOException, URISyntaxException {
+        Resource newResource = Resource.newResource(this.getClass().getResource(path + "/" + dir).toURI());
+        ResourceHandler resourceHandler = new ResourceHandler();
+        resourceHandler.setBaseResource(newResource);
+        ContextHandler ctx = new ContextHandler("/" + dir);
+        ctx.setHandler(resourceHandler);
+        handlers.addHandler(ctx);
     }
 
     @Override
