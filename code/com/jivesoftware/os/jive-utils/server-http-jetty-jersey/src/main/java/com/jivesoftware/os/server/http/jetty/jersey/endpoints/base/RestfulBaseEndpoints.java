@@ -225,7 +225,7 @@ public class RestfulBaseEndpoints {
 
             canvas.hr();
 
-            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "logging/setLogLevel").method("get").id("setLogLevel-form"));
+            canvas.form(HtmlAttributesFactory.action(uriInfo.getBaseUri().getPath() + "logging/setLevels").method("get").id("setLevels-form"));
             canvas.fieldset();
 
             org.apache.logging.log4j.Logger rl = LogManager.getRootLogger();
