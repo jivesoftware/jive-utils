@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-plugin-management</artifactId>
-        <version>0.83</version>
+        <version>0.84</version>
         <relativePath>../global-plugin-management/pom.xml</relativePath>
     </parent>
 
@@ -20,7 +20,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.6.3.201306030806</version>
+                <version>0.7.2.201409121644</version>
                 <executions>
                     <execution>
                         <id>default-prepare-agent</id>
