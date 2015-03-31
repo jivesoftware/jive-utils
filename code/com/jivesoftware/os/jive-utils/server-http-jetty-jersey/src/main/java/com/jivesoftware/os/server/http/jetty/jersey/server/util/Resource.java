@@ -15,9 +15,9 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.server.util;
 
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.slf4j.Logger;
@@ -29,17 +29,25 @@ public class Resource {
 
     private final File rootDir;
 
-    private List<String> welcomeFiles = new ArrayList<>(Arrays.asList("index.html"));
+    private List<String> welcomeFiles = Lists.newArrayList("index.html");
     private boolean allowDirectoryListing = true;
     private String context = "/static";
     private List<String> resourcePaths = new ArrayList<>();
+    private List<String> classpathResources = new ArrayList<>();
 
     public Resource(File rootDir) {
         this.rootDir = rootDir;
     }
 
     public Resource addResourcePath(String path) {
+        // wtf
         resourcePaths.add(path);
+        return this;
+    }
+
+    public Resource addClasspathResource(String classpathResource) {
+        // this is dumb
+        classpathResources.add(classpathResource);
         return this;
     }
 
@@ -66,9 +74,11 @@ public class Resource {
         ResourceHandler handler = new ResourceHandler();
 
         String resourceBase = null;
+        org.eclipse.jetty.util.resource.Resource baseResource = null;
 
         for (String path : resourcePaths) {
             File dir = new File(rootDir, path);
+            // seriously?
             if (dir.isDirectory() && dir.list().length > 0) {
                 resourceBase = dir.getAbsolutePath();
                 break;
@@ -76,11 +86,27 @@ public class Resource {
         }
 
         if (resourceBase == null) {
-            throw new IllegalStateException("Could not find resourceBase for context " + this.context);
+            for (String classpathResource : classpathResources) {
+                baseResource = org.eclipse.jetty.util.resource.Resource.newClassPathResource(classpathResource);
+                // this sucks
+                if (baseResource != null && baseResource.exists()) {
+                    break;
+                }
+            }
         }
 
-        log.info("Assigning " + resourceBase + " to context " + this.context);
-        handler.setResourceBase(resourceBase);
+        if (resourceBase == null && baseResource == null) {
+            throw new IllegalStateException("Could not find resourceBase or baseResource for context " + this.context);
+        }
+
+        // the things I do for backwards compatibility
+        if (resourceBase != null) {
+            log.info("Assigning " + resourceBase + " to context " + this.context);
+            handler.setResourceBase(resourceBase);
+        } else { // baseResource != null
+            log.info("Assigning " + baseResource.getName() + " to context " + this.context);
+            handler.setBaseResource(baseResource);
+        }
         handler.setWelcomeFiles(welcomeFiles.toArray(new String[welcomeFiles.size()]));
         handler.setDirectoriesListed(allowDirectoryListing);
         handler.setCacheControl("max-age=21600"); //6hrs
