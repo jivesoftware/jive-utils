@@ -63,7 +63,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
     private static final int JSON_POST_LOG_LENGTH_LIMIT = 2048;
 
     public ApacheHttpClient31BackedHttpClient(org.apache.commons.httpclient.HttpClient client,
-            Map<String, String> headersForEveryRequest) {
+        Map<String, String> headersForEveryRequest) {
         this.client = client;
         this.headersForEveryRequest = headersForEveryRequest;
     }
@@ -201,8 +201,8 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
                 return execute(method);
             }
         } catch (Exception e) {
-            String trimmedMethodBody = (jsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT) ?
-                jsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : jsonBody;
+            String trimmedMethodBody = (jsonBody.length() > JSON_POST_LOG_LENGTH_LIMIT)
+                ? jsonBody.substring(0, JSON_POST_LOG_LENGTH_LIMIT) : jsonBody;
             throw new HttpClientException("Error executing " + method.getName() + " request to: "
                 + client.getHostConfiguration().getHostURL() + " path: " + method.getPath() + " JSON body: " + trimmedMethodBody, e);
         }
@@ -218,23 +218,23 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
                 return execute(method);
             }
         } catch (Exception e) {
-            String trimmedMethodBody = (putBytes.length > JSON_POST_LOG_LENGTH_LIMIT) ?
-                    new String(putBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(putBytes);
+            String trimmedMethodBody = (putBytes.length > JSON_POST_LOG_LENGTH_LIMIT)
+                ? new String(putBytes, 0, JSON_POST_LOG_LENGTH_LIMIT) : new String(putBytes);
             throw new HttpClientException("Error executing " + method.getName() + " request to:"
-                    + client.getHostConfiguration().getHostURL() + " path: " + method.getPath() + " byte body: " + trimmedMethodBody, e);
+                + client.getHostConfiguration().getHostURL() + " path: " + method.getPath() + " byte body: " + trimmedMethodBody, e);
         }
     }
 
     @Override
     public String toString() {
         return "ApacheHttpClient31BackedHttpClient{"
-                + "client=" + client
-                + ", headersForEveryRequest=" + headersForEveryRequest
-                + ", consumerKey=" + consumerKey
-                + ", consumerSecret=" + consumerSecret
-                + ", isOauthEnabled=" + isOauthEnabled
-                + ", isSSLEnabled=" + isSSLEnabled
-                + '}';
+            + "client=" + client
+            + ", headersForEveryRequest=" + headersForEveryRequest
+            + ", consumerKey=" + consumerKey
+            + ", consumerSecret=" + consumerSecret
+            + ", isOauthEnabled=" + isOauthEnabled
+            + ", isSSLEnabled=" + isSSLEnabled
+            + '}';
     }
 
     private HttpResponse executeMethod(HttpMethodBase method, Map<String, String> headers, int timeoutMillis) throws HttpClientException {
@@ -295,9 +295,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
         byte[] responseBody;
         StatusLine statusLine = null;
-        if (LOG.isInfoEnabled()) {
-            LOG.startTimer(TIMER_NAME);
-        }
+        LOG.startTimer(TIMER_NAME);
         try {
 
             client.executeMethod(method);
@@ -315,24 +313,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
         } finally {
             method.releaseConnection();
-            if (LOG.isInfoEnabled()) {
-                long elapsedTime = LOG.stopTimer(TIMER_NAME);
-                StringBuilder httpInfo = new StringBuilder();
-                boolean logInfo = false;
-                if (statusLine != null) {
-                    logInfo = (statusLine.getStatusCode() < HttpStatus.SC_MULTIPLE_CHOICES);
-                    httpInfo.append("Outbound ").append(statusLine.getHttpVersion()).append(" Status ").append(statusLine.getStatusCode());
-                } else {
-                    httpInfo.append("Exception sending request");
-                }
-                httpInfo.append(" in ").append(elapsedTime).append(" ms ").append(method.getName()).append(" ")
-                        .append(safeHostString(client.getHostConfiguration())).append(method.getURI());
-                if (logInfo) {
-                    LOG.info(httpInfo.toString());
-                } else {
-                    LOG.error(httpInfo.toString());
-                }
-            }
+            LOG.stopTimer(TIMER_NAME);
         }
     }
 
@@ -369,10 +350,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
         applyHeadersCommonToAllRequests(method);
 
-        StatusLine statusLine = null;
-        if (LOG.isInfoEnabled()) {
-            LOG.startTimer(TIMER_NAME);
-        }
+        LOG.startTimer(TIMER_NAME);
         try {
             int status = client.executeMethod(method);
 
@@ -382,25 +360,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
         } catch (Exception e) {
             throw new IOException("Failed to get stream", e);
         } finally {
-
-            if (LOG.isInfoEnabled()) {
-                long elapsedTime = LOG.stopTimer(TIMER_NAME);
-                StringBuilder httpInfo = new StringBuilder();
-                boolean logInfo = false;
-                if (statusLine != null) {
-                    logInfo = (statusLine.getStatusCode() < HttpStatus.SC_MULTIPLE_CHOICES);
-                    httpInfo.append("Outbound ").append(statusLine.getHttpVersion()).append(" Status ").append(statusLine.getStatusCode());
-                } else {
-                    httpInfo.append("Exception sending request");
-                }
-                httpInfo.append(" in ").append(elapsedTime).append(" ms ").append(method.getName()).append(" ")
-                        .append(safeHostString(client.getHostConfiguration())).append(method.getURI());
-                if (logInfo) {
-                    LOG.info(httpInfo.toString());
-                } else {
-                    LOG.error(httpInfo.toString());
-                }
-            }
+            LOG.stopTimer(TIMER_NAME);
         }
     }
 
@@ -412,7 +372,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
                 if (!StringUtils.isEmpty(responseBodyAsString)) {
                     responseBodyAsString = new String(responseBodyAsString.getBytes(), "UTF-8");
                     throw new HttpClientException(
-                            "Bad status : " + httpMethod.getStatusText() + ":\n" + responseBodyAsString);
+                        "Bad status : " + httpMethod.getStatusText() + ":\n" + responseBodyAsString);
                 } else {
                     throw new HttpClientException("Bad status : " + httpMethod.getStatusLine());
                 }
@@ -428,13 +388,13 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
 
             URI uri = method.getURI();
             URI newUri = new URI(
-                    (isSSLEnabled) ? "https" : "http",
-                    uri.getUserinfo(),
-                    hostConfiguration.getHost(),
-                    hostConfiguration.getPort(),
-                    uri.getPath(),
-                    uri.getQuery(),
-                    uri.getFragment());
+                (isSSLEnabled) ? "https" : "http",
+                uri.getUserinfo(),
+                hostConfiguration.getHost(),
+                hostConfiguration.getPort(),
+                uri.getPath(),
+                uri.getQuery(),
+                uri.getFragment());
 
             method.setURI(newUri);
 
@@ -515,7 +475,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
         String contentType = getContentType(method);
 
         HttpStreamResponse streamResponse = new HttpStreamResponse(statusLine.getStatusCode(), statusLine.getReasonPhrase(), method.getResponseBodyAsStream(),
-                filename, contentType, length);
+            filename, contentType, length);
         return streamResponse;
     }
 
@@ -540,12 +500,12 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
         ContentDisposition contentDisposition;
         Header[] contentDispositionHeader = method.getResponseHeaders("Content-Disposition");
         if (contentDispositionHeader != null && contentDispositionHeader.length == 1 && contentDispositionHeader[0] != null
-                && contentDispositionHeader[0].getValue() != null) {
+            && contentDispositionHeader[0].getValue() != null) {
             try {
                 contentDisposition = new ContentDisposition(contentDispositionHeader[0].getValue());
                 filename = contentDisposition.getFileName();
             } catch (java.text.ParseException e) {
-                LOG.info("cant parse content disposition", e);
+                LOG.warn("cant parse content disposition", e);
             }
         }
         return filename;
@@ -562,7 +522,7 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
                 filename = baseName + "." + extension;
             }
         } catch (URIException e) {
-            LOG.info("cant parse url for getting filename", e);
+            LOG.warn("cant parse url for getting filename", e);
         }
         return filename;
     }
@@ -571,12 +531,12 @@ class ApacheHttpClient31BackedHttpClient implements HttpClient {
         long size = -1;
         Header[] contentLengthHeader = method.getResponseHeaders("Content-Length");
         if (contentLengthHeader != null && contentLengthHeader.length == 1 && contentLengthHeader[0] != null
-                && contentLengthHeader[0].getValue() != null) {
+            && contentLengthHeader[0].getValue() != null) {
             try {
                 String contentLength = contentLengthHeader[0].getValue();
                 size = Long.parseLong(contentLength);
             } catch (NumberFormatException e) {
-                LOG.info("cant parse content Content-Length", e);
+                LOG.warn("cant parse content Content-Length", e);
             }
         }
         return size;
