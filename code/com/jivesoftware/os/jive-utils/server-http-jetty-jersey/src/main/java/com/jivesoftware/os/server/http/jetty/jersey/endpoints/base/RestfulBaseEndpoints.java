@@ -389,7 +389,7 @@ public class RestfulBaseEndpoints {
             if (!idump.threads.isEmpty()) {
                 for (int j = i + 1; j < threadDumps.size(); j++) {
                     ThreadDump jdump = threadDumps.get(j);
-                    if (idump.trace[0].equals(jdump.trace[0])) {
+                    if (idump.trace.length > 0 && jdump.trace.length > 0 && idump.trace[0].equals(jdump.trace[0])) {
                         idump.threads.addAll(jdump.threads);
                         jdump.threads.clear();
                     }
