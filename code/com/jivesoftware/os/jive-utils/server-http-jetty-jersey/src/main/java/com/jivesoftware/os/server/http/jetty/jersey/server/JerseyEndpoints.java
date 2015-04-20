@@ -19,6 +19,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
+import com.jivesoftware.os.mlogger.core.MetricLogger;
+import com.jivesoftware.os.mlogger.core.MetricLoggerFactory;
 import com.jivesoftware.os.server.http.jetty.jersey.server.binding.Injectable;
 import com.jivesoftware.os.server.http.jetty.jersey.server.binding.InjectableBinder;
 import com.jivesoftware.os.server.http.jetty.jersey.server.filter.NewRelicRequestFilter;
@@ -43,6 +45,8 @@ import org.glassfish.jersey.servlet.ServletContainer;
  *
  */
 public class JerseyEndpoints implements HasServletContextHandler {
+
+    private static final MetricLogger LOG = MetricLoggerFactory.getLogger();
 
     private final Set<Class<?>> allClasses = new HashSet<>();
     private final Set<Class<?>> allInjectedClasses = new HashSet<>();
@@ -83,10 +87,11 @@ public class JerseyEndpoints implements HasServletContextHandler {
     public JerseyEndpoints addInjectable(Injectable<?> injectable) {
         Class<?> injectableClass = injectable.getClazz();
         if (allInjectedClasses.contains(injectableClass)) {
-            throw new IllegalStateException("You can only inject a single instance for any given class. You have already injected " + injectableClass);
+            LOG.warn("You should only inject a single instance for any given class. You have already injected class {}", injectableClass);
+        } else {
+            allInjectedClasses.add(injectableClass);
+            allInjectables.add(injectable);
         }
-        allInjectedClasses.add(injectableClass);
-        allInjectables.add(injectable);
 
         return this;
     }

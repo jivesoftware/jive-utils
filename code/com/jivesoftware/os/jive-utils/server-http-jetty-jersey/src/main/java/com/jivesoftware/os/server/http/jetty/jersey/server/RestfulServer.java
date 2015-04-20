@@ -80,6 +80,7 @@ public class RestfulServer implements ServiceHandle {
         Resource newResource = Resource.newResource(this.getClass().getResource(path + "/" + dir).toURI());
         ResourceHandler resourceHandler = new ResourceHandler();
         resourceHandler.setBaseResource(newResource);
+        resourceHandler.setCacheControl("public, max-age=31536000");
         ContextHandler ctx = new ContextHandler("/" + dir);
         ctx.setHandler(resourceHandler);
         handlers.addHandler(ctx);
