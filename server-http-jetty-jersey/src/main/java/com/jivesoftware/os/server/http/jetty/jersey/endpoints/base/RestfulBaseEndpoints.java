@@ -66,6 +66,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.eclipse.jetty.server.Server;
 import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
+import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
@@ -667,7 +668,7 @@ public class RestfulBaseEndpoints {
             }
             Reflections reflections = new Reflections(new ConfigurationBuilder()
                 .setUrls(ClasspathHelper.forPackage("com.jivesoftware"))
-                .setScanners(new MethodAnnotationsScanner(), new TypeAnnotationsScanner()));
+                .setScanners(new MethodAnnotationsScanner(), new TypeAnnotationsScanner(), new SubTypesScanner()));
             Set<Class<?>> result = reflections.getTypesAnnotatedWith(Path.class);
             Set<Method> methods = reflections.getMethodsAnnotatedWith(Path.class);
             for (Method method : methods) {
