@@ -4,40 +4,40 @@
     <parent>
         <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
         <artifactId>global-repo-management</artifactId>
-        <version>0.87</version>
+        <version>0.88</version>
         <relativePath>../global-repo-management/pom.xml</relativePath>
     </parent>
     <artifactId>global-version-management</artifactId>
     <packaging>pom</packaging>
     <properties>
-        <mlogger-version>0.8</mlogger-version>
+        <mlogger-version>0.9</mlogger-version>
     </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>health</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>ordered-id</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>id</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>jaxrs-util</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>base</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.mlogger</groupId>
@@ -47,22 +47,22 @@
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>http-client</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>http-client-rest</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>permit</artifactId>
-                <version>0.51-SNAPSHOT</version>
+                <version>0.88-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.jivesoftware.os.jive.utils</groupId>
                 <artifactId>merlin-config</artifactId>
-                <version>0.87</version>
+                <version>0.88</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -128,7 +128,7 @@
             <dependency>
                 <groupId>org.reflections</groupId>
                 <artifactId>reflections</artifactId>
-                <version>0.9.8</version>
+                <version>0.9.9</version>
             </dependency>
             <dependency>
                 <groupId>javax.inject</groupId>
