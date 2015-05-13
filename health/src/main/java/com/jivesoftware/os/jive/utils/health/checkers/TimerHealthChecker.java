@@ -39,7 +39,7 @@ public class TimerHealthChecker implements HealthChecker<Timer> {
             public HealthCheckResponse call() throws Exception {
                 double health = 1.0f;
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.getMeanMax(), 0, timer.getMean()));
-                health = Math.min(health, HealthCheckUtil.zeroToOne(config.getVarianceMax(), 0, timer.getVariance()));
+                health = Math.min(health, HealthCheckUtil.zeroToOne(config.getVarianceMax(), 0, Math.abs(timer.getVariance())));
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get50ThPecentileMax(), 0, timer.get50ThPercentile()));
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get75ThPecentileMax(), 0, timer.get75ThPercentile()));
                 health = Math.min(health, HealthCheckUtil.zeroToOne(config.get90ThPecentileMax(), 0, timer.get90ThPercentile()));
