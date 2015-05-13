@@ -39,24 +39,30 @@ public class RestfulServer implements ServiceHandle {
     private static final int MIN_THREADS = 8;
     private static final int IDLE_TIMEOUT = 60000;
 
-    private static Server makeServer(final int maxNumberOfThreads, final int maxQueuedRequests) {
-        final int maxThreads = maxNumberOfThreads + ACCEPTORS + SELECTORS;
-        final BlockingArrayQueue<Runnable> queue = new BlockingArrayQueue<>(MIN_THREADS, MIN_THREADS, maxQueuedRequests);
-        return new Server(new QueuedThreadPool(maxThreads, MIN_THREADS, IDLE_TIMEOUT, queue));
-    }
-
     private final Server server;
+    private final QueuedThreadPool queuedThreadPool;
     private final String applicationName;
     private final ContextHandlerCollection handlers;
 
     public RestfulServer(int port, String applicationName, int maxNumberOfThreads, int maxQueuedRequests) {
         this.applicationName = applicationName;
-        this.server = makeServer(maxNumberOfThreads, maxQueuedRequests);
+        int maxThreads = maxNumberOfThreads + ACCEPTORS + SELECTORS;
+        BlockingArrayQueue<Runnable> queue = new BlockingArrayQueue<>(MIN_THREADS, MIN_THREADS, maxQueuedRequests);
+        this.queuedThreadPool = new QueuedThreadPool(maxThreads, MIN_THREADS, IDLE_TIMEOUT, queue);
+        this.server = new Server(queuedThreadPool);
         this.handlers = new ContextHandlerCollection();
 
         server.addEventListener(new MBeanContainer(ManagementFactory.getPlatformMBeanServer()));
         server.setHandler(handlers);
         server.addConnector(makeConnector(port));
+    }
+
+    public int getIdleThreads() {
+        return queuedThreadPool.getIdleThreads();
+    }
+
+    public boolean isLowOnThreads() {
+        return queuedThreadPool.isLowOnThreads();
     }
 
     private Connector makeConnector(int port) {

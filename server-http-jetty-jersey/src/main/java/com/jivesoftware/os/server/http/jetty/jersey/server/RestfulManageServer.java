@@ -36,9 +36,9 @@ public class RestfulManageServer implements ServiceHandle {
     private final JerseyEndpoints jerseyEndpoints;
 
     public RestfulManageServer(int port,
-            String applicationName,
-            int maxNumberOfThreads,
-            int maxQueuedRequests) {
+        String applicationName,
+        int maxNumberOfThreads,
+        int maxQueuedRequests) {
         server = new RestfulServer(port, applicationName, maxNumberOfThreads, maxQueuedRequests);
 
         jerseyEndpoints = new JerseyEndpoints()
@@ -50,6 +50,14 @@ public class RestfulManageServer implements ServiceHandle {
             .addEndpoint(KillSwitchsRestEndpoints.class).addInjectable(killSwitchService)
             .addInjectable(ResfulServiceName.class, new ResfulServiceName(applicationName, port));
 
+    }
+
+    public int getIdleThreads() {
+        return server.getIdleThreads();
+    }
+
+    public boolean isLowOnThreads() {
+        return server.isLowOnThreads();
     }
 
     public void addEndpoint(Class clazz) {

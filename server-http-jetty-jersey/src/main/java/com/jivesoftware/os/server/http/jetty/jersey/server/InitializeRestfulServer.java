@@ -15,7 +15,6 @@
  */
 package com.jivesoftware.os.server.http.jetty.jersey.server;
 
-import com.jivesoftware.os.jive.utils.base.service.ServiceHandle;
 import com.jivesoftware.os.server.http.jetty.jersey.server.util.Resource;
 
 public class InitializeRestfulServer {
@@ -51,7 +50,7 @@ public class InitializeRestfulServer {
         return this;
     }
 
-    public ServiceHandle build() {
+    public RestfulServer build() {
         return server;
     }
 }
