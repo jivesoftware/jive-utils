@@ -15,6 +15,7 @@
  */
 package com.jivesoftware.os.jive.utils.jaxrs.util;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -83,6 +84,19 @@ public class ResponseHelper {
         return Response.ok().entity(jsonString).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
 
+    /** Turns a jsonable object into a jetty web service response. */
+    public Response jsonResponse(Object jsonableObject, Class<?> parametrized, Class<?>[] parameterClasses) {
+        String jsonString;
+        try {
+            JavaType resultType = jsonMapper.getTypeFactory().constructParametricType(parametrized, parameterClasses);
+            jsonString = jsonMapper.writerWithType(resultType).writeValueAsString(jsonableObject);
+        } catch (Exception x) {
+            log.error("failed to marshall object to jsonString. object=" + jsonableObject, x);
+            return errorResponse("server failed to marshall result object to jsonString.", x);
+        }
+        return Response.ok().entity(jsonString).type(MediaType.APPLICATION_JSON_TYPE).build();
+    }
+
     public Response jsonpResponse(String callbackName, Object jsonableObject) {
         String jsonString;
         try {
@@ -122,7 +136,6 @@ public class ResponseHelper {
     }
 
     /**
-     *
      * @param message
      * @param e
      * @return
