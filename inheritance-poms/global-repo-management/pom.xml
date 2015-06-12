@@ -7,12 +7,6 @@
     <packaging>pom</packaging>
 
     <inceptionYear>2013</inceptionYear>
-    <organization>
-        <name>Jive Software</name>
-        <url>https://developers.jivesoftware.com</url>
-
-    </organization>
-    <url>https://developers.jivesoftware.com</url>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -21,23 +15,19 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:ssh://github.com/jivesoftware/jive-utils.git</connection>
-        <developerConnection>scm:git:git://git@github.com/jivesoftware/jive-utils.git</developerConnection>
         <url>https://github.com/jivesoftware/jive-utils</url>
-        <tag>HEAD</tag>
+        <connection>scm:git:git://github.com/jivesoftware/jive-utils.git</connection>
+        <developerConnection>scm:git:git@github.com:jivesoftware/jive-utils.git</developerConnection>
     </scm>
-    <repositories>
-        <repository>
-            <id>cloudera</id>
-            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-        </repository>
-    </repositories>
     <distributionManagement>
         <repository>
             <id>modified-thirdparty</id>
             <name>Jive Internal Repository</name>
             <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
         </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <url>http://nexus-int-qa.eng.jiveland.com/content/repositories/snapshots</url>
+        </snapshotRepository>
     </distributionManagement>
-
 </project>
