@@ -68,7 +68,7 @@
             <property name="max" value="160"/>
         </module>
         <module name="MethodLength">
-            <property name="max" value="200"/>
+            <property name="max" value="1000"/>
             <property name="countEmpty" value="false"/>
         </module>
         <module name="MethodParamPad"/>
@@ -101,7 +101,7 @@
         <module name="PackageName"/>
         <module name="ParameterNumber">
             <property name="id" value="paramNum"/>
-            <property name="max" value="20"/>
+            <property name="max" value="32"/>
         </module>
         <module name="ParenPad"/>
         <module name="RedundantImport"/>
