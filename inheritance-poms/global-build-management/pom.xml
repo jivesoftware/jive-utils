@@ -25,7 +25,7 @@
                 <artifactId>guava</artifactId>
                 <version>14.0</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
@@ -41,7 +41,7 @@
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson-version}</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-io</artifactId>
@@ -72,8 +72,8 @@
                 <artifactId>commons-compress</artifactId>
                 <version>1.2</version>
             </dependency>
-            
-            
+
+
             <dependency>
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
@@ -94,7 +94,7 @@
         </dependencies>
     </dependencyManagement>
 
-    
+
 
     <build>
         <!-- This section defines the plugin versions and default configurations/executions. -->
@@ -361,6 +361,89 @@
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile shared for releasing to any target server -->
+        <!-- To release to central, run: "mvn -Prelease,sign,central-release clean deploy" -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!--For packaging with the source code-->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>2.4</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!--For packaging with the javadoc-->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.2</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- Profile shared for signing artifacts -->
+        <profile>
+            <id>sign</id>
+            <build>
+                <plugins>
+                    <!--Required to upload to central repository-->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.5</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>central-release</id>
+            <build>
+                <plugins>
+                    <!--For uploading to the Maven Central Repository-->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.5</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <sslInsecure>true</sslInsecure>
+                            <sslAllowAll>true</sslAllowAll>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
