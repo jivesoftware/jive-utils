@@ -11,3 +11,6 @@ branches:
     - master
 
 script: mvn test
+
+after_success:
+  - mvn clean test jacoco:report coveralls:report
