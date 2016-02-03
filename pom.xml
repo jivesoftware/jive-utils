@@ -17,6 +17,7 @@
         <module>ordered-id</module>
         <module>shell-utils</module>
         <module>id</module>
+        <module>collections</module>
     </modules>
 
 </project>
