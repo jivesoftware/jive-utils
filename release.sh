@@ -61,7 +61,7 @@ echo "/-------------------------------------------------------"
 echo "| setting version to "${VERSION}
 echo "\-------------------------------------------------------"
 sleep 1
-mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION} -pl com.jivesoftware.os.jive-utils.inheritance.poms:global-repo-management
+mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION} -pl com.jivesoftware.os.jive.utils.inheritance.poms:global-repo-management
 git add -A
 git commit -m "release "${VERSION}
 git push origin ${ON_BRANCH}
