@@ -7,14 +7,18 @@ package com.jivesoftware.os.jive.utils.collections.lh;
 public class ConcurrentLHash<V> {
 
     //private final TLongObjectHashMap<V>[] maps;
+    private final long capacity;
+    private final long nilKey;
+    private final long skipKey;
+
     private final LHash<V>[] maps;
 
     @SuppressWarnings("unchecked")
     public ConcurrentLHash(long capacity, long nilKey, long skipKey, int concurrency) {
+        this.capacity = capacity;
+        this.nilKey = nilKey;
+        this.skipKey = skipKey;
         this.maps = new LHash[concurrency];
-        for (int i = 0; i < concurrency; i++) {
-            this.maps[i] = new LHash<>(new LHMapState<>(null, capacity, nilKey, skipKey));
-        }
     }
 
     public void put(long key, V value) {
@@ -25,7 +29,15 @@ public class ConcurrentLHash<V> {
     }
 
     private LHash<V> hmap(long key) {
-        return maps[Math.abs((Long.hashCode(key)) % maps.length)];
+        int index = Math.abs((Long.hashCode(key)) % maps.length);
+        if (maps[index] == null) {
+            synchronized (maps) {
+                if (maps[index] == null) {
+                    maps[index] = new LHash<>(new LHMapState<>(null, capacity, nilKey, skipKey));
+                }
+            }
+        }
+        return maps[index];
     }
 
     public V get(long key) {
