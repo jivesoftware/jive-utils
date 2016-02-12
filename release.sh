@@ -88,7 +88,7 @@ git checkout ${ON_BRANCH}
 echo "/-------------------------------------------------------"
 echo "| setting version to "${NEXT_VERSION}"-SNAPSHOT on branch "${ON_BRANCH}
 echo "\-------------------------------------------------------"
-mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${NEXT_VERSION}-SNAPSHOT -pl com.jivesoftware.os.jive-utils.inheritance.poms:global-repo-management
+mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${NEXT_VERSION}-SNAPSHOT -pl com.jivesoftware.os.jive.utils.inheritance.poms:global-repo-management
 git add -A
 git commit -m "begin "${NEXT_VERSION}"-SNAPSHOT"
 git push origin ${ON_BRANCH}
