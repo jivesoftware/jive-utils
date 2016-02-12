@@ -1,16 +1,20 @@
 package com.jivesoftware.os.jive.utils.collections.lh;
 
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.SoftReference;
+
 /**
  *
  * @author jonathan.colt
  */
-public class ConcurrentLHash<V> {
+public class SoftConcurrentLHash<V> {
 
     //private final TLongObjectHashMap<V>[] maps;
     private final LHash<V>[] maps;
+    private final ReferenceQueue<V> referenceQueue = new ReferenceQueue<>();
 
     @SuppressWarnings("unchecked")
-    public ConcurrentLHash(long capacity, long nilKey, long skipKey, int concurrency) {
+    public SoftConcurrentLHash(long capacity, long nilKey, long skipKey, int concurrency) {
         this.maps = new LHash[concurrency];
         for (int i = 0; i < concurrency; i++) {
             this.maps[i] = new LHash<>(new LHMapState<>(null, capacity, nilKey, skipKey));
@@ -19,6 +23,7 @@ public class ConcurrentLHash<V> {
 
     public void put(long key, V value) {
         LHash<V> hmap = hmap(key);
+        SoftReference<V> softValue = new SoftReference<>(value);
         synchronized (hmap) {
             hmap.put(key, value);
         }

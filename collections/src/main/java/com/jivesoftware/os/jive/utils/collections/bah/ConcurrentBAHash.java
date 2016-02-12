@@ -10,17 +10,17 @@ import java.util.function.Function;
  */
 public class ConcurrentBAHash<V> {
 
-
+    private final int capacity;
+    private final boolean hasValues;
     private final BAHasher hasher;
     private final BAHash<V>[] hmaps;
 
     @SuppressWarnings("unchecked")
     public ConcurrentBAHash(int capacity, boolean hasValues, int concurrency) {
+        this.capacity = capacity;
+        this.hasValues = hasValues;
         this.hasher = BAHasher.SINGLETON;
         this.hmaps = new BAHash[concurrency];
-        for (int i = 0; i < concurrency; i++) {
-            this.hmaps[i] = new BAHash<>(new BAHMapState<>(capacity, hasValues, BAHMapState.NIL), hasher, BAHEqualer.SINGLETON);
-        }
     }
 
     public void put(byte[] key, V value) {
@@ -36,7 +36,15 @@ public class ConcurrentBAHash<V> {
     }
 
     private BAHash<V> hmap(int hashCode) {
-        return hmaps[Math.abs((hashCode) % hmaps.length)];
+        int index = Math.abs((hashCode) % hmaps.length);
+        if (hmaps[index] == null) {
+            synchronized (hmaps) {
+                if (hmaps[index] == null) {
+                    hmaps[index] = new BAHash<>(new BAHMapState<>(capacity, hasValues, BAHMapState.NIL), hasher, BAHEqualer.SINGLETON);
+                }
+            }
+        }
+        return hmaps[index];
     }
 
     public V computeIfAbsent(byte[] key, Function<byte[], ? extends V> mappingFunction) {
