@@ -6,7 +6,6 @@ package com.jivesoftware.os.jive.utils.collections.lh;
  */
 public class ConcurrentLHash<V> {
 
-    //private final TLongObjectHashMap<V>[] maps;
     private final long capacity;
     private final long nilKey;
     private final long skipKey;
@@ -22,18 +21,18 @@ public class ConcurrentLHash<V> {
     }
 
     public void put(long key, V value) {
-        LHash<V> hmap = hmap(key);
+        LHash<V> hmap = hmap(key, true);
         synchronized (hmap) {
             hmap.put(key, value);
         }
     }
 
-    private LHash<V> hmap(long key) {
+    private LHash<V> hmap(long key, boolean create) {
         int index = Math.abs((Long.hashCode(key)) % maps.length);
-        if (maps[index] == null) {
+        if (maps[index] == null && create) {
             synchronized (maps) {
                 if (maps[index] == null) {
-                    maps[index] = new LHash<>(new LHMapState<>(null, capacity, nilKey, skipKey));
+                    maps[index] = new LHash<>(new LHMapState<>(capacity, nilKey, skipKey));
                 }
             }
         }
@@ -41,23 +40,31 @@ public class ConcurrentLHash<V> {
     }
 
     public V get(long key) {
-        LHash<V> hmap = hmap(key);
-        synchronized (hmap) {
-            return hmap.get(key);
+        LHash<V> hmap = hmap(key, false);
+        if (hmap != null) {
+            synchronized (hmap) {
+                return hmap.get(key);
+            }
         }
+        return null;
     }
 
     public void remove(long key) {
-        LHash<V> hmap = hmap(key);
-        synchronized (hmap) {
-            hmap.remove(key);
+        LHash<V> hmap = hmap(key, false);
+        if (hmap != null) {
+            synchronized (hmap) {
+                hmap.remove(key);
+            }
         }
     }
 
     public void clear() {
         for (LHash<V> hmap : maps) {
-            synchronized (hmap) {
-                hmap.clear();
+            if (hmap != null) {
+
+                synchronized (hmap) {
+                    hmap.clear();
+                }
             }
         }
     }
@@ -65,7 +72,9 @@ public class ConcurrentLHash<V> {
     public int size() {
         int size = 0;
         for (LHash<V> hmap : maps) {
-            size += hmap.size();
+            if (hmap != null) {
+                size += hmap.size();
+            }
         }
         return size;
     }

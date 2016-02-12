@@ -10,7 +10,6 @@ public class LHMapState<V> {
 
     public static final byte[] NIL = new byte[0];
 
-    private final LHMapStateManager<V> manager;
     private final long capacity;
     private final long nilKey;
     private final long skipKey;
@@ -18,8 +17,7 @@ public class LHMapState<V> {
     private final Object[] values;
     private int count;
 
-    public LHMapState(LHMapStateManager<V> manager, long capacity, long nilKey, long skipKey) {
-        this.manager = manager;
+    public LHMapState(long capacity, long nilKey, long skipKey) {
         this.count = 0;
         this.capacity = capacity;
         this.nilKey = nilKey;
@@ -31,13 +29,7 @@ public class LHMapState<V> {
     }
 
     public LHMapState<V> allocate(long capacity) {
-        LHMapState<V> state = new LHMapState<>(manager, capacity, nilKey, skipKey);
-        manager.allocated(state);
-        return state;
-    }
-
-    public void deallocate(LHMapState<V> state) {
-        manager.deallocated(state);
+        return new LHMapState<>(capacity, nilKey, skipKey);
     }
 
     public long skipped() {
