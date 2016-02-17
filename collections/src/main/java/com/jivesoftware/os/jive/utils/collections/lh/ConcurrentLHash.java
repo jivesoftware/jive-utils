@@ -79,4 +79,15 @@ public class ConcurrentLHash<V> {
         return size;
     }
 
+    public boolean stream(LHashValueStream<V> lHashValueStream) throws Exception {
+        for (LHash<V> hmap : maps) {
+            if (hmap != null) {
+                if (!hmap.stream(lHashValueStream)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 }
