@@ -175,4 +175,33 @@ public class LHash<V> {
         return keyShuffle % state.capacity();
     }
 
+    public boolean stream(LHashValueStream<V> stream) throws Exception {
+        LHMapState<V> s = state;
+        long c = s.capacity();
+        if (c <= 0) {
+            return true;
+        }
+        long nil = s.nil();
+        long skipped = s.skipped();
+        long i = s.first();
+        while (i != -1) {
+
+            long key;
+            V value = null;
+            synchronized (this) {
+                key = s.key(i);
+                if (key != nil && key != skipped) {
+                    value = s.value(i);
+                }
+            }
+            if (key != nil && key != skipped) {
+                if (!stream.keyValue(key, value)) {
+                    return false;
+                }
+            }
+            i = s.next(i);
+        }
+        return true;
+    }
+
 }
