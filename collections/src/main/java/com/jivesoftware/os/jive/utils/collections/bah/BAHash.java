@@ -112,9 +112,9 @@ public class BAHash<V> implements BAH<V> {
             }
 
             if (equaler.equals(storedKey, key, keyOffset, keyLength)) {
-                long next = (i + 1) % k;
-
                 s.remove(i, skipped, null);
+
+                long next = (i + 1) % k;
                 if (s.key(next) == null) {
                     for (long z = i, y = 0; y < capacity; z = (z + capacity - 1) % k, y++) {
                         if (s.key(z) != skipped) {

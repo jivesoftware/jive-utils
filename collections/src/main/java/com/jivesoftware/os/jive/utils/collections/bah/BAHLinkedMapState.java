@@ -35,7 +35,7 @@ public class BAHLinkedMapState<V> implements BAHState<V> {
         this.nextKeyIndex = new long[(int) capacity];
         Arrays.fill(nextKeyIndex, -1);
         this.lastKeyIndex = -1;
-        this.values = (hasValues) ? new Object[(int) capacity] : keys;
+        this.values = (hasValues) ? new Object[(int) capacity] : null;
     }
 
     @Override
@@ -61,7 +61,9 @@ public class BAHLinkedMapState<V> implements BAHState<V> {
     @Override
     public void update(long i, byte[] key, V value) {
         keys[(int) i] = key;
-        values[(int) i] = value;
+        if (hasValues) {
+            values[(int) i] = value;
+        }
     }
 
     @Override
@@ -77,14 +79,18 @@ public class BAHLinkedMapState<V> implements BAHState<V> {
         lastKeyIndex = i;
 
         keys[(int) i] = key;
-        values[(int) i] = value;
+        if (hasValues) {
+            values[(int) i] = value;
+        }
         count++;
     }
 
     @Override
     public void clear(long i) {
         keys[(int) i] = null;
-        values[(int) i] = null;
+        if (hasValues) {
+            values[(int) i] = null;
+        }
     }
 
     @Override
@@ -111,7 +117,9 @@ public class BAHLinkedMapState<V> implements BAHState<V> {
         priorKeyIndex[(int) i] = -1;
 
         keys[(int) i] = key;
-        values[(int) i] = value;
+        if (hasValues) {
+            values[(int) i] = value;
+        }
         count--;
     }
 
@@ -132,7 +140,7 @@ public class BAHLinkedMapState<V> implements BAHState<V> {
 
     @Override
     public V value(long i) {
-        return (V) values[(int) i];
+        return (V) (hasValues ? values[(int) i] : keys[(int) i]);
     }
 
 }
