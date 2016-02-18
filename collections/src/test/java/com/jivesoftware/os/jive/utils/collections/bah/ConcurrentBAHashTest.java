@@ -5,6 +5,7 @@ import java.util.Set;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 /**
  *
@@ -28,5 +29,31 @@ public class ConcurrentBAHashTest {
         });
 
         assertEquals(actual, expected);
+    }
+
+    @Test
+    public void testRemove() throws Exception {
+        ConcurrentBAHash<byte[]> hash = new ConcurrentBAHash<>(3, false, 4);
+        int records = 1_000;
+        for (int i = 0; i < records; i++) {
+            String k = String.valueOf(i);
+            byte[] bytes = k.getBytes();
+            hash.put(bytes, bytes);
+        }
+
+        assertEquals(hash.size(), records);
+
+        hash.stream((key, value) -> {
+            hash.remove(key);
+            return true;
+        });
+
+        assertEquals(hash.size(), 0);
+        for (int i = 0; i < records; i++) {
+            String k = String.valueOf(i);
+            byte[] bytes = k.getBytes();
+            byte[] got = hash.get(bytes, 0, bytes.length);
+            assertNull(got);
+        }
     }
 }
