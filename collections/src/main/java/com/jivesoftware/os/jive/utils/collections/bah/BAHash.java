@@ -45,6 +45,36 @@ public class BAHash<V> implements BAH<V> {
         return keyShuffle % state.capacity();
     }
 
+    V firstValue() {
+        BAHState<V> s = state;
+        byte[] skipped = s.skipped();
+        long i = s.first();
+        if (i != -1) {
+            byte[] key;
+            key = s.key(i);
+            if (key != null && key != skipped) {
+                return s.value(i);
+            }
+        }
+        return null;
+    }
+
+    V removeFirstValue() {
+        BAHState<V> s = state;
+        byte[] skipped = s.skipped();
+        long i = s.first();
+        if (i != -1) {
+            byte[] key;
+            key = s.key(i);
+            if (key != null && key != skipped) {
+                V v = s.value(i);
+                remove(key, 0, key.length);
+                return v;
+            }
+        }
+        return null;
+    }
+
     @Override
     public V get(byte[] key, int keyOffset, int keyLength) {
         return get(hasher.hashCode(key, keyOffset, keyLength), key, keyOffset, keyLength);
