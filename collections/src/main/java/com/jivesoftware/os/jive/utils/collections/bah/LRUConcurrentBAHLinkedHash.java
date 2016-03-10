@@ -2,6 +2,7 @@ package com.jivesoftware.os.jive.utils.collections.bah;
 
 import com.jivesoftware.os.jive.utils.collections.KeyValueStream;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -21,7 +22,7 @@ public class LRUConcurrentBAHLinkedHash<V> {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private volatile Thread cleaner;
     private final AtomicLong updates = new AtomicLong();
-    private final AtomicLong syntheticTime = new  AtomicLong(0);
+    private final AtomicLong syntheticTime = new AtomicLong(0);
 
     /**
      *
@@ -87,6 +88,24 @@ public class LRUConcurrentBAHLinkedHash<V> {
         }
     }
 
+    private static final FirstValueComparator FIRST_VALUE_COMPARATOR = new FirstValueComparator();
+
+    private static final class FirstValueComparator implements Comparator<FirstValue> {
+
+        @Override
+        public int compare(FirstValue o1, FirstValue o2) {
+            if (o1 == null && o2 == null) {
+                return -1;
+            } else if (o1 == null) {
+                return 1;
+            } else if (o2 == null) {
+                return -1;
+            } else {
+                return Long.compare(o1.timestamp, o2.timestamp);
+            }
+        }
+    }
+
     public void cleanup() {
         int count = 0;
         for (BAHash<LRUValue<V>> hmap : hmaps) {
@@ -121,15 +140,15 @@ public class LRUConcurrentBAHLinkedHash<V> {
                     }
                 }
                 while (removeCount > 0) {
-                    Arrays.sort(firstValues);
-                    if (firstValues[1] != null) {
+                    Arrays.sort(firstValues, FIRST_VALUE_COMPARATOR);
+                    if (firstValues[1] != null && firstValues[1].timestamp != Long.MAX_VALUE) {
                         while (firstValues[0].timestamp < firstValues[1].timestamp) {
                             firstValues[0].removeFirstValue();
                             removeCount--;
                         }
                     } else {
                         while (removeCount > 0) {
-                            if (hmaps[0].removeFirstValue() == null) {
+                            if (firstValues[0].hmap.removeFirstValue() == null) {
                                 return;
                             }
                             removeCount--;
@@ -151,7 +170,7 @@ public class LRUConcurrentBAHLinkedHash<V> {
         }
     }
 
-    private static class FirstValue<V> implements Comparable<FirstValue<V>> {
+    private static class FirstValue<V> {
 
         private long timestamp;
         private final BAHash<LRUValue<V>> hmap;
@@ -165,26 +184,11 @@ public class LRUConcurrentBAHLinkedHash<V> {
             synchronized (hmap) {
                 LRUValue<V> removed = hmap.removeFirstValue();
                 if (removed == null) {
-                    timestamp = -1;
+                    timestamp = Long.MAX_VALUE;
                 } else {
                     timestamp = removed.timestamp;
                 }
             }
-        }
-
-        @Override
-        public int compareTo(FirstValue<V> o) {
-            if (o == null) {
-                return 1;
-            }
-            int c = Long.compare(timestamp, o.timestamp);
-            if (c != 0) {
-                return c;
-            }
-            if (hmap == null || o.hmap == null) { // drive nulls to the bottom
-                return hmap == o.hmap ? 0 : 1;
-            }
-            return c;
         }
 
     }
