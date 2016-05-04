@@ -3,7 +3,6 @@ package com.jivesoftware.os.jive.utils.collections.bah;
 import com.jivesoftware.os.jive.utils.collections.KeyValueStream;
 
 /**
- *
  * @author jonathan.colt
  */
 public class BAHash<V> implements BAH<V> {
@@ -13,8 +12,9 @@ public class BAHash<V> implements BAH<V> {
     private volatile BAHState<V> state;
 
     /**
-     *
-     * @param capacity
+     * @param state
+     * @param hasher
+     * @param equaler
      */
     public BAHash(BAHState<V> state, BAHasher hasher, BAHEqualer equaler) {
         this.hasher = hasher;
@@ -28,7 +28,6 @@ public class BAHash<V> implements BAH<V> {
     }
 
     /**
-     *
      * @return
      */
     @Override
@@ -93,8 +92,8 @@ public class BAHash<V> implements BAH<V> {
         long capacity = s.capacity();
         long start = hash(s, hashCode);
         for (long i = start, j = 0, k = capacity; // stack vars for efficiency
-            j < k; // max search for key
-            i = (++i) % k, j++) { // wraps around table
+             j < k; // max search for key
+             i = (++i) % k, j++) { // wraps around table
 
             byte[] storedKey = s.key(i);
             if (storedKey == skipped) {
@@ -130,8 +129,8 @@ public class BAHash<V> implements BAH<V> {
         long capacity = s.capacity();
         long start = hash(s, hashCode);
         for (long i = start, j = 0, k = capacity; // stack vars for efficiency
-            j < k; // max search for key
-            i = (++i) % k, j++) {					// wraps around table
+             j < k; // max search for key
+             i = (++i) % k, j++) {                    // wraps around table
 
             byte[] storedKey = s.key(i);
             if (storedKey == skipped) {
@@ -159,13 +158,13 @@ public class BAHash<V> implements BAH<V> {
     }
 
     @Override
-    public void put(byte[] key, int keyOffset, int keyLength, V value) {
-        put(hasher.hashCode(key, keyOffset, keyLength), key, keyOffset, keyLength, value);
+    public void put(byte[] key, V value) {
+        put(hasher.hashCode(key, 0, key.length), key, value);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void put(long hashCode, byte[] key, int keyOffset, int keyLength, V value) {
+    public void put(long hashCode, byte[] key, V value) {
         BAHState<V> s = state;
         long capacity = s.capacity();
         if (s.size() * 2 >= capacity) {
@@ -174,16 +173,16 @@ public class BAHash<V> implements BAH<V> {
             state = to;
             s = to;
         }
-        internalPut(s, hashCode, key, keyOffset, keyLength, value);
+        internalPut(s, hashCode, key, value);
     }
 
-    private void internalPut(BAHState<V> s, long hashCode, byte[] key, int keyOffset, int keyLength, V value) {
+    private void internalPut(BAHState<V> s, long hashCode, byte[] key, V value) {
         long capacity = s.capacity();
         long start = hash(s, hashCode);
         byte[] skipped = s.skipped();
         for (long i = start, j = 0, k = capacity; // stack vars for efficiency
-            j < k; // max search for available slot
-            i = (++i) % k, j++) {
+             j < k; // max search for available slot
+             i = (++i) % k, j++) {
             // wraps around table
 
             byte[] storedKey = s.key(i);
@@ -195,7 +194,7 @@ public class BAHash<V> implements BAH<V> {
                 s.link(i, key, value);
                 return;
             }
-            if (equaler.equals(storedKey, key, keyOffset, keyLength)) {
+            if (equaler.equals(storedKey, key, 0, key.length)) {
                 s.update(i, key, value);
                 return;
             }
@@ -209,7 +208,7 @@ public class BAHash<V> implements BAH<V> {
             byte[] storedKey = from.key(i);
             if (storedKey != null && storedKey != skipped) {
                 long hash = hasher.hashCode(storedKey, 0, storedKey.length);
-                internalPut(to, hash, storedKey, 0, storedKey.length, from.value(i));
+                internalPut(to, hash, storedKey, from.value(i));
             }
             i = from.next(i);
         }

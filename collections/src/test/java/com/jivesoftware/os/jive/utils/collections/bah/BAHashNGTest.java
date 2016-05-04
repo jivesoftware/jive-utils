@@ -44,7 +44,7 @@ public class BAHashNGTest {
     private void internalTestPuts(BAHash<String> map) throws Exception {
         int count = 64;
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, 0, 1, String.valueOf(i));
+            map.put(new byte[]{i}, String.valueOf(i));
         }
 
         map.stream((byte[] key, String value) -> {
@@ -84,7 +84,7 @@ public class BAHashNGTest {
         }
 
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, 0, 1, String.valueOf(i));
+            map.put(new byte[]{i}, String.valueOf(i));
             validation.put(new ByteArrayKey(new byte[]{i}), String.valueOf(i));
         }
 
@@ -125,7 +125,7 @@ public class BAHashNGTest {
 
         // Add all back
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, 0, 1, String.valueOf(i));
+            map.put(new byte[]{i}, String.valueOf(i));
             validation.put(new ByteArrayKey(new byte[]{i}), String.valueOf(i));
         }
 
@@ -166,7 +166,7 @@ public class BAHashNGTest {
 
         // Add all back
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, 0, 1, String.valueOf(i));
+            map.put(new byte[]{i}, String.valueOf(i));
             validation.put(new ByteArrayKey(new byte[]{i}), String.valueOf(i));
         }
 
