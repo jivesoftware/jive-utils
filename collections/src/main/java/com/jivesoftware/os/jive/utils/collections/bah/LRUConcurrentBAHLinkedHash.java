@@ -43,16 +43,12 @@ public class LRUConcurrentBAHLinkedHash<V> {
     }
 
     public void put(byte[] key, V value) {
-        put(key, 0, key.length, value);
-    }
-
-    private void put(byte[] key, int keyOffset, int keyLength, V value) {
-        int hashCode = hasher.hashCode(key, keyOffset, keyLength);
+        int hashCode = hasher.hashCode(key, 0, key.length);
         BAHash<LRUValue<V>> lhmap = lhmap(hashCode, true);
         LRUValue<V> v = new LRUValue<>(value, syntheticTime.incrementAndGet());
         synchronized (lhmap) {
-            lhmap.remove(hashCode, key, keyOffset, keyLength);
-            lhmap.put(hashCode, key, keyOffset, keyLength, v);
+            lhmap.remove(hashCode, key, 0, key.length);
+            lhmap.put(hashCode, key, v);
         }
         if (updates.incrementAndGet() > maxCapacity * slack) {
             synchronized (updates) {

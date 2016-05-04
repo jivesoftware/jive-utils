@@ -24,14 +24,10 @@ public class ConcurrentBAHash<V> {
     }
 
     public void put(byte[] key, V value) {
-        put(key, 0, key.length, value);
-    }
-
-    private void put(byte[] key, int keyOffset, int keyLength, V value) {
-        int hashCode = hasher.hashCode(key, keyOffset, keyLength);
+        int hashCode = hasher.hashCode(key, 0, key.length);
         BAHash<V> hmap = hmap(hashCode, true);
         synchronized (hmap) {
-            hmap.put(hashCode, key, keyOffset, keyLength, value);
+            hmap.put(hashCode, key, value);
         }
     }
 
@@ -54,7 +50,7 @@ public class ConcurrentBAHash<V> {
             V value = hmap.get(hashCode, key, 0, key.length);
             if (value == null) {
                 value = mappingFunction.apply(key);
-                hmap.put(hashCode, key, 0, key.length, value);
+                hmap.put(hashCode, key, value);
             }
             return value;
         }
@@ -68,7 +64,7 @@ public class ConcurrentBAHash<V> {
             V remapped = remappingFunction.apply(key, value);
             if (remapped != value) {
                 value = remapped;
-                hmap.put(hashCode, key, 0, key.length, value);
+                hmap.put(hashCode, key, value);
             }
             return value;
         }

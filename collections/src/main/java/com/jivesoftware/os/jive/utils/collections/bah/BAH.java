@@ -14,10 +14,10 @@ public interface BAH<V> {
 
     V get(long hashCode, byte[] key, int keyOffset, int keyLength);
 
-    void put(byte[] key, int keyOffset, int keyLength, V value);
+    void put(byte[] key, V value);
 
     @SuppressWarnings(value = "unchecked")
-    void put(long hashCode, byte[] key, int keyOffset, int keyLength, V value);
+    void put(long hashCode, byte[] key, V value);
 
     void remove(byte[] key, int keyOffset, int keyLength);
 
