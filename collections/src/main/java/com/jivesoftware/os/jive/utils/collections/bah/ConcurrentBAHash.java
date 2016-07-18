@@ -43,8 +43,16 @@ public class ConcurrentBAHash<V> {
         return hmaps[index];
     }
 
+    public int hashCode(byte[] key, int offset, int length) {
+        return hasher.hashCode(key, offset, length);
+    }
+
     public V computeIfAbsent(byte[] key, Function<byte[], ? extends V> mappingFunction) {
         int hashCode = hasher.hashCode(key, 0, key.length);
+        return computeIfAbsent(hashCode, key, mappingFunction);
+    }
+
+    public V computeIfAbsent(int hashCode, byte[] key, Function<byte[], ? extends V> mappingFunction) {
         BAHash< V> hmap = hmap(hashCode, true);
         synchronized (hmap) {
             V value = hmap.get(hashCode, key, 0, key.length);
@@ -58,6 +66,10 @@ public class ConcurrentBAHash<V> {
 
     public V compute(byte[] key, BiFunction<byte[], ? super V, ? extends V> remappingFunction) {
         int hashCode = hasher.hashCode(key, 0, key.length);
+        return compute(hashCode, key, remappingFunction);
+    }
+
+    public V compute(int hashCode, byte[] key, BiFunction<byte[], ? super V, ? extends V> remappingFunction) {
         BAHash<V> hmap = hmap(hashCode, true);
         synchronized (hmap) {
             V value = hmap.get(hashCode, key, 0, key.length);
@@ -76,6 +88,10 @@ public class ConcurrentBAHash<V> {
 
     public V get(byte[] key, int keyOffset, int keyLength) {
         int hashCode = hasher.hashCode(key, keyOffset, keyLength);
+        return get(hashCode, key, keyOffset, keyLength);
+    }
+
+    public V get(int hashCode, byte[] key, int keyOffset, int keyLength) {
         BAHash<V> hmap = hmap(hashCode, false);
         if (hmap != null) {
             synchronized (hmap) {
@@ -91,6 +107,10 @@ public class ConcurrentBAHash<V> {
 
     public void remove(byte[] key, int keyOffset, int keyLength) {
         int hashCode = hasher.hashCode(key, keyOffset, keyLength);
+        remove(hashCode, key, keyOffset, keyLength);
+    }
+
+    public void remove(int hashCode, byte[] key, int keyOffset, int keyLength) {
         BAHash< V> hmap = hmap(hashCode, false);
         if (hmap != null) {
             synchronized (hmap) {
