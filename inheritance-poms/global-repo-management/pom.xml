@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.jivesoftware.os.jive.utils.inheritance.poms</groupId>
     <artifactId>global-repo-management</artifactId>
-    <version>0.104</version>
+    <version>0.105</version>
     <packaging>pom</packaging>
 
     <inceptionYear>2013</inceptionYear>
@@ -19,19 +19,6 @@
         <connection>scm:git:git://github.com/jivesoftware/jive-utils.git</connection>
         <developerConnection>scm:git:git@github.com:jivesoftware/jive-utils.git</developerConnection>
     </scm>
-    <distributionManagement>
-        <repository>
-            <id>modified-thirdparty</id>
-            <name>Jive Internal Repository</name>
-            <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots</id>
-            <url>http://nexus-int-qa.eng.jiveland.com/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
-    
-    
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -59,4 +46,27 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <distributionManagement>
+                <repository>
+                    <id>modified-thirdparty</id>
+                    <name>Jive Internal Repository</name>
+                    <url>http://nexus-int.eng.jiveland.com/content/repositories/modified-thirdparty</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>upena</id>
+            <distributionManagement>
+                <repository>
+                    <id>upena-repo</id>
+                    <name>Upena Repository</name>
+                    <url>http://localhost:1175/repo</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 </project>
