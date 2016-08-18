@@ -188,7 +188,7 @@ public class OHash<K, V> implements OH<K, V> {
 
             K storedKey = s.key(i);
             if (storedKey == key) {
-                s.link(i, key, value);
+                s.update(i, key, value);
                 return;
             }
             if (storedKey == null || storedKey == skipped) {

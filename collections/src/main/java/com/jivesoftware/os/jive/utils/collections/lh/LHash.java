@@ -8,10 +8,6 @@ public class LHash<V> {
 
     private volatile LHMapState< V> state;
 
-    /**
-     *
-     * @param capacity
-     */
     public LHash(LHMapState<V> state) {
         this.state = state;
     }
@@ -137,10 +133,6 @@ public class LHash<V> {
             // wraps around table
 
             long storedKey = s.key(i);
-            if (storedKey == key) {
-                s.link(i, key, value);
-                return;
-            }
             if (storedKey == nil || storedKey == skipped) {
                 s.link(i, key, value);
                 return;
