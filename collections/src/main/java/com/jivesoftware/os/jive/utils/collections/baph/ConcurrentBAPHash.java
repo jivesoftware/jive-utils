@@ -25,7 +25,7 @@ public class ConcurrentBAPHash<V> {
         this.reader = reader;
     }
 
-    public void put(long keyPointer, byte[] key, V value) {
+    public void put(long keyPointer, byte[] key, V value) throws Exception {
         int hashCode = hasher.hashCode(key, 0, key.length);
         BAPHash<V> hmap = hmap(hashCode, true);
         synchronized (hmap) {
@@ -50,12 +50,12 @@ public class ConcurrentBAPHash<V> {
         return hasher.hashCode(key, offset, length);
     }
 
-    public V computeIfAbsent(long keyPointer, byte[] key, Function<byte[], ? extends V> mappingFunction) {
+    public V computeIfAbsent(long keyPointer, byte[] key, Function<byte[], ? extends V> mappingFunction) throws Exception {
         int hashCode = hasher.hashCode(key, 0, key.length);
         return computeIfAbsent(hashCode, keyPointer, key, mappingFunction);
     }
 
-    public V computeIfAbsent(int hashCode, long keyPointer, byte[] key, Function<byte[], ? extends V> mappingFunction) {
+    public V computeIfAbsent(int hashCode, long keyPointer, byte[] key, Function<byte[], ? extends V> mappingFunction) throws Exception {
         BAPHash< V> hmap = hmap(hashCode, true);
         synchronized (hmap) {
             V value = hmap.get(hashCode, key, 0, key.length);
@@ -67,12 +67,12 @@ public class ConcurrentBAPHash<V> {
         }
     }
 
-    public V compute(byte[] key, BiFunction<byte[], ? super V, ? extends V> remappingFunction) {
+    public V compute(byte[] key, BiFunction<byte[], ? super V, ? extends V> remappingFunction) throws Exception {
         int hashCode = hasher.hashCode(key, 0, key.length);
         return compute(hashCode, key, remappingFunction);
     }
 
-    public V compute(int hashCode, byte[] key, BiFunction<byte[], ? super V, ? extends V> remappingFunction) {
+    public V compute(int hashCode, byte[] key, BiFunction<byte[], ? super V, ? extends V> remappingFunction) throws Exception {
         BAPHash<V> hmap = hmap(hashCode, true);
         synchronized (hmap) {
             V value = hmap.get(hashCode, key, 0, key.length);
@@ -85,16 +85,16 @@ public class ConcurrentBAPHash<V> {
         }
     }
 
-    public V get(byte[] key) {
+    public V get(byte[] key) throws Exception {
         return get(key, 0, key.length);
     }
 
-    public V get(byte[] key, int keyOffset, int keyLength) {
+    public V get(byte[] key, int keyOffset, int keyLength) throws Exception {
         int hashCode = hasher.hashCode(key, keyOffset, keyLength);
         return get(hashCode, key, keyOffset, keyLength);
     }
 
-    public V get(int hashCode, byte[] key, int keyOffset, int keyLength) {
+    public V get(int hashCode, byte[] key, int keyOffset, int keyLength) throws Exception {
         BAPHash<V> hmap = hmap(hashCode, false);
         if (hmap != null) {
             synchronized (hmap) {
@@ -104,16 +104,16 @@ public class ConcurrentBAPHash<V> {
         return null;
     }
 
-    public void remove(byte[] key) {
+    public void remove(byte[] key) throws Exception {
         remove(key, 0, key.length);
     }
 
-    public void remove(byte[] key, int keyOffset, int keyLength) {
+    public void remove(byte[] key, int keyOffset, int keyLength) throws Exception {
         int hashCode = hasher.hashCode(key, keyOffset, keyLength);
         remove(hashCode, key, keyOffset, keyLength);
     }
 
-    public void remove(int hashCode, byte[] key, int keyOffset, int keyLength) {
+    public void remove(int hashCode, byte[] key, int keyOffset, int keyLength) throws Exception {
         BAPHash< V> hmap = hmap(hashCode, false);
         if (hmap != null) {
             synchronized (hmap) {

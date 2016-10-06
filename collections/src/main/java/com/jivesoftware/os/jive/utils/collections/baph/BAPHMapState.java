@@ -113,7 +113,7 @@ public class BAPHMapState<V> implements BAPHState<V> {
     }
 
     @Override
-    public byte[] key(long i) {
+    public byte[] key(long i) throws Exception {
         if (keyPointers[(int) i] == nilKeyPointer) {
             return nilKey;
         }
@@ -124,7 +124,7 @@ public class BAPHMapState<V> implements BAPHState<V> {
     }
 
     @Override
-    public V value(long i) {
+    public V value(long i) throws Exception {
         return (V) (hasValues ? values[(int) i] : reader.byteArray(keyPointers[(int) i]));
     }
 
