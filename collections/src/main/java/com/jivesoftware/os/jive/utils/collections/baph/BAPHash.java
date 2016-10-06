@@ -44,7 +44,7 @@ public class BAPHash<V> implements BAPH<V> {
         return keyShuffle % state.capacity();
     }
 
-    V firstValue() {
+    V firstValue() throws Exception {
         BAPHState<V> s = state;
         byte[] skipped = s.skipped();
         long i = s.first();
@@ -58,7 +58,7 @@ public class BAPHash<V> implements BAPH<V> {
         return null;
     }
 
-    V removeFirstValue() {
+    V removeFirstValue() throws Exception {
         BAPHState<V> s = state;
         byte[] skipped = s.skipped();
         long i = s.first();
@@ -75,12 +75,12 @@ public class BAPHash<V> implements BAPH<V> {
     }
 
     @Override
-    public V get(byte[] key, int keyOffset, int keyLength) {
+    public V get(byte[] key, int keyOffset, int keyLength) throws Exception {
         return get(hasher.hashCode(key, keyOffset, keyLength), key, keyOffset, keyLength);
     }
 
     @Override
-    public V get(long hashCode, byte[] key, int keyOffset, int keyLength) {
+    public V get(long hashCode, byte[] key, int keyOffset, int keyLength) throws Exception {
         BAPHState<V> s = state;
         byte[] skipped = s.skipped();
         if (key == null || key == skipped) {
@@ -92,8 +92,8 @@ public class BAPHash<V> implements BAPH<V> {
         long capacity = s.capacity();
         long start = hash(s, hashCode);
         for (long i = start, j = 0, k = capacity; // stack vars for efficiency
-             j < k; // max search for key
-             i = (++i) % k, j++) { // wraps around table
+            j < k; // max search for key
+            i = (++i) % k, j++) { // wraps around table
 
             byte[] storedKey = s.key(i);
             if (storedKey == skipped) {
@@ -111,13 +111,13 @@ public class BAPHash<V> implements BAPH<V> {
     }
 
     @Override
-    public void remove(byte[] key, int keyOffset, int keyLength) {
+    public void remove(byte[] key, int keyOffset, int keyLength) throws Exception {
         remove(hasher.hashCode(key, keyOffset, keyLength), key, keyOffset, keyLength);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void remove(long hashCode, byte[] key, int keyOffset, int keyLength) {
+    public void remove(long hashCode, byte[] key, int keyOffset, int keyLength) throws Exception {
         BAPHState<V> s = state;
         byte[] skipped = s.skipped();
         if (key == null || key == skipped) {
@@ -129,8 +129,8 @@ public class BAPHash<V> implements BAPH<V> {
         long capacity = s.capacity();
         long start = hash(s, hashCode);
         for (long i = start, j = 0, k = capacity; // stack vars for efficiency
-             j < k; // max search for key
-             i = (++i) % k, j++) {                    // wraps around table
+            j < k; // max search for key
+            i = (++i) % k, j++) {                    // wraps around table
 
             byte[] storedKey = s.key(i);
             if (storedKey == skipped) {
@@ -158,13 +158,13 @@ public class BAPHash<V> implements BAPH<V> {
     }
 
     @Override
-    public void put(long keyPointer, byte[] key, V value) {
+    public void put(long keyPointer, byte[] key, V value) throws Exception {
         put(hasher.hashCode(key, 0, key.length), keyPointer, key, value);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void put(long hashCode, long keyPointer, byte[] key, V value) {
+    public void put(long hashCode, long keyPointer, byte[] key, V value) throws Exception {
         BAPHState<V> s = state;
         long capacity = s.capacity();
         if (s.size() * 2 >= capacity) {
@@ -176,13 +176,13 @@ public class BAPHash<V> implements BAPH<V> {
         internalPut(s, hashCode, keyPointer, key, value);
     }
 
-    private void internalPut(BAPHState<V> s, long hashCode, long keyPointer, byte[] key, V value) {
+    private void internalPut(BAPHState<V> s, long hashCode, long keyPointer, byte[] key, V value) throws Exception {
         long capacity = s.capacity();
         long start = hash(s, hashCode);
         byte[] skipped = s.skipped();
         for (long i = start, j = 0, k = capacity; // stack vars for efficiency
-             j < k; // max search for available slot
-             i = (++i) % k, j++) {
+            j < k; // max search for available slot
+            i = (++i) % k, j++) {
             // wraps around table
 
             byte[] storedKey = s.key(i);
@@ -201,7 +201,7 @@ public class BAPHash<V> implements BAPH<V> {
         }
     }
 
-    private void rehash(BAPHState<V> from, BAPHState<V> to) {
+    private void rehash(BAPHState<V> from, BAPHState<V> to) throws Exception {
         long i = from.first();
         byte[] skipped = to.skipped();
         while (i != -1) {

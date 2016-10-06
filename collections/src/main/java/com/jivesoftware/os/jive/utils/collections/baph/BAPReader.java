@@ -6,5 +6,5 @@ package com.jivesoftware.os.jive.utils.collections.baph;
  */
 public interface BAPReader {
 
-    byte[] byteArray(long pointer);
+    byte[] byteArray(long pointer) throws Exception;
 }

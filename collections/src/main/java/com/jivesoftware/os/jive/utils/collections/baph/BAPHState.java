@@ -30,8 +30,8 @@ public interface BAPHState<V> {
 
     long keyPointer(long i);
 
-    byte[] key(long i);
+    byte[] key(long i) throws Exception;
 
-    V value(long i);
+    V value(long i) throws Exception;
 
 }
