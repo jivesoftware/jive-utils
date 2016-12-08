@@ -1,6 +1,7 @@
 package com.jivesoftware.os.jive.utils.collections.bah;
 
 import com.jivesoftware.os.jive.utils.collections.KeyValueStream;
+import java.util.concurrent.Semaphore;
 
 /**
  * @author jonathan.colt
@@ -215,7 +216,7 @@ public class BAHash<V> implements BAH<V> {
     }
 
     @Override
-    public boolean stream(KeyValueStream<byte[], V> stream) throws Exception {
+    public boolean stream(Semaphore semaphore, KeyValueStream<byte[], V> stream) throws Exception {
         BAHState<V> s = state;
         long c = s.capacity();
         if (c <= 0) {
@@ -227,11 +228,14 @@ public class BAHash<V> implements BAH<V> {
 
             byte[] key;
             V value = null;
-            synchronized (this) {
+            semaphore.acquire();
+            try {
                 key = s.key(i);
                 if (key != null && key != skipped) {
                     value = s.value(i);
                 }
+            } finally {
+                semaphore.release();
             }
             if (key != null && key != skipped) {
                 if (!stream.keyValue(key, value)) {
