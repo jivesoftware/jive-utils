@@ -1,9 +1,9 @@
 package com.jivesoftware.os.jive.utils.collections.bah;
 
 import com.jivesoftware.os.jive.utils.collections.KeyValueStream;
+import java.util.concurrent.Semaphore;
 
 /**
- *
  * @author jonathan.colt
  */
 public interface BAH<V> {
@@ -26,6 +26,6 @@ public interface BAH<V> {
 
     long size();
 
-    boolean stream(KeyValueStream<byte[], V> stream) throws Exception;
+    boolean stream(Semaphore semaphore, KeyValueStream<byte[], V> stream) throws Exception;
 
 }

@@ -18,11 +18,11 @@ package com.jivesoftware.os.jive.utils.collections.bah;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**
- *
  * @author jonathan.colt
  */
 public class BAHashNGTest {
@@ -44,16 +44,16 @@ public class BAHashNGTest {
     private void internalTestPuts(BAHash<String> map) throws Exception {
         int count = 64;
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, String.valueOf(i));
+            map.put(new byte[] { i }, String.valueOf(i));
         }
 
-        map.stream((byte[] key, String value) -> {
+        map.stream(new Semaphore(10, true), (byte[] key, String value) -> {
             System.out.println(Arrays.toString(key) + "->" + value);
             return true;
         });
 
         for (byte i = 0; i < count; i++) {
-            Assert.assertEquals(map.get(new byte[]{i}, 0, 1), String.valueOf(i));
+            Assert.assertEquals(map.get(new byte[] { i }, 0, 1), String.valueOf(i));
         }
     }
 
@@ -79,13 +79,13 @@ public class BAHashNGTest {
 
         // Add all
         for (byte i = 0; i < count; i++) {
-            map.remove(new byte[]{i}, 0, 1);
-            validation.remove(new ByteArrayKey(new byte[]{i}));
+            map.remove(new byte[] { i }, 0, 1);
+            validation.remove(new ByteArrayKey(new byte[] { i }));
         }
 
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, String.valueOf(i));
-            validation.put(new ByteArrayKey(new byte[]{i}), String.valueOf(i));
+            map.put(new byte[] { i }, String.valueOf(i));
+            validation.put(new ByteArrayKey(new byte[] { i }), String.valueOf(i));
         }
 
         if (assertOrder) {
@@ -96,11 +96,11 @@ public class BAHashNGTest {
         byte[][] retained = new byte[count][];
         byte[][] removed = new byte[count][];
         for (byte i = 0; i < count; i++) {
-            byte[] key = new byte[]{i};
+            byte[] key = new byte[] { i };
             if (r.nextBoolean()) {
                 System.out.println("Removed:" + i);
                 map.remove(key, 0, 1);
-                validation.remove(new ByteArrayKey(new byte[]{i}));
+                validation.remove(new ByteArrayKey(new byte[] { i }));
                 removed[i] = key;
             } else {
                 retained[i] = key;
@@ -125,8 +125,8 @@ public class BAHashNGTest {
 
         // Add all back
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, String.valueOf(i));
-            validation.put(new ByteArrayKey(new byte[]{i}), String.valueOf(i));
+            map.put(new byte[] { i }, String.valueOf(i));
+            validation.put(new ByteArrayKey(new byte[] { i }), String.valueOf(i));
         }
 
         if (assertOrder) {
@@ -137,11 +137,11 @@ public class BAHashNGTest {
         retained = new byte[count][];
         removed = new byte[count][];
         for (byte i = 0; i < count; i++) {
-            byte[] key = new byte[]{i};
+            byte[] key = new byte[] { i };
             if (r.nextBoolean()) {
                 System.out.println("Removed:" + i);
                 map.remove(key, 0, 1);
-                validation.remove(new ByteArrayKey(new byte[]{i}));
+                validation.remove(new ByteArrayKey(new byte[] { i }));
                 removed[i] = key;
             } else {
                 retained[i] = key;
@@ -166,8 +166,8 @@ public class BAHashNGTest {
 
         // Add all back
         for (byte i = 0; i < count; i++) {
-            map.put(new byte[]{i}, String.valueOf(i));
-            validation.put(new ByteArrayKey(new byte[]{i}), String.valueOf(i));
+            map.put(new byte[] { i }, String.valueOf(i));
+            validation.put(new ByteArrayKey(new byte[] { i }), String.valueOf(i));
         }
 
         if (assertOrder) {
@@ -176,8 +176,8 @@ public class BAHashNGTest {
 
         // Remove all in reverse order
         for (byte i = (byte) count; i > -1; i--) {
-            validation.remove(new ByteArrayKey(new byte[]{i}));
-            map.remove(new byte[]{i}, 0, 1);
+            validation.remove(new ByteArrayKey(new byte[] { i }));
+            map.remove(new byte[] { i }, 0, 1);
         }
 
         if (assertOrder) {
@@ -185,15 +185,15 @@ public class BAHashNGTest {
         }
 
         for (byte i = 0; i < count; i++) {
-            Assert.assertNull(map.get(new byte[]{i}, 0, 1));
+            Assert.assertNull(map.get(new byte[] { i }, 0, 1));
         }
     }
 
     private void assertOrder(String step, LinkedHashMap<ByteArrayKey, String> validation, BAHash<String> map) throws Exception {
         ByteArrayKey[] expectedOrder = validation.keySet().toArray(new ByteArrayKey[0]);
-        int[] i = new int[]{0};
+        int[] i = new int[] { 0 };
         try {
-            map.stream((byte[] key, String value) -> {
+            map.stream(new Semaphore(10, true), (byte[] key, String value) -> {
                 Assert.assertTrue(Arrays.equals(key, expectedOrder[i[0]].key), Arrays.toString(key) + " vs " + Arrays.toString(expectedOrder[i[0]].key));
                 i[0]++;
                 return true;
@@ -203,7 +203,7 @@ public class BAHashNGTest {
             for (ByteArrayKey byteArrayKey : expectedOrder) {
                 System.out.println(step + " Expected:" + Arrays.toString(byteArrayKey.key));
             }
-            map.stream((byte[] key, String value) -> {
+            map.stream(new Semaphore(10, true), (byte[] key, String value) -> {
                 System.out.println(step + "Was:" + Arrays.toString(key));
                 return true;
             });
