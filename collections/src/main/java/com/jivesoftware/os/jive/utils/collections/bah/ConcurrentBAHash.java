@@ -60,6 +60,11 @@ public class ConcurrentBAHash<V> {
     }
 
     public V computeIfAbsent(int hashCode, byte[] key, Function<byte[], ? extends V> mappingFunction) throws InterruptedException {
+        V v = get(hashCode, key, 0, key.length);
+        if (v != null) {
+            return v;
+        }
+
         int i = hmap(hashCode, true);
         BAHash<V> hmap = hmaps[i];
         hmapsSemaphore[i].acquire(Short.MAX_VALUE);
