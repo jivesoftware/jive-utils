@@ -51,7 +51,7 @@
                 <repository>
                     <id>upena-repo</id>
                     <name>Upena Repository</name>
-                    <url>http://localhost:1175/repo</url>
+                    <url>https://localhost:1175/repo</url>
                 </repository>
             </distributionManagement>
         </profile>
