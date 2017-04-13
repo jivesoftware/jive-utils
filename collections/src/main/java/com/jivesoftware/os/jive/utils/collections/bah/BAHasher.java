@@ -17,7 +17,7 @@ public class BAHasher {
         long randMult = 0x5_DEEC_E66DL;
         long randAdd = 0xBL;
         long randMask = (1L << 48) - 1;
-        long seed = bytes.length;
+        long seed = length;
         for (int i = offset; i < offset + length; i++) {
             long x = (seed * randMult + randAdd) & randMask;
 
